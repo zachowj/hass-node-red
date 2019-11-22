@@ -2,19 +2,6 @@ default_config:
 logger:
   default: error
   logs:
-    custom_components.blueprint: debug
+    # homeassistant.components.websocket_api: debug
+    custom_components.nodered: debug
 
-
-
-blueprint:
-  username: my_username
-  password: my_password
-  binary_sensor:
-    - enabled: true
-      name: My custom name
-  sensor:
-    - enabled: true
-      name: My custom name
-  switch:
-    - enabled: true
-      name: My custom name

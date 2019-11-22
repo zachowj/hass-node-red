@@ -1,0 +1,14 @@
+{
+    "config": {
+        "title": "Node-RED",
+        "step": {
+            "user": {
+                "title": "Node-RED",
+                "description": "Are you sure you want to set up Node-RED?"
+            }
+        },
+        "abort": {
+            "single_instance_allowed": "Only a single configuration of Node-RED is allowed."
+        }
+    }
+}
