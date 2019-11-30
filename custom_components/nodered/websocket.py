@@ -115,9 +115,11 @@ async def websocket_webhook(hass, connection, msg):
         """Handle webhook callback."""
         body = await request.text()
         try:
-            data = json.loads(body) if body else {}
+            payload = json.loads(body) if body else {}
         except ValueError:
-            data = body
+            payload = body
+
+        data = {"payload": payload, "headers": dict(request.headers)}
 
         _LOGGER.debug(f"Webhook recieved {id[:15]}..: {data}")
         connection.send_message(event_message(msg[CONF_ID], {"data": data}))
