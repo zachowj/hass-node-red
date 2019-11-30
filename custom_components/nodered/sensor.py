@@ -6,6 +6,7 @@ from homeassistant.const import CONF_STATE
 
 from . import NodeRedEntity
 from .const import (
+    CONF_ATTRIBUTES,
     CONF_SENSOR,
     NODERED_DISCOVERY_NEW,
 )
@@ -35,6 +36,6 @@ class NodeRedSensor(NodeRedEntity):
     def __init__(self, hass, config):
         super().__init__(hass, config)
         self._component = CONF_SENSOR
-        self._state = config.get(CONF_STATE, None)
-        self.attr = config.get("attributes", {})
+        self._state = config.get(CONF_STATE)
+        self.attr = config.get(CONF_ATTRIBUTES, {})
 

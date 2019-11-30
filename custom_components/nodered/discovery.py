@@ -8,8 +8,10 @@ from homeassistant.helpers.dispatcher import (
 )
 
 from .const import (
+    CONF_COMPONENT,
     CONF_BINARY_SENSOR,
     CONF_NODE_ID,
+    CONF_REMOVE,
     CONF_SENSOR,
     CONF_SERVER_ID,
     CONF_SWITCH,
@@ -42,7 +44,7 @@ async def start_discovery(
 
     async def async_device_message_received(msg):
         """Process the received message."""
-        component = msg["component"]
+        component = msg[CONF_COMPONENT]
         server_id = msg[CONF_SERVER_ID]
         node_id = msg[CONF_NODE_ID]
 
@@ -62,8 +64,8 @@ async def start_discovery(
             if data[ALREADY_DISCOVERED][discovery_hash] != component:
                 # Remove old
                 log_text = f"Changing {data[ALREADY_DISCOVERED][discovery_hash]} to"
-                msg["remove"] = CHANGE_ENTITY_TYPE
-            elif "remove" in msg:
+                msg[CONF_REMOVE] = CHANGE_ENTITY_TYPE
+            elif CONF_REMOVE in msg:
                 log_text = "Removing"
             else:
                 # Dispatch update

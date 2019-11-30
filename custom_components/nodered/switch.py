@@ -5,10 +5,16 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.components.websocket_api import event_message
 from homeassistant.core import callback
-from homeassistant.const import CONF_ICON, CONF_STATE
+from homeassistant.const import CONF_ICON, CONF_ID, CONF_STATE
 
 from . import NodeRedEntity
-from .const import CONF_SWITCH, NODERED_DISCOVERY_NEW, SWITCH_ICON
+from .const import (
+    CONF_CONFIG,
+    CONF_CONNECTION,
+    CONF_SWITCH,
+    NODERED_DISCOVERY_NEW,
+    SWITCH_ICON,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,8 +40,8 @@ class NodeRedSwitch(ToggleEntity, NodeRedEntity):
 
     def __init__(self, hass, config):
         super().__init__(hass, config)
-        self._message_id = config["id"]
-        self._connection = config["connection"]
+        self._message_id = config[CONF_ID]
+        self._connection = config[CONF_CONNECTION]
         self._state = config.get(CONF_STATE, True)
         self._component = CONF_SWITCH
         self._available = True
@@ -64,7 +70,9 @@ class NodeRedSwitch(ToggleEntity, NodeRedEntity):
         self._update_node_red(True)
 
     def _update_node_red(self, state):
-        self._connection.send_message(event_message(self._message_id, {"state": state}))
+        self._connection.send_message(
+            event_message(self._message_id, {CONF_STATE: state})
+        )
 
     @callback
     def handle_lost_connection(self):
@@ -81,10 +89,10 @@ class NodeRedSwitch(ToggleEntity, NodeRedEntity):
         else:
             self._available = True
             self._state = msg[CONF_STATE]
-            self._config = msg["config"]
-            self._message_id = msg["id"]
-            self._connection = msg["connection"]
-            self._connection.subscriptions[msg["id"]] = self.handle_lost_connection
+            self._config = msg[CONF_CONFIG]
+            self._message_id = msg[CONF_ID]
+            self._connection = msg[CONF_CONNECTION]
+            self._connection.subscriptions[msg[CONF_ID]] = self.handle_lost_connection
             self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:

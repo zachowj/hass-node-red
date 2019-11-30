@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ICON,
     CONF_STATE,
+    CONF_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.core import callback
@@ -38,15 +39,18 @@ from .discovery import (
 )
 
 from .const import (
+    CONF_CONFIG,
+    CONF_COMPONENT,
     CONF_NAME,
-    CONF_SERVER_ID,
     CONF_NODE_ID,
+    CONF_REMOVE,
+    CONF_SERVER_ID,
     DEFAULT_NAME,
     DOMAIN,
     DOMAIN_DATA,
+    ISSUE_URL,
     NODERED_ENTITY,
     NODERED_DISCOVERY_UPDATED,
-    ISSUE_URL,
     REQUIRED_FILES,
     VERSION,
 )
@@ -115,7 +119,7 @@ async def async_remove_entry(hass, config_entry):
 
     stop_discovery(hass)
     del hass.data[DOMAIN_DATA]
-    hass.bus.async_fire("nodered", {"type": "unloaded"})
+    hass.bus.async_fire(DOMAIN, {CONF_TYPE: "unloaded"})
 
 
 class NodeRedEntity(Entity):
@@ -124,7 +128,7 @@ class NodeRedEntity(Entity):
     def __init__(self, hass, config):
         self.hass = hass
         self.attr = {}
-        self._config = config["config"]
+        self._config = config[CONF_CONFIG]
         self._component = None
         self._state = None
         self._server_id = config[CONF_SERVER_ID]
@@ -147,7 +151,7 @@ class NodeRedEntity(Entity):
     @property
     def device_class(self):
         """Return the class of this binary_sensor."""
-        return self._config.get(CONF_DEVICE_CLASS, None)
+        return self._config.get(CONF_DEVICE_CLASS)
 
     @property
     def name(self):
@@ -162,12 +166,12 @@ class NodeRedEntity(Entity):
     @property
     def icon(self):
         """Return the icon of the sensor."""
-        return self._config.get(CONF_ICON, None)
+        return self._config.get(CONF_ICON)
 
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return self._config.get(CONF_UNIT_OF_MEASUREMENT, None)
+        return self._config.get(CONF_UNIT_OF_MEASUREMENT)
 
     @property
     def device_state_attributes(self):
@@ -185,25 +189,24 @@ class NodeRedEntity(Entity):
     @callback
     def handle_discovery_update(self, msg):
         """Update entity config"""
-        if "remove" in msg:
+        if CONF_REMOVE in msg:
             # Remove entity
-            if msg["remove"] == CHANGE_ENTITY_TYPE:
+            if msg[CONF_REMOVE] == CHANGE_ENTITY_TYPE:
                 # recreate entity if component type changed
                 @callback
                 def recreate_entity():
                     """Create entity with new type"""
-                    del msg["remove"]
+                    del msg[CONF_REMOVE]
                     async_dispatcher_send(
-                        self.hass, NODERED_DISCOVERY.format(msg["component"]), msg
+                        self.hass, NODERED_DISCOVERY.format(msg[CONF_COMPONENT]), msg
                     )
 
                 self.async_on_remove(recreate_entity)
 
             self.hass.async_create_task(self.async_remove())
-
             return
 
-        self._config = msg["config"]
+        self._config = msg[CONF_CONFIG]
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
@@ -214,7 +217,6 @@ class NodeRedEntity(Entity):
             NODERED_ENTITY.format(self._server_id, self._node_id),
             self.handle_entity_update,
         )
-
         self._remove_signal_discovery_update = async_dispatcher_connect(
             self.hass,
             NODERED_DISCOVERY_UPDATED.format(self.unique_id),

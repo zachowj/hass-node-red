@@ -17,16 +17,19 @@ REQUIRED_FILES = [
 ISSUE_URL = "https://github.com/zachowj/hass-node-red/issues"
 ATTRIBUTION = "Data from this is provided by Node-RED."
 
-
 # Configuration
+CONF_ATTRIBUTES = "attributes"
 CONF_BINARY_SENSOR = "binary_sensor"
+CONF_COMPONENT = "component"
+CONF_CONFIG = "config"
+CONF_CONNECTION = "connection"
 CONF_ENABLED = "enabled"
 CONF_NAME = "name"
 CONF_NODE_ID = "node_id"
+CONF_REMOVE = "remove"
 CONF_SENSOR = "sensor"
 CONF_SERVER_ID = "server_id"
 CONF_SWITCH = "switch"
-
 
 NODERED_DISCOVERY = "nodered_discovery"
 NODERED_DISCOVERY_NEW = "nodered_discovery_new_{}"
