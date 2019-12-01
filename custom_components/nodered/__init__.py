@@ -189,28 +189,28 @@ class NodeRedEntity(Entity):
     @callback
     def handle_discovery_update(self, msg, connection):
         """Update entity config"""
-        if CONF_REMOVE in msg:
-            # Remove entity
-            if msg[CONF_REMOVE] == CHANGE_ENTITY_TYPE:
-                # recreate entity if component type changed
-                @callback
-                def recreate_entity():
-                    """Create entity with new type"""
-                    del msg[CONF_REMOVE]
-                    async_dispatcher_send(
-                        self.hass,
-                        NODERED_DISCOVERY.format(msg[CONF_COMPONENT]),
-                        msg,
-                        connection,
-                    )
-
-                self.async_on_remove(recreate_entity)
-
-            self.hass.async_create_task(self.async_remove())
+        if CONF_REMOVE not in msg:
+            self._config = msg[CONF_CONFIG]
+            self.async_write_ha_state()
             return
 
-        self._config = msg[CONF_CONFIG]
-        self.async_write_ha_state()
+        # Otherwise, remove entity
+        if msg[CONF_REMOVE] == CHANGE_ENTITY_TYPE:
+            # recreate entity if component type changed
+            @callback
+            def recreate_entity():
+                """Create entity with new type"""
+                del msg[CONF_REMOVE]
+                async_dispatcher_send(
+                    self.hass,
+                    NODERED_DISCOVERY.format(msg[CONF_COMPONENT]),
+                    msg,
+                    connection,
+                )
+
+            self.async_on_remove(recreate_entity)
+
+        self.hass.async_create_task(self.async_remove())
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
