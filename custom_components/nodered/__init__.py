@@ -187,7 +187,7 @@ class NodeRedEntity(Entity):
         self.async_write_ha_state()
 
     @callback
-    def handle_discovery_update(self, msg):
+    def handle_discovery_update(self, msg, connection):
         """Update entity config"""
         if CONF_REMOVE in msg:
             # Remove entity
@@ -198,7 +198,10 @@ class NodeRedEntity(Entity):
                     """Create entity with new type"""
                     del msg[CONF_REMOVE]
                     async_dispatcher_send(
-                        self.hass, NODERED_DISCOVERY.format(msg[CONF_COMPONENT]), msg
+                        self.hass,
+                        NODERED_DISCOVERY.format(msg[CONF_COMPONENT]),
+                        msg,
+                        connection,
                     )
 
                 self.async_on_remove(recreate_entity)

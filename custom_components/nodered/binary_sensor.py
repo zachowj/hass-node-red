@@ -23,15 +23,15 @@ from .const import (
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Setup sensor platform."""
 
-    async def async_discover(config):
-        await _async_setup_entity(hass, config, async_add_devices, config_entry)
+    async def async_discover(config, connection):
+        await _async_setup_entity(hass, config, async_add_devices)
 
     async_dispatcher_connect(
         hass, NODERED_DISCOVERY_NEW.format(CONF_BINARY_SENSOR), async_discover,
     )
 
 
-async def _async_setup_entity(hass, config, async_add_devices, config_entry=None):
+async def _async_setup_entity(hass, config, async_add_devices):
     """Set up the Node-RED binary-sensor."""
     async_add_devices([NodeRedBinarySensor(hass, config)])
 

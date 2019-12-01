@@ -22,26 +22,26 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Setup Switch platform."""
 
-    async def async_discover(config):
-        await _async_setup_entity(hass, config, async_add_entities, config_entry)
+    async def async_discover(config, connection):
+        await _async_setup_entity(hass, config, async_add_entities, connection)
 
     async_dispatcher_connect(
         hass, NODERED_DISCOVERY_NEW.format(CONF_SWITCH), async_discover,
     )
 
 
-async def _async_setup_entity(hass, config, async_add_entities, config_entry=None):
+async def _async_setup_entity(hass, config, async_add_entities, connection):
     """Set up the Node-RED Switch."""
-    async_add_entities([NodeRedSwitch(hass, config)])
+    async_add_entities([NodeRedSwitch(hass, config, connection)])
 
 
 class NodeRedSwitch(ToggleEntity, NodeRedEntity):
     """Node-RED Switch class."""
 
-    def __init__(self, hass, config):
+    def __init__(self, hass, config, connection):
         super().__init__(hass, config)
         self._message_id = config[CONF_ID]
-        self._connection = config[CONF_CONNECTION]
+        self._connection = connection
         self._state = config.get(CONF_STATE, True)
         self._component = CONF_SWITCH
         self._available = True
@@ -81,7 +81,7 @@ class NodeRedSwitch(ToggleEntity, NodeRedEntity):
         self.async_write_ha_state()
 
     @callback
-    def handle_discovery_update(self, msg):
+    def handle_discovery_update(self, msg, connection):
         """Update entity config"""
         if "remove" in msg:
             # Remove entity
@@ -91,7 +91,7 @@ class NodeRedSwitch(ToggleEntity, NodeRedEntity):
             self._state = msg[CONF_STATE]
             self._config = msg[CONF_CONFIG]
             self._message_id = msg[CONF_ID]
-            self._connection = msg[CONF_CONNECTION]
+            self._connection = connection
             self._connection.subscriptions[msg[CONF_ID]] = self.handle_lost_connection
             self.async_write_ha_state()
 

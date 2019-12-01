@@ -63,9 +63,9 @@ def register_websocket_handlers(hass: HomeAssistantType):
 )
 def websocket_discovery(hass, connection, msg):
     """Sensor command."""
-    msg["connection"] = connection
-
-    async_dispatcher_send(hass, NODERED_DISCOVERY.format(msg[CONF_COMPONENT]), msg)
+    async_dispatcher_send(
+        hass, NODERED_DISCOVERY.format(msg[CONF_COMPONENT]), msg, connection
+    )
     connection.send_message(result_message(msg[CONF_ID], {"success": True}))
 
 

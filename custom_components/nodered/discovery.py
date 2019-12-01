@@ -42,7 +42,7 @@ async def start_discovery(
 ) -> bool:
     """Initialize of Node-RED Discovery."""
 
-    async def async_device_message_received(msg):
+    async def async_device_message_received(msg, connection):
         """Process the received message."""
         component = msg[CONF_COMPONENT]
         server_id = msg[CONF_SERVER_ID]
@@ -75,7 +75,7 @@ async def start_discovery(
 
             data[ALREADY_DISCOVERED][discovery_hash] = component
             async_dispatcher_send(
-                hass, NODERED_DISCOVERY_UPDATED.format(discovery_hash), msg
+                hass, NODERED_DISCOVERY_UPDATED.format(discovery_hash), msg, connection
             )
         else:
             # Add component
@@ -89,7 +89,9 @@ async def start_discovery(
                     )
                     data[CONFIG_ENTRY_IS_SETUP].add(component)
 
-            async_dispatcher_send(hass, NODERED_DISCOVERY_NEW.format(component), msg)
+            async_dispatcher_send(
+                hass, NODERED_DISCOVERY_NEW.format(component), msg, connection
+            )
 
     hass.data[DOMAIN_DATA][CONFIG_ENTRY_LOCK] = asyncio.Lock()
     hass.data[DOMAIN_DATA][CONFIG_ENTRY_IS_SETUP] = set()
