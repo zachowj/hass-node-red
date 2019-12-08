@@ -7,7 +7,7 @@ This integration will give Node-RED the ability to create and update sensors in 
 
 ![Demo Sensor Gif](https://github.com/zachowj/hass-node-red/blob/master/images/sensor.gif)
 
-![Demo Switch Gif](https://github.com/zachowj/hass-node-red/blob/master/images/sensor.gif)
+![Demo Switch Gif](https://github.com/zachowj/hass-node-red/blob/master/images/switch.gif)
 
 ## Installation
 
