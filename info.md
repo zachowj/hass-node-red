@@ -5,9 +5,9 @@ This integration will give Node-RED the ability to create and update sensors in 
 * Disable and enable Node-RED flows from Home Assistant UI
 * Create webhooks in Home Assistant and handle them in Node-RED
 
-![Demo Sensor Gif](images/sensor.gif)
+![Demo Sensor Gif](https://user-images.githubusercontent.com/37859597/70391071-f9c4f200-1985-11ea-863a-4736217bdb91.gif))
 
-![Demo Switch Gif](images/switch.gif)
+![Demo Switch Gif](https://user-images.githubusercontent.com/37859597/70391074-fcbfe280-1985-11ea-9331-b045d8538371.gif)
 
 ## Installation
 
