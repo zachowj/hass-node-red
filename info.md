@@ -1,5 +1,7 @@
 This integration will give Node-RED the ability to create and update sensors in Home Assistant. Event nodes in Node-RED can be exposed to Home Assistant as switches which will allow them to enable and disable flows from the Home Assistant UI or service calls.
 
+_Must have [node-red-contrib-home-assistant-websocket](https://github.com/zachowj/node-red-contrib-home-assistant-websocket) installed in Node-RED._
+
 ## Features
 * Create and update sensors from Node-RED
 * Disable and enable Node-RED flows from Home Assistant UI
@@ -12,11 +14,12 @@ This integration will give Node-RED the ability to create and update sensors in 
 ## Installation
 
 1. Click install.
-2. In the Home Assistant UI go to "Configuration" -> "Integrations" click "+" and search for "Node-RED"
+2. Restart Home Assistant
+3. In the Home Assistant UI go to "Configuration" -> "Integrations" click "+" and search for "Node-RED"
 
 ## Configuration
 
-Once installed and added via the Integrations menu all configuration is done from Node-RED.
+Once installed and added via Integrations all configuration is done from Node-RED.
 
 ---
 

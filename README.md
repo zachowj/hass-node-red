@@ -1,10 +1,14 @@
 # hass-node-red
 
-[![License][license-shield]](LICENSE.md) [![BuyMeCoffee][buymecoffeebadge]][buymecoffee]
+[![hacs][hacsbadge]][hacs] [![releasebadge]][release] [![License][license-shield]](LICENSE.md)
+
+[![BuyMeCoffee][buymecoffeebadge]][buymecoffee]
 
 _Companion Component to [node-red-contrib-home-assistant-websocket](https://github.com/zachowj/node-red-contrib-home-assistant-websocket) to integrate Node-RED with Home Assistant._
 
 ## Installation
+
+_This integration is available in [HACS](https://github.com/custom-components/hacs) (Home Assistant Community Store)_
 
 1. Using the tool of choice open the directory (folder) for your HA configuration (where you find `configuration.yaml`).
 2. If you do not have a `custom_components` directory (folder) there, you need to create it.
@@ -29,6 +33,9 @@ custom_components/nodered/switch.py
 custom_components/nodered/websocket.py
 ```
 
+## Configuration
+
+Once installed and added via Integrations all configuration is done from Node-RED.
 
 ## Contributions are welcome!
 
@@ -37,5 +44,9 @@ If you want to contribute to this please read the [Contribution guidelines](CONT
 ***
 
 [buymecoffee]: https://www.buymeacoffee.com/zachowj
-[buymecoffeebadge]: https://img.shields.io/badge/buy%20me%20a%20coffee-donate-yellow.svg?style=for-the-badge
+[buymecoffeebadge]: https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png
 [license-shield]: https://img.shields.io/github/license/zachowj/hass-node-red.svg?style=for-the-badge
+[hacs]: https://github.com/zachowj/hass-node-red
+[hacsbadge]: https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge
+[release]: https://github.com/zachowj/hass-node-red/releases
+[releasebadge]: https://img.shields.io/github/v/release/zachowj/hass-node-red?style=for-the-badge
