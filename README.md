@@ -8,7 +8,7 @@ _Companion Component to [node-red-contrib-home-assistant-websocket](https://gith
 
 ## Installation
 
-_This integration is available in [HACS](https://github.com/custom-components/hacs) (Home Assistant Community Store)_
+_This integration is available in [HACS](https://hacs.xyz) (Home Assistant Community Store)_
 
 1. Using the tool of choice open the directory (folder) for your HA configuration (where you find `configuration.yaml`).
 2. If you do not have a `custom_components` directory (folder) there, you need to create it.
