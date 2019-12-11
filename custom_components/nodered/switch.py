@@ -1,20 +1,14 @@
 """Sensor platform for nodered."""
 import logging
 
+from homeassistant.components.websocket_api import event_message
+from homeassistant.const import CONF_ICON, CONF_ID, CONF_STATE
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.components.websocket_api import event_message
-from homeassistant.core import callback
-from homeassistant.const import CONF_ICON, CONF_ID, CONF_STATE
 
 from . import NodeRedEntity
-from .const import (
-    CONF_CONFIG,
-    CONF_CONNECTION,
-    CONF_SWITCH,
-    NODERED_DISCOVERY_NEW,
-    SWITCH_ICON,
-)
+from .const import CONF_CONFIG, CONF_SWITCH, NODERED_DISCOVERY_NEW, SWITCH_ICON
 
 _LOGGER = logging.getLogger(__name__)
 

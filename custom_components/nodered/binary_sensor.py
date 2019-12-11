@@ -1,23 +1,18 @@
 """Binary sensor platform for nodered."""
 from numbers import Number
 
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.const import (
     CONF_STATE,
-    STATE_ON,
-    STATE_OFF,
     STATE_HOME,
-    STATE_OPEN,
     STATE_LOCKED,
+    STATE_OFF,
+    STATE_ON,
+    STATE_OPEN,
 )
-
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import NodeRedEntity
-from .const import (
-    CONF_ATTRIBUTES,
-    CONF_BINARY_SENSOR,
-    NODERED_DISCOVERY_NEW,
-)
+from .const import CONF_ATTRIBUTES, CONF_BINARY_SENSOR, NODERED_DISCOVERY_NEW
 
 
 async def async_setup_entry(hass, config_entry, async_add_devices):

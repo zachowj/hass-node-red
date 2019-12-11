@@ -1,15 +1,11 @@
 """Sensor platform for nodered."""
 import logging
 
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.const import CONF_STATE
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import NodeRedEntity
-from .const import (
-    CONF_ATTRIBUTES,
-    CONF_SENSOR,
-    NODERED_DISCOVERY_NEW,
-)
+from .const import CONF_ATTRIBUTES, CONF_SENSOR, NODERED_DISCOVERY_NEW
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,4 +34,3 @@ class NodeRedSensor(NodeRedEntity):
         self._component = CONF_SENSOR
         self._state = config.get(CONF_STATE)
         self.attr = config.get(CONF_ATTRIBUTES, {})
-

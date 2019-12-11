@@ -4,15 +4,12 @@ Component to integrate with node-red.
 For more details about this component, please refer to
 https://github.com/zachowj/hass-node-red
 """
-import json
+import asyncio
 import logging
 import os
-import asyncio
 
-import homeassistant.helpers.config_validation as cv
-import voluptuous as vol
-from homeassistant import config_entries
-from homeassistant.helpers.entity import Entity
+from integrationhelper.const import CC_STARTUP_VERSION
+
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ICON,
@@ -21,26 +18,15 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import discovery
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-
-from integrationhelper.const import CC_STARTUP_VERSION
-from .websocket import register_websocket_handlers
-from .discovery import (
-    start_discovery,
-    stop_discovery,
-    ALREADY_DISCOVERED,
-    CONFIG_ENTRY_IS_SETUP,
-    NODERED_DISCOVERY,
-    CHANGE_ENTITY_TYPE,
-)
+from homeassistant.helpers.entity import Entity
 
 from .const import (
-    CONF_CONFIG,
     CONF_COMPONENT,
+    CONF_CONFIG,
     CONF_NAME,
     CONF_NODE_ID,
     CONF_REMOVE,
@@ -49,11 +35,20 @@ from .const import (
     DOMAIN,
     DOMAIN_DATA,
     ISSUE_URL,
-    NODERED_ENTITY,
     NODERED_DISCOVERY_UPDATED,
+    NODERED_ENTITY,
     REQUIRED_FILES,
     VERSION,
 )
+from .discovery import (
+    ALREADY_DISCOVERED,
+    CHANGE_ENTITY_TYPE,
+    CONFIG_ENTRY_IS_SETUP,
+    NODERED_DISCOVERY,
+    start_discovery,
+    stop_discovery,
+)
+from .websocket import register_websocket_handlers
 
 _LOGGER = logging.getLogger(__name__)
 
