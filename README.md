@@ -4,7 +4,7 @@
 
 [![BuyMeCoffee][buymecoffeebadge]][buymecoffee]
 
-_Companion Component to [node-red-contrib-home-assistant-websocket](https://github.com/zachowj/node-red-contrib-home-assistant-websocket) to integrate Node-RED with Home Assistant._
+_Companion Component to [node-red-contrib-home-assistant-websocket](https://github.com/zachowj/node-red-contrib-home-assistant-websocket) to integrate Node-RED with Home Assistant. (minimum version 0.17.1)_
 
 ## Installation
 
