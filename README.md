@@ -1,6 +1,6 @@
 # hass-node-red
 
-[![hacs][hacsbadge]][hacs] [![releasebadge]][release] [![License][license-shield]](LICENSE.md)
+[![hacs][hacsbadge]][hacs] [![releasebadge]][release] ![buildbadge] [![License][license-shield]](LICENSE.md)
 
 [![BuyMeCoffee][buymecoffeebadge]][buymecoffee]
 
@@ -50,3 +50,4 @@ If you want to contribute to this please read the [Contribution guidelines](CONT
 [hacsbadge]: https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge
 [release]: https://github.com/zachowj/hass-node-red/releases
 [releasebadge]: https://img.shields.io/github/v/release/zachowj/hass-node-red?style=for-the-badge
+[buildbadge]: https://img.shields.io/github/workflow/status/zachowj/hass-node-red/pre-commit?style=for-the-badge
