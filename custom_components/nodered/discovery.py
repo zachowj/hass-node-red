@@ -1,3 +1,4 @@
+"""Support for Node-RED discovery."""
 import asyncio
 import logging
 
@@ -102,5 +103,5 @@ async def start_discovery(
 
 
 def stop_discovery(hass: HomeAssistantType):
-    """ Remove discovery dispatcher """
+    """Remove discovery dispatcher."""
     hass.data[DOMAIN_DATA][DISCOVERY_DISPATCHED]()

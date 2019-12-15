@@ -14,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Setup Switch platform."""
+    """Set up the Switch platform."""
 
     async def async_discover(config, connection):
         await _async_setup_entity(hass, config, async_add_entities, connection)
@@ -33,6 +33,7 @@ class NodeRedSwitch(ToggleEntity, NodeRedEntity):
     """Node-RED Switch class."""
 
     def __init__(self, hass, config, connection):
+        """Initialize the switch."""
         super().__init__(hass, config)
         self._message_id = config[CONF_ID]
         self._connection = connection
@@ -70,13 +71,13 @@ class NodeRedSwitch(ToggleEntity, NodeRedEntity):
 
     @callback
     def handle_lost_connection(self):
-        """ Set availability to False when disconnected """
+        """Set availability to False when disconnected."""
         self._available = False
         self.async_write_ha_state()
 
     @callback
     def handle_discovery_update(self, msg, connection):
-        """Update entity config"""
+        """Update entity config."""
         if "remove" in msg:
             # Remove entity
             self.hass.async_create_task(self.async_remove())

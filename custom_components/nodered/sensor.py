@@ -11,7 +11,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Setup sensor platform."""
+    """Set up sensor platform."""
 
     async def async_discover(config, connection):
         await _async_setup_entity(hass, config, async_add_entities)
@@ -30,6 +30,7 @@ class NodeRedSensor(NodeRedEntity):
     """Node-RED Sensor class."""
 
     def __init__(self, hass, config):
+        """Initialize the sensor."""
         super().__init__(hass, config)
         self._component = CONF_SENSOR
         self._state = config.get(CONF_STATE)

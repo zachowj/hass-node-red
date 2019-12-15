@@ -16,7 +16,7 @@ from .const import CONF_ATTRIBUTES, CONF_BINARY_SENSOR, NODERED_DISCOVERY_NEW
 
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
-    """Setup sensor platform."""
+    """Set up sensor platform."""
 
     async def async_discover(config, connection):
         await _async_setup_entity(hass, config, async_add_devices)
@@ -46,6 +46,7 @@ class NodeRedBinarySensor(NodeRedEntity):
     )
 
     def __init__(self, hass, config):
+        """Initialize the binary sensor."""
         super().__init__(hass, config)
         self._component = CONF_BINARY_SENSOR
         self._state = config.get(CONF_STATE)

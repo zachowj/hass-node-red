@@ -121,6 +121,7 @@ class NodeRedEntity(Entity):
     """nodered Sensor class."""
 
     def __init__(self, hass, config):
+        """Initialize the entity."""
         self.hass = hass
         self.attr = {}
         self._config = config[CONF_CONFIG]
@@ -134,6 +135,7 @@ class NodeRedEntity(Entity):
     @property
     def should_poll(self) -> bool:
         """Return True if entity has to be polled for state.
+
         False if entity pushes its state to HA.
         """
         return False
@@ -183,7 +185,7 @@ class NodeRedEntity(Entity):
 
     @callback
     def handle_discovery_update(self, msg, connection):
-        """Update entity config"""
+        """Update entity config."""
         if CONF_REMOVE not in msg:
             self._config = msg[CONF_CONFIG]
             self.async_write_ha_state()
@@ -194,7 +196,7 @@ class NodeRedEntity(Entity):
             # recreate entity if component type changed
             @callback
             def recreate_entity():
-                """Create entity with new type"""
+                """Create entity with new type."""
                 del msg[CONF_REMOVE]
                 async_dispatcher_send(
                     self.hass,
