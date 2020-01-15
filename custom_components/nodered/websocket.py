@@ -28,6 +28,7 @@ from .const import (
     CONF_ATTRIBUTES,
     CONF_COMPONENT,
     CONF_CONFIG,
+    CONF_DEVICE_INFO,
     CONF_NODE_ID,
     CONF_REMOVE,
     CONF_SERVER_ID,
@@ -60,6 +61,7 @@ def register_websocket_handlers(hass: HomeAssistantType):
         vol.Optional(CONF_STATE): vol.Any(bool, str, int, float),
         vol.Optional(CONF_ATTRIBUTES): dict,
         vol.Optional(CONF_REMOVE): bool,
+        vol.Optional(CONF_DEVICE_INFO): dict,
     }
 )
 def websocket_discovery(hass, connection, msg):
