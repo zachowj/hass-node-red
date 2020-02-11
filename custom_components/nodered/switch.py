@@ -1,16 +1,47 @@
 """Sensor platform for nodered."""
 import logging
 
+import voluptuous as vol
+
 from homeassistant.components.websocket_api import event_message
-from homeassistant.const import CONF_ICON, CONF_ID, CONF_STATE
+from homeassistant.const import (
+    CONF_ENTITY_ID,
+    CONF_ICON,
+    CONF_ID,
+    CONF_STATE,
+    CONF_TYPE,
+    EVENT_AUTOMATION_TRIGGERED,
+    EVENT_STATE_CHANGED,
+)
 from homeassistant.core import callback
+from homeassistant.helpers import entity_platform
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import ToggleEntity
 
 from . import NodeRedEntity
-from .const import CONF_CONFIG, CONF_SWITCH, NODERED_DISCOVERY_NEW, SWITCH_ICON
+from .const import (
+    CONF_CONFIG,
+    CONF_DATA,
+    CONF_OUTPUT_PATH,
+    CONF_SKIP_CONDITION,
+    CONF_SWITCH,
+    CONF_TRIGGER_ENTITY_ID,
+    NODERED_DISCOVERY_NEW,
+    SERVICE_TRIGGER,
+    SWITCH_ICON,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+SERVICE_TRIGGER_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ENTITY_ID): cv.entity_ids,
+        vol.Optional(CONF_TRIGGER_ENTITY_ID): cv.entity_id,
+        vol.Optional(CONF_SKIP_CONDITION): cv.boolean,
+        vol.Optional(CONF_OUTPUT_PATH): cv.boolean,
+    }
+)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -21,6 +52,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async_dispatcher_connect(
         hass, NODERED_DISCOVERY_NEW.format(CONF_SWITCH), async_discover,
+    )
+
+    platform = entity_platform.current_platform.get()
+
+    platform.async_register_entity_service(
+        SERVICE_TRIGGER, SERVICE_TRIGGER_SCHEMA, "async_trigger_node"
     )
 
 
@@ -64,9 +101,25 @@ class NodeRedSwitch(ToggleEntity, NodeRedEntity):
         """Turn on the switch."""
         self._update_node_red(True)
 
+    async def async_trigger_node(self, **kwargs) -> None:
+        """Trigger node in Node-RED."""
+        data = {}
+        data[CONF_ENTITY_ID] = kwargs.get(CONF_TRIGGER_ENTITY_ID)
+        data[CONF_SKIP_CONDITION] = kwargs.get(CONF_SKIP_CONDITION, False)
+        data[CONF_OUTPUT_PATH] = kwargs.get(CONF_OUTPUT_PATH, True)
+
+        self._connection.send_message(
+            event_message(
+                self._message_id,
+                {CONF_TYPE: EVENT_AUTOMATION_TRIGGERED, CONF_DATA: data},
+            )
+        )
+
     def _update_node_red(self, state):
         self._connection.send_message(
-            event_message(self._message_id, {CONF_STATE: state})
+            event_message(
+                self._message_id, {CONF_TYPE: EVENT_STATE_CHANGED, CONF_STATE: state}
+            )
         )
 
     @callback

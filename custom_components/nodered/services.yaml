@@ -1,0 +1,15 @@
+trigger:
+  description: Trigger a Node-RED Event Node
+  fields:
+    entity_id:
+      description: Entity Id of the Node-RED switch
+      example: switch.nodered_motion
+    trigger_entity_id:
+      description: Entity Id to trigger the event node with. Only needed if the node is not triggered by a single entity.
+      example: sun.sun
+    skip_condition:
+      description: Skip conditions of the node (defaults to false)
+      example: true
+    output_path:
+      description: Which output of the node to use (defaults to true, the top output). Only used when skip_condition is set to true.
+      example: true
