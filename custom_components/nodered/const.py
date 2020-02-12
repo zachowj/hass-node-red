@@ -36,6 +36,7 @@ CONF_SERVER_ID = "server_id"
 CONF_SKIP_CONDITION = "skip_condition"
 CONF_SWITCH = "switch"
 CONF_TRIGGER_ENTITY_ID = "trigger_entity_id"
+CONF_VERSION = "version"
 
 NODERED_DISCOVERY = "nodered_discovery"
 NODERED_DISCOVERY_NEW = "nodered_discovery_new_{}"

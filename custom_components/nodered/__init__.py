@@ -33,6 +33,7 @@ from .const import (
     CONF_NODE_ID,
     CONF_REMOVE,
     CONF_SERVER_ID,
+    CONF_VERSION,
     DEFAULT_NAME,
     DOMAIN,
     DOMAIN_DATA,
@@ -81,6 +82,7 @@ async def async_setup_entry(hass, config_entry):
 
     register_websocket_handlers(hass)
     await start_discovery(hass, hass.data[DOMAIN_DATA], config_entry)
+    hass.bus.async_fire(DOMAIN, {CONF_TYPE: "loaded", CONF_VERSION: VERSION})
 
     return True
 
