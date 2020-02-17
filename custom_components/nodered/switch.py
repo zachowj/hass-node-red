@@ -24,6 +24,7 @@ from .const import (
     CONF_CONFIG,
     CONF_DATA,
     CONF_OUTPUT_PATH,
+    CONF_PAYLOAD,
     CONF_SKIP_CONDITION,
     CONF_SWITCH,
     CONF_TRIGGER_ENTITY_ID,
@@ -40,6 +41,7 @@ SERVICE_TRIGGER_SCHEMA = vol.Schema(
         vol.Optional(CONF_TRIGGER_ENTITY_ID): cv.entity_id,
         vol.Optional(CONF_SKIP_CONDITION): cv.boolean,
         vol.Optional(CONF_OUTPUT_PATH): cv.boolean,
+        vol.Optional(CONF_PAYLOAD): vol.Extra,
     }
 )
 
@@ -107,6 +109,8 @@ class NodeRedSwitch(ToggleEntity, NodeRedEntity):
         data[CONF_ENTITY_ID] = kwargs.get(CONF_TRIGGER_ENTITY_ID)
         data[CONF_SKIP_CONDITION] = kwargs.get(CONF_SKIP_CONDITION, False)
         data[CONF_OUTPUT_PATH] = kwargs.get(CONF_OUTPUT_PATH, True)
+        if kwargs.get(CONF_PAYLOAD) is not None:
+            data[CONF_PAYLOAD] = kwargs[CONF_PAYLOAD]
 
         self._connection.send_message(
             event_message(

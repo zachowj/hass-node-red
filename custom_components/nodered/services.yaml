@@ -13,3 +13,5 @@ trigger:
     output_path:
       description: Which output of the node to use (defaults to true, the top output). Only used when skip_condition is set to true.
       example: true
+    payload:
+      description: The payload the node will output when triggered. Work only when triggering a entity node not an event node.
