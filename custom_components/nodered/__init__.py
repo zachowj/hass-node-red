@@ -73,7 +73,7 @@ async def async_setup_entry(hass, config_entry):
     )
 
     # Check that all required files are present
-    file_check = await check_files(hass)
+    file_check = await hass.async_add_executor_job(check_files, hass)
     if not file_check:
         return False
 
@@ -87,7 +87,7 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
-async def check_files(hass):
+def check_files(hass):
     """Return bool that indicates if all files are present."""
     # Verify that the user downloaded all files.
     base = f"{hass.config.path()}/custom_components/{DOMAIN}/"
