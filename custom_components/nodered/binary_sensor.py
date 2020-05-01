@@ -4,10 +4,10 @@ from numbers import Number
 from homeassistant.const import (
     CONF_STATE,
     STATE_HOME,
-    STATE_LOCKED,
     STATE_OFF,
     STATE_ON,
     STATE_OPEN,
+    STATE_UNLOCKED,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -42,7 +42,7 @@ class NodeRedBinarySensor(NodeRedEntity):
         STATE_ON,
         STATE_OPEN,
         STATE_HOME,
-        STATE_LOCKED,
+        STATE_UNLOCKED,
     )
 
     def __init__(self, hass, config):
