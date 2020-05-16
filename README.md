@@ -21,7 +21,7 @@ _This integration is available in [HACS](https://hacs.xyz) (Home Assistant Commu
 Using your HA configuration directory (folder) as a starting point you should now also have this:
 
 ```text
-custom_components/nodered/.translations/en.json
+custom_components/nodered/translations/en.json
 custom_components/nodered/__init__.py
 custom_components/nodered/binary_sensor.py
 custom_components/nodered/config_flow.py
