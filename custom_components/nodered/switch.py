@@ -10,7 +10,6 @@ from homeassistant.const import (
     CONF_ID,
     CONF_STATE,
     CONF_TYPE,
-    EVENT_AUTOMATION_TRIGGERED,
     EVENT_STATE_CHANGED,
 )
 from homeassistant.core import callback
@@ -44,6 +43,7 @@ SERVICE_TRIGGER_SCHEMA = vol.Schema(
         vol.Optional(CONF_PAYLOAD): vol.Extra,
     }
 )
+EVENT_TRIGGER_NODE = "automation_triggered"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -114,8 +114,7 @@ class NodeRedSwitch(ToggleEntity, NodeRedEntity):
 
         self._connection.send_message(
             event_message(
-                self._message_id,
-                {CONF_TYPE: EVENT_AUTOMATION_TRIGGERED, CONF_DATA: data},
+                self._message_id, {CONF_TYPE: EVENT_TRIGGER_NODE, CONF_DATA: data},
             )
         )
 
