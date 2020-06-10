@@ -2,7 +2,7 @@
 # Base component constants
 DOMAIN = "nodered"
 DOMAIN_DATA = f"{DOMAIN}_data"
-VERSION = "0.4.3"
+VERSION = "0.4.4"
 REQUIRED_FILES = [
     "translations/en.json",
     "binary_sensor.py",
