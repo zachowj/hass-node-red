@@ -3,20 +3,8 @@
 DOMAIN = "nodered"
 DOMAIN_DATA = f"{DOMAIN}_data"
 VERSION = "0.4.4"
-REQUIRED_FILES = [
-    "translations/en.json",
-    "binary_sensor.py",
-    "config_flow.py",
-    "const.py",
-    "discovery.py",
-    "manifest.json",
-    "sensor.py",
-    "services.yaml",
-    "switch.py",
-    "websocket.py",
-]
+
 ISSUE_URL = "https://github.com/zachowj/hass-node-red/issues"
-ATTRIBUTION = "Data from this is provided by Node-RED."
 
 # Configuration
 CONF_ATTRIBUTES = "attributes"
@@ -47,5 +35,15 @@ NODERED_ENTITY = "nodered_entity_{}_{}"
 SERVICE_TRIGGER = "trigger"
 
 # Defaults
-DEFAULT_NAME = DOMAIN
+NAME = DOMAIN
 SWITCH_ICON = "mdi:electric-switch-closed"
+
+STARTUP_MESSAGE = f"""
+-------------------------------------------------------------------
+{NAME}
+Version: {VERSION}
+This is a custom integration!
+If you have any issues with this you need to open an issue here:
+{ISSUE_URL}
+-------------------------------------------------------------------
+"""
