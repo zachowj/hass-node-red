@@ -24,6 +24,12 @@
             "type": "shell",
             "command": "container set-version",
             "problemMatcher": []
+        },
+        {
+            "label": "Install pre-commit",
+            "type": "shell",
+            "command": "pip install --ignore-installed pre-commit && pre-commit install",
+            "problemMatcher": []
         }
     ]
 }
