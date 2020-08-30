@@ -224,7 +224,9 @@ class NodeRedEntity(Entity):
         # Remove the entity_id from the entity registry
         registry = await self.hass.helpers.entity_registry.async_get_registry()
         entity_id = registry.async_get_entity_id(
-            self._component, DOMAIN, self.unique_id,
+            self._component,
+            DOMAIN,
+            self.unique_id,
         )
         if entity_id:
             registry.async_remove(entity_id)

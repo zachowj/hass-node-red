@@ -28,4 +28,7 @@ class NodeRedFlowHandler(config_entries.ConfigFlow):
 
         if user_input is None:
             return self.async_show_form(step_id="user")
-        return self.async_create_entry(title="Node-RED", data={},)
+        return self.async_create_entry(
+            title="Node-RED",
+            data={},
+        )

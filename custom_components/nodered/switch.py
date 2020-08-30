@@ -53,7 +53,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         await _async_setup_entity(hass, config, async_add_entities, connection)
 
     async_dispatcher_connect(
-        hass, NODERED_DISCOVERY_NEW.format(CONF_SWITCH), async_discover,
+        hass,
+        NODERED_DISCOVERY_NEW.format(CONF_SWITCH),
+        async_discover,
     )
 
     platform = entity_platform.current_platform.get()
@@ -114,7 +116,8 @@ class NodeRedSwitch(ToggleEntity, NodeRedEntity):
 
         self._connection.send_message(
             event_message(
-                self._message_id, {CONF_TYPE: EVENT_TRIGGER_NODE, CONF_DATA: data},
+                self._message_id,
+                {CONF_TYPE: EVENT_TRIGGER_NODE, CONF_DATA: data},
             )
         )
 

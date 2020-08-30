@@ -17,7 +17,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         await _async_setup_entity(hass, config, async_add_entities)
 
     async_dispatcher_connect(
-        hass, NODERED_DISCOVERY_NEW.format(CONF_SENSOR), async_discover,
+        hass,
+        NODERED_DISCOVERY_NEW.format(CONF_SENSOR),
+        async_discover,
     )
 
 

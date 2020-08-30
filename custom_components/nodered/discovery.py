@@ -98,7 +98,9 @@ async def start_discovery(
     hass.data[DOMAIN_DATA][CONFIG_ENTRY_IS_SETUP] = set()
 
     hass.data[DOMAIN_DATA][DISCOVERY_DISPATCHED] = async_dispatcher_connect(
-        hass, NODERED_DISCOVERY, async_device_message_received,
+        hass,
+        NODERED_DISCOVERY,
+        async_device_message_received,
     )
 
 
