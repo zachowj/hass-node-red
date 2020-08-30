@@ -2,7 +2,7 @@ name: Cron actions
 
 on:
   schedule:
-    - cron:  '0 0 * * *'
+    - cron:  '0 0 * * 0'
 
 jobs:
   validate:
