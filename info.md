@@ -15,7 +15,8 @@ _Must have [node-red-contrib-home-assistant-websocket](https://github.com/zachow
 
 1. Click install.
 2. Restart Home Assistant
-3. In the Home Assistant UI go to "Configuration" -> "Integrations" click "+" and search for "Node-RED"
+4. Refresh your browser window (bug in HA where it doesn't update the integration list after a reboot)
+5. In the Home Assistant UI go to "Configuration" -> "Integrations" click "+" and search for "Node-RED"
 
 ## Configuration
 
