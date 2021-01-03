@@ -11,7 +11,7 @@ jobs:
         - uses: "actions/checkout@v2"
 
         - name: HACS validation
-          uses: "hacs/integration/action@master"
+          uses: "hacs/integration/action@main"
           with:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             CATEGORY: "integration"
@@ -28,10 +28,4 @@ jobs:
       name: Set up Python 3.8
       with:
         python-version: 3.8
-    - name: set PY
-      run: echo "::set-env name=PY::$(python --version --version | sha256sum | cut -d' ' -f1)"
-    - uses: actions/cache@v1
-      with:
-        path: ~/.cache/pre-commit
-        key: pre-commit|${{ env.PY }}|${{ hashFiles('.pre-commit-config.yaml') }}
-    - uses: pre-commit/action@v1.0.0
+    - uses: pre-commit/action@v2
