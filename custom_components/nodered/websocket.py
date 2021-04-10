@@ -122,7 +122,11 @@ async def websocket_webhook(hass, connection, msg):
         except ValueError:
             payload = body
 
-        data = {"payload": payload, "headers": dict(request.headers)}
+        data = {
+            "payload": payload,
+            "headers": dict(request.headers),
+            "params": dict(request.rel_url.query),
+        }
 
         _LOGGER.debug(f"Webhook received {id[:15]}..: {data}")
         connection.send_message(event_message(msg[CONF_ID], {"data": data}))
