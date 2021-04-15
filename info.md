@@ -3,13 +3,10 @@ This integration will give Node-RED the ability to create/update binary sensonrs
 _Must have [node-red-contrib-home-assistant-websocket](https://github.com/zachowj/node-red-contrib-home-assistant-websocket) installed in Node-RED. (minimum version 0.20)_
 
 ## Features
-* Create and update sensors from Node-RED
+* Create and update binary sensors, sensors, and switches from Node-RED
 * Disable and enable Node-RED flows from Home Assistant UI
 * Create webhooks in Home Assistant and handle them in Node-RED
-
-![Demo Sensor Gif](https://user-images.githubusercontent.com/37859597/70391071-f9c4f200-1985-11ea-863a-4736217bdb91.gif)
-
-![Demo Switch Gif](https://user-images.githubusercontent.com/37859597/70391074-fcbfe280-1985-11ea-9331-b045d8538371.gif)
+* Use Device triggers and action from Node-RED
 
 ## Installation
 
