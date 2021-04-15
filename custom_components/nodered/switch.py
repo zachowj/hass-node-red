@@ -1,4 +1,5 @@
 """Sensor platform for nodered."""
+import json
 import logging
 
 import voluptuous as vol
@@ -13,20 +14,25 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import entity_platform
+from homeassistant.helpers import entity_platform, trigger
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.json import ExtendedJSONEncoder
 
 from . import NodeRedEntity
 from .const import (
     CONF_CONFIG,
     CONF_DATA,
+    CONF_DEVICE_TRIGGER,
     CONF_OUTPUT_PATH,
     CONF_PAYLOAD,
+    CONF_REMOVE,
     CONF_SKIP_CONDITION,
+    CONF_SUB_TYPE,
     CONF_SWITCH,
     CONF_TRIGGER_ENTITY_ID,
+    DOMAIN,
     NODERED_DISCOVERY_NEW,
     SERVICE_TRIGGER,
     SWITCH_ICON,
@@ -44,6 +50,10 @@ SERVICE_TRIGGER_SCHEMA = vol.Schema(
     }
 )
 EVENT_TRIGGER_NODE = "automation_triggered"
+EVENT_DEVICE_TRIGGER = "device_trigger"
+
+TYPE_SWITCH = "switch"
+TYPE_DEVICE_TRIGGER = "device_trigger"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -67,7 +77,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 async def _async_setup_entity(hass, config, async_add_entities, connection):
     """Set up the Node-RED Switch."""
-    async_add_entities([NodeRedSwitch(hass, config, connection)])
+
+    switch_type = config.get(CONF_SUB_TYPE, TYPE_SWITCH)
+    switch_class = (
+        NodeRedDeviceTrigger if switch_type == TYPE_DEVICE_TRIGGER else NodeRedSwitch
+    )
+    async_add_entities([switch_class(hass, config, connection)])
 
 
 class NodeRedSwitch(ToggleEntity, NodeRedEntity):
@@ -137,7 +152,7 @@ class NodeRedSwitch(ToggleEntity, NodeRedEntity):
     @callback
     def handle_discovery_update(self, msg, connection):
         """Update entity config."""
-        if "remove" in msg:
+        if CONF_REMOVE in msg:
             # Remove entity
             self.hass.async_create_task(self.async_remove())
         else:
@@ -154,3 +169,68 @@ class NodeRedSwitch(ToggleEntity, NodeRedEntity):
         await super().async_added_to_hass()
 
         self._connection.subscriptions[self._message_id] = self.handle_lost_connection
+
+
+class NodeRedDeviceTrigger(NodeRedSwitch):
+    """Node-RED Device Trigger class."""
+
+    def __init__(self, hass, config, connection):
+        """Initialize the switch."""
+        super().__init__(hass, config, connection)
+        self._trigger_config = config[CONF_DEVICE_TRIGGER]
+        self._unsubscribe_device_trigger = None
+
+    @callback
+    def handle_lost_connection(self):
+        """Set remove device trigger when disconnected."""
+        super().handle_lost_connection()
+        self.remove_device_trigger()
+
+    async def add_device_trigger(self):
+        """Validate device trigger."""
+
+        @callback
+        def forward_trigger(event, context=None):
+            """Forward events to websocket."""
+            message = event_message(
+                self._message_id,
+                {"type": EVENT_DEVICE_TRIGGER, "data": event["trigger"]},
+            )
+            self._connection.send_message(
+                json.dumps(message, cls=ExtendedJSONEncoder, allow_nan=False)
+            )
+
+        trigger_config = await trigger.async_validate_trigger_config(
+            self.hass, [self._trigger_config]
+        )
+        self._unsubscribe_device_trigger = await trigger.async_initialize_triggers(
+            self.hass,
+            trigger_config,
+            forward_trigger,
+            DOMAIN,
+            DOMAIN,
+            _LOGGER.log,
+        )
+
+    def remove_device_trigger(self):
+        """Remove device trigger."""
+        if self._unsubscribe_device_trigger is not None:
+            _LOGGER.info(f"Removing device triger - {self._node_id}")
+            self._unsubscribe_device_trigger()
+            self._unsubscribe_device_trigger = None
+
+    @callback
+    async def handle_discovery_update(self, msg, connection):
+        """Update entity config."""
+        self.remove_device_trigger()
+        if CONF_REMOVE not in msg:
+            self._trigger_config = msg[CONF_DEVICE_TRIGGER]
+            await self.add_device_trigger()
+
+        super().handle_discovery_update(msg, connection)
+
+    async def async_added_to_hass(self):
+        """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
+
+        await self.add_device_trigger()

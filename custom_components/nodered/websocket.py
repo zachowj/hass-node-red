@@ -4,15 +4,23 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components import device_automation
+from homeassistant.components.device_automation.exceptions import (
+    DeviceNotFound,
+    InvalidDeviceAutomationConfig,
+)
+from homeassistant.components.device_automation.trigger import TRIGGER_SCHEMA
 from homeassistant.components.websocket_api import (
     async_register_command,
     async_response,
+    error_message,
     event_message,
     require_admin,
     result_message,
     websocket_command,
 )
 from homeassistant.const import (
+    CONF_DOMAIN,
     CONF_ID,
     CONF_NAME,
     CONF_STATE,
@@ -20,7 +28,7 @@ from homeassistant.const import (
     CONF_WEBHOOK_ID,
 )
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -29,9 +37,11 @@ from .const import (
     CONF_COMPONENT,
     CONF_CONFIG,
     CONF_DEVICE_INFO,
+    CONF_DEVICE_TRIGGER,
     CONF_NODE_ID,
     CONF_REMOVE,
     CONF_SERVER_ID,
+    CONF_SUB_TYPE,
     DOMAIN,
     NODERED_DISCOVERY,
     NODERED_ENTITY,
@@ -48,6 +58,33 @@ def register_websocket_handlers(hass: HomeAssistantType):
     async_register_command(hass, websocket_webhook)
     async_register_command(hass, websocket_discovery)
     async_register_command(hass, websocket_entity)
+    async_register_command(hass, websocket_device_action)
+
+
+@require_admin
+@async_response
+@websocket_command(
+    {
+        vol.Required(CONF_TYPE): "nodered/device_action",
+        vol.Required("action"): cv.DEVICE_ACTION_SCHEMA,
+    }
+)
+async def websocket_device_action(hass, connection, msg):
+    """Sensor command."""
+    context = connection.context(msg)
+    platform = await device_automation.async_get_device_automation_platform(
+        hass, msg["action"][CONF_DOMAIN], "action"
+    )
+
+    try:
+        await platform.async_call_action_from_config(hass, msg["action"], {}, context)
+        connection.send_message(result_message(msg[CONF_ID], {"success": True}))
+    except InvalidDeviceAutomationConfig as err:
+        connection.send_message(error_message(msg[CONF_ID], "invalid_config", str(err)))
+    except DeviceNotFound as err:
+        connection.send_message(
+            error_message(msg[CONF_ID], "device_not_found", str(err))
+        )
 
 
 @require_admin
@@ -62,6 +99,8 @@ def register_websocket_handlers(hass: HomeAssistantType):
         vol.Optional(CONF_ATTRIBUTES): dict,
         vol.Optional(CONF_REMOVE): bool,
         vol.Optional(CONF_DEVICE_INFO): dict,
+        vol.Optional(CONF_DEVICE_TRIGGER): TRIGGER_SCHEMA,
+        vol.Optional(CONF_SUB_TYPE): str,
     }
 )
 def websocket_discovery(hass, connection, msg):
