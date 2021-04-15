@@ -9,7 +9,7 @@ _Companion Component to [node-red-contrib-home-assistant-websocket](https://gith
 ## Features
 * Create and update binary sensors, sensors, and switches from Node-RED
 * Disable and enable Node-RED flows from Home Assistant UI
-* Create webhooks in Home Assistant and handle them in Node-RED
+* Create Home Assistant webhooks and handle them in Node-RED
 * Use Device triggers and action from Node-RED
 
 ## Installation
