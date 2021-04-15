@@ -18,7 +18,6 @@ from homeassistant.helpers import entity_platform, trigger
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.helpers.json import ExtendedJSONEncoder
 
 from . import NodeRedEntity
 from .const import (
@@ -37,6 +36,7 @@ from .const import (
     SERVICE_TRIGGER,
     SWITCH_ICON,
 )
+from .utils import NodeRedJSONEncoder
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -197,7 +197,7 @@ class NodeRedDeviceTrigger(NodeRedSwitch):
                 {"type": EVENT_DEVICE_TRIGGER, "data": event["trigger"]},
             )
             self._connection.send_message(
-                json.dumps(message, cls=ExtendedJSONEncoder, allow_nan=False)
+                json.dumps(message, cls=NodeRedJSONEncoder, allow_nan=False)
             )
 
         trigger_config = await trigger.async_validate_trigger_config(
