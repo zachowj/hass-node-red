@@ -2,12 +2,12 @@
     "config": {
         "step": {
             "user": {
-                "title": "Node-RED",
-                "description": "Are you sure you want to set up Node-RED?"
+                "title": "Node-RED Companion",
+                "description": "Are you sure you want to set up Node-RED Companion?"
             }
         },
         "abort": {
-            "single_instance_allowed": "Only a single configuration of Node-RED is allowed."
+            "single_instance_allowed": "Only a single configuration of Node-RED Companion is allowed."
         }
     }
 }

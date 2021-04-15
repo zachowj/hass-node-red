@@ -1,4 +1,4 @@
-# hass-node-red
+# Node-RED Companion Integration
 
 [![hacs][hacsbadge]][hacs] [![releasebadge]][release] ![buildbadge] [![License][license-shield]](LICENSE.md)
 
@@ -17,7 +17,7 @@ _This integration is available in [HACS](https://hacs.xyz) (Home Assistant Commu
 5. Place the files you downloaded in the new directory (folder) you created.
 6. Restart Home Assistant
 7. Refresh your browser window (bug in HA where it doesn't update the integration list after a reboot)
-8. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Node-RED"
+8. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Node-RED Companion"
 
 Using your HA configuration directory (folder) as a starting point you should now also have this:
 

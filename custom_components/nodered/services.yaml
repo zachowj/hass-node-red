@@ -1,5 +1,5 @@
 trigger:
-  description: Trigger a Node-RED Event Node
+  description: Trigger a Node-RED Node
   fields:
     entity_id:
       description: Entity Id of the Node-RED switch
