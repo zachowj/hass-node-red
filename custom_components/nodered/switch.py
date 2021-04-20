@@ -200,17 +200,22 @@ class NodeRedDeviceTrigger(NodeRedSwitch):
                 json.dumps(message, cls=NodeRedJSONEncoder, allow_nan=False)
             )
 
-        trigger_config = await trigger.async_validate_trigger_config(
-            self.hass, [self._trigger_config]
-        )
-        self._unsubscribe_device_trigger = await trigger.async_initialize_triggers(
-            self.hass,
-            trigger_config,
-            forward_trigger,
-            DOMAIN,
-            DOMAIN,
-            _LOGGER.log,
-        )
+        try:
+            trigger_config = await trigger.async_validate_trigger_config(
+                self.hass, [self._trigger_config]
+            )
+            self._unsubscribe_device_trigger = await trigger.async_initialize_triggers(
+                self.hass,
+                trigger_config,
+                forward_trigger,
+                DOMAIN,
+                DOMAIN,
+                _LOGGER.log,
+            )
+        except vol.MultipleInvalid as ex:
+            _LOGGER.error(
+                f"Error initializing device trigger '{self._node_id}': {str(ex)}",
+            )
 
     def remove_device_trigger(self):
         """Remove device trigger."""
