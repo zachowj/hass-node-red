@@ -219,16 +219,17 @@ class NodeRedDeviceTrigger(NodeRedSwitch):
 
     def remove_device_trigger(self):
         """Remove device trigger."""
+        self._trigger_config = None
         if self._unsubscribe_device_trigger is not None:
-            _LOGGER.info(f"Removing device triger - {self._node_id}")
+            _LOGGER.info(f"removed device triger - {self._server_id} {self._node_id}")
             self._unsubscribe_device_trigger()
             self._unsubscribe_device_trigger = None
 
     @callback
     async def handle_discovery_update(self, msg, connection):
         """Update entity config."""
-        self.remove_device_trigger()
-        if CONF_REMOVE not in msg:
+        if CONF_REMOVE not in msg and self._trigger_config != msg[CONF_DEVICE_TRIGGER]:
+            self.remove_device_trigger()
             self._trigger_config = msg[CONF_DEVICE_TRIGGER]
             await self.add_device_trigger()
 
@@ -239,3 +240,8 @@ class NodeRedDeviceTrigger(NodeRedSwitch):
         await super().async_added_to_hass()
 
         await self.add_device_trigger()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass."""
+        self.remove_device_trigger()
+        await super().async_will_remove_from_hass()
