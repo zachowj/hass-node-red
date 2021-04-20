@@ -37,4 +37,3 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           release-type: python
-          package-name: release-please-action
