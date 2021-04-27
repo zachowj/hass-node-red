@@ -1,7 +1,7 @@
 {
   "domain": "nodered",
   "name": "Node-RED Companion",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "documentation": "https://zachowj.github.io/node-red-contrib-home-assistant-websocket/guide/custom_integration/",
   "issue_tracker": "https://github.com/zachowj/hass-node-red/issues",
   "dependencies": [],
