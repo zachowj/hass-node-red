@@ -164,7 +164,7 @@ async def websocket_webhook(hass, connection, msg):
         data = {
             "payload": payload,
             "headers": dict(request.headers),
-            "params": dict(request.rel_url.query),
+            "params": dict(request.query),
         }
 
         _LOGGER.debug(f"Webhook received {id[:15]}..: {data}")
