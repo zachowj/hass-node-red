@@ -1,53 +1,60 @@
-# Devcontainer
+## Developing with Visual Studio Code + devcontainer
 
-_The easiest way to contribute to and/or test this repository._
+The easiest way to get started with custom integration development is to use Visual Studio Code with devcontainers. This approach will create a preconfigured development environment with all the tools you need.
 
-## Requirements
+In the container you will have a dedicated Home Assistant core instance running with your custom component code. You can configure this instance by updating the `./devcontainer/configuration.yaml` file.
+
+**Prerequisites**
 
 - [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
-- [docker](https://docs.docker.com/install/)
-- [VS Code](https://code.visualstudio.com/)
-- [Remote - Containers (VSC Extention)](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+- Docker
+  -  For Linux, macOS, or Windows 10 Pro/Enterprise/Education use the [current release version of Docker](https://docs.docker.com/install/)
+  -   Windows 10 Home requires [WSL 2](https://docs.microsoft.com/windows/wsl/wsl2-install) and the current Edge version of Docker Desktop (see instructions [here](https://docs.docker.com/docker-for-windows/wsl-tech-preview/)). This can also be used for Windows Pro/Enterprise/Education.
+- [Visual Studio code](https://code.visualstudio.com/)
+- [Remote - Containers (VSC Extension)][extension-link]
 
 [More info about requirements and devcontainer in general](https://code.visualstudio.com/docs/remote/containers#_getting-started)
 
-## How to use Devcontainer for development/test
+[extension-link]: https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers
 
-1. Make sure your computer meets the requirements.
-1. Fork this repository.
-1. Clone the repository to your computer.
-1. Open the repository using VS Code.
+**Getting started:**
 
-When you open this repository with VSCode and your computer meets the requirements you are asked to "Reopen in Container", do that.
+1. Fork the repository.
+2. Clone the repository to your computer.
+3. Open the repository using Visual Studio code.
 
-![reopen](images/reopen.png)
+When you open this repository with Visual Studio code you are asked to "Reopen in Container", this will start the build of the container.
 
-If you don't see this notification, open the command pallet (ctrl+shift+p) and select `Remote-Containers: Reopen Folder in Container`.
+_If you don't see this notification, open the command palette and select `Remote-Containers: Reopen Folder in Container`._
 
-_It will now build the devcontainer._
+### Tasks
 
-The container have some "tasks" to help you testing your changes.
+The devcontainer comes with some useful tasks to help you with development, you can start these tasks by opening the command palette and select `Tasks: Run Task` then select the task you want to run.
 
-## Custom Tasks in this repository
+When a task is currently running (like `Run Home Assistant on port 9123` for the docs), it can be restarted by opening the command palette and selecting `Tasks: Restart Running Task`, then select the task you want to restart.
 
-_Start "tasks" by opening the the command pallet (ctrl+shift+p) and select `Tasks: Run Task`_
+The available tasks are:
 
-Running tasks like `Start Home Assistant on port 8124` can be restarted by opening the the command pallet (ctrl+shift+p) and select `Tasks: Restart Running Task`, then select the task you want to restart.
+Task | Description
+-- | --
+Run Home Assistant on port 9123 | Launch Home Assistant with your custom component code and the configuration defined in `.devcontainer/configuration.yaml`.
+Run Home Assistant configuration against /config | Check the configuration.
+Upgrade Home Assistant to latest dev | Upgrade the Home Assistant core version in the container to the latest version of the `dev` branch.
+Install a specific version of Home Assistant | Install a specific version of Home Assistant core in the container.
 
-### Start Home Assistant on port 8124
+### Step by Step debugging
 
-This will copy the configuration and the integration files to the expected location in the container.
+With the development container,
+you can test your custom component in Home Assistant with step by step debugging.
 
-And start up Home Assistant on [port 8124.](http://localhost:8124)
+You need to modify the `configuration.yaml` file in `.devcontainer` folder
+by uncommenting the line:
 
-### Upgrade Home Assistant to latest dev
+```yaml
+# debugpy:
+```
 
-This will upgrade Home Assistant to the latest dev version.
+Then launch the task `Run Home Assistant on port 9123`, and launch the debbuger
+with the existing debugging configuration `Python: Attach Local`.
 
-### Set Home Assistant Version
-
-This allows you to specify a version of Home Assistant to install inside the devcontainer.
-
-### Home Assistant Config Check
-
-This runs a config check to make sure your config is valid.
+For more information, look at [the Remote Python Debugger integration documentation](https://www.home-assistant.io/integrations/debugpy/).
