@@ -148,11 +148,6 @@ class NodeRedEntity(Entity):
         return self._config.get(CONF_UNIT_OF_MEASUREMENT)
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
-        """Return the state attributes."""
-        return self.attr
-
-    @property
     def device_info(self) -> Optional[Dict[str, Any]]:
         """Return device specific attributes."""
         info = None
