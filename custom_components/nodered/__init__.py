@@ -8,6 +8,8 @@ import asyncio
 import logging
 from typing import Any, Dict, Optional, Union
 
+from homeassistant.const import MAJOR_VERSION, MINOR_VERSION
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -108,6 +110,12 @@ class NodeRedEntity(Entity):
         self._node_id = config[CONF_NODE_ID]
         self._remove_signal_discovery_update = None
         self._remove_signal_entity_update = None
+
+        # changed property name since 2021.12
+        if MAJOR_VERSION >= 2022 or (MAJOR_VERSION == 2021 and MINOR_VERSION == 12):
+            NodeRedEntity.extra_state_attributes = property(lambda self: self.attrs)
+        else:
+            NodeRedEntity.device_state_attributes = property(lambda self: self.attrs)
 
     @property
     def should_poll(self) -> bool:
