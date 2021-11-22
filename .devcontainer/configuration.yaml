@@ -4,3 +4,5 @@ logger:
   logs:
     # homeassistant.components.websocket_api: debug
     custom_components.nodered: debug
+
+automation: !include automations.yaml
