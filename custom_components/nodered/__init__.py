@@ -113,9 +113,9 @@ class NodeRedEntity(Entity):
 
         # changed property name since 2021.12
         if MAJOR_VERSION >= 2022 or (MAJOR_VERSION == 2021 and MINOR_VERSION == 12):
-            NodeRedEntity.extra_state_attributes = property(lambda self: self.attrs)
+            NodeRedEntity.extra_state_attributes = property(lambda self: self.attr)
         else:
-            NodeRedEntity.device_state_attributes = property(lambda self: self.attrs)
+            NodeRedEntity.device_state_attributes = property(lambda self: self.attr)
 
     @property
     def should_poll(self) -> bool:
