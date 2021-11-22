@@ -2,8 +2,6 @@
 import json
 import logging
 
-import voluptuous as vol
-
 from homeassistant.components import device_automation
 from homeassistant.components.device_automation.exceptions import (
     DeviceNotFound,
@@ -31,6 +29,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import HomeAssistantType
+import voluptuous as vol
 
 from .const import (
     CONF_ATTRIBUTES,

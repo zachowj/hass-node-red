@@ -2,8 +2,6 @@
 import json
 import logging
 
-import voluptuous as vol
-
 from homeassistant.components.websocket_api import event_message
 from homeassistant.const import (
     CONF_ENTITY_ID,
@@ -18,6 +16,7 @@ from homeassistant.helpers import entity_platform, trigger
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import ToggleEntity
+import voluptuous as vol
 
 from . import NodeRedEntity
 from .const import (
