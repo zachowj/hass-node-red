@@ -8,8 +8,6 @@ import asyncio
 import logging
 from typing import Any, Dict, Optional, Union
 
-from homeassistant.const import MAJOR_VERSION, MINOR_VERSION
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -17,6 +15,8 @@ from homeassistant.const import (
     CONF_STATE,
     CONF_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
+    MAJOR_VERSION,
+    MINOR_VERSION,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import (
