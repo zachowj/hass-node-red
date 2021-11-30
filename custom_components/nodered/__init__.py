@@ -15,6 +15,8 @@ from homeassistant.const import (
     CONF_STATE,
     CONF_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
+    MAJOR_VERSION,
+    MINOR_VERSION,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import (
@@ -109,6 +111,12 @@ class NodeRedEntity(Entity):
         self._remove_signal_discovery_update = None
         self._remove_signal_entity_update = None
 
+        # changed property name since 2021.12
+        if MAJOR_VERSION >= 2022 or (MAJOR_VERSION == 2021 and MINOR_VERSION == 12):
+            NodeRedEntity.extra_state_attributes = property(lambda self: self.attr)
+        else:
+            NodeRedEntity.device_state_attributes = property(lambda self: self.attr)
+
     @property
     def should_poll(self) -> bool:
         """Return True if entity has to be polled for state.
@@ -146,11 +154,6 @@ class NodeRedEntity(Entity):
     def unit_of_measurement(self) -> Optional[str]:
         """Return the unit this state is expressed in."""
         return self._config.get(CONF_UNIT_OF_MEASUREMENT)
-
-    @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
-        """Return the state attributes."""
-        return self.attr
 
     @property
     def device_info(self) -> Optional[Dict[str, Any]]:
