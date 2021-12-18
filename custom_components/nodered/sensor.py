@@ -1,11 +1,20 @@
 """Sensor platform for nodered."""
+from datetime import datetime
 import logging
+from typing import Optional
 
+from dateutil import parser
 from homeassistant.const import CONF_STATE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import NodeRedEntity
-from .const import CONF_ATTRIBUTES, CONF_SENSOR, NODERED_DISCOVERY_NEW
+from .const import (
+    CONF_ATTRIBUTES,
+    CONF_LAST_RESET,
+    CONF_SENSOR,
+    CONF_STATE_CLASS,
+    NODERED_DISCOVERY_NEW,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,3 +46,16 @@ class NodeRedSensor(NodeRedEntity):
         self._component = CONF_SENSOR
         self._state = config.get(CONF_STATE)
         self.attr = config.get(CONF_ATTRIBUTES, {})
+
+    @property
+    def state_class(self) -> Optional[str]:
+        """Return the state class."""
+        return self._config.get(CONF_STATE_CLASS)
+
+    @property
+    def last_reset(self) -> Optional[datetime]:
+        """Return the last reset."""
+        try:
+            return parser.parse(self._config.get(CONF_LAST_RESET))
+        except (ValueError, TypeError):
+            return None
