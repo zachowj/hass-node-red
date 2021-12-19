@@ -1,10 +1,10 @@
 """Binary sensor platform for nodered."""
 from numbers import Number
 
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import (
     CONF_STATE,
     STATE_HOME,
-    STATE_OFF,
     STATE_ON,
     STATE_OPEN,
     STATE_UNLOCKED,
@@ -33,7 +33,7 @@ async def _async_setup_entity(hass, config, async_add_devices):
     async_add_devices([NodeRedBinarySensor(hass, config)])
 
 
-class NodeRedBinarySensor(NodeRedEntity):
+class NodeRedBinarySensor(NodeRedEntity, BinarySensorEntity):
     """Node-RED binary-sensor class."""
 
     on_states = (
@@ -46,11 +46,12 @@ class NodeRedBinarySensor(NodeRedEntity):
         STATE_HOME,
         STATE_UNLOCKED,
     )
+    _component = CONF_BINARY_SENSOR
 
     def __init__(self, hass, config):
         """Initialize the binary sensor."""
         super().__init__(hass, config)
-        self._component = CONF_BINARY_SENSOR
+
         self._state = config.get(CONF_STATE)
         self.attr = config.get(CONF_ATTRIBUTES, {})
 
@@ -69,8 +70,3 @@ class NodeRedBinarySensor(NodeRedEntity):
             return value != 0
 
         return False
-
-    @property
-    def state(self):
-        """Return the state of the binary sensor."""
-        return STATE_ON if self.is_on else STATE_OFF

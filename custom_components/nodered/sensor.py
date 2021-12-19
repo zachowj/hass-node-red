@@ -1,11 +1,13 @@
 """Sensor platform for nodered."""
-from datetime import datetime
+from datetime import date, datetime
 import logging
-from typing import Optional
+from typing import Optional, Union
 
 from dateutil import parser
-from homeassistant.const import CONF_STATE
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import CONF_STATE, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.typing import StateType
 
 from . import NodeRedEntity
 from .const import (
@@ -37,15 +39,26 @@ async def _async_setup_entity(hass, config, async_add_entities):
     async_add_entities([NodeRedSensor(hass, config)])
 
 
-class NodeRedSensor(NodeRedEntity):
+class NodeRedSensor(NodeRedEntity, SensorEntity):
     """Node-RED Sensor class."""
+
+    _component = CONF_SENSOR
 
     def __init__(self, hass, config):
         """Initialize the sensor."""
         super().__init__(hass, config)
-        self._component = CONF_SENSOR
         self._state = config.get(CONF_STATE)
         self.attr = config.get(CONF_ATTRIBUTES, {})
+
+    @property
+    def native_value(self) -> Union[StateType, date, datetime]:
+        """Return the state of the sensor."""
+        return self._state
+
+    @property
+    def native_unit_of_measurement(self) -> Union[str, None]:
+        """Return the unit of measurement of this entity, if any."""
+        return self._config.get(CONF_UNIT_OF_MEASUREMENT)
 
     @property
     def state_class(self) -> Optional[str]:
