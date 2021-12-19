@@ -4,13 +4,18 @@
 
 [![BuyMeCoffee][buymecoffeebadge]][buymecoffee]
 
-_Companion Component to [node-red-contrib-home-assistant-websocket](https://github.com/zachowj/node-red-contrib-home-assistant-websocket) to integrate Node-RED with Home Assistant. (minimum version 0.20)_
+_Companion Component to [node-red-contrib-home-assistant-websocket](https://github.com/zachowj/node-red-contrib-home-assistant-websocket) to integrate Node-RED with Home Assistant._
 
 ## Features
-* Create and update binary sensors, sensors, and switches from Node-RED
+* Create and update binary sensors, buttons, sensors, and switches from Node-RED
 * Disable and enable Node-RED flows from Home Assistant UI
 * Create Home Assistant webhooks and handle them in Node-RED
 * Use Device triggers and action from Node-RED
+
+## Minimum Requirements
+
+* [node-red-contrib-home-assistant-websocket](https://github.com/zachowj/node-red-contrib-home-assistant-websocket) v0.20+
+* [Home Assistant](https://github.com/home-assistant/core) 2021.12.0
 
 ## Installation
 
