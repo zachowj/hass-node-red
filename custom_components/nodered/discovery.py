@@ -10,6 +10,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     CONF_BINARY_SENSOR,
+    CONF_BUTTON,
     CONF_COMPONENT,
     CONF_NODE_ID,
     CONF_REMOVE,
@@ -24,9 +25,10 @@ from .const import (
 )
 
 SUPPORTED_COMPONENTS = [
-    CONF_SWITCH,
     CONF_BINARY_SENSOR,
+    CONF_BUTTON,
     CONF_SENSOR,
+    CONF_SWITCH,
 ]
 
 _LOGGER = logging.getLogger(__name__)

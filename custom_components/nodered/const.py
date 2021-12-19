@@ -9,6 +9,7 @@ ISSUE_URL = "https://github.com/zachowj/hass-node-red/issues"
 # Configuration
 CONF_ATTRIBUTES = "attributes"
 CONF_BINARY_SENSOR = "binary_sensor"
+CONF_BUTTON = "button"
 CONF_COMPONENT = "component"
 CONF_CONFIG = "config"
 CONF_CONNECTION = "connection"
