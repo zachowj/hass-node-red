@@ -9,9 +9,10 @@ from homeassistant.const import (
     CONF_ID,
     CONF_STATE,
     CONF_TYPE,
+    EVENT_HOMEASSISTANT_START,
     EVENT_STATE_CHANGED,
 )
-from homeassistant.core import callback
+from homeassistant.core import CoreState, callback
 from homeassistant.helpers import entity_platform, trigger
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -154,19 +155,16 @@ class NodeRedDeviceTrigger(NodeRedSwitch):
         self.remove_device_trigger()
 
     async def add_device_trigger(self):
-        """Validate device trigger."""
+        """Add device trigger."""
 
-        @callback
-        def forward_trigger(event, context=None):
-            """Forward events to websocket."""
-            message = event_message(
-                self._message_id,
-                {"type": EVENT_DEVICE_TRIGGER, "data": event["trigger"]},
-            )
-            self._connection.send_message(
-                json.dumps(message, cls=NodeRedJSONEncoder, allow_nan=False)
+        if self.hass.state == CoreState.running:
+            await self._attach_triggers()
+        else:
+            self._unsub_start = self.hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_START, self._attach_triggers
             )
 
+    async def _attach_triggers(self):
         try:
             trigger_config = await trigger.async_validate_trigger_config(
                 self.hass, [self._trigger_config]
@@ -174,7 +172,7 @@ class NodeRedDeviceTrigger(NodeRedSwitch):
             self._unsubscribe_device_trigger = await trigger.async_initialize_triggers(
                 self.hass,
                 trigger_config,
-                forward_trigger,
+                self.forward_trigger,
                 DOMAIN,
                 DOMAIN,
                 _LOGGER.log,
@@ -183,6 +181,17 @@ class NodeRedDeviceTrigger(NodeRedSwitch):
             _LOGGER.error(
                 f"Error initializing device trigger '{self._node_id}': {str(ex)}",
             )
+
+    @callback
+    def forward_trigger(self, event, context=None):
+        """Forward events to websocket."""
+        message = event_message(
+            self._message_id,
+            {"type": EVENT_DEVICE_TRIGGER, "data": event["trigger"]},
+        )
+        self._connection.send_message(
+            json.dumps(message, cls=NodeRedJSONEncoder, allow_nan=False)
+        )
 
     def remove_device_trigger(self):
         """Remove device trigger."""
