@@ -164,7 +164,7 @@ class NodeRedDeviceTrigger(NodeRedSwitch):
                 EVENT_HOMEASSISTANT_START, self._attach_triggers
             )
 
-    async def _attach_triggers(self):
+    async def _attach_triggers(self, start_event=None) -> None:
         try:
             trigger_config = await trigger.async_validate_trigger_config(
                 self.hass, [self._trigger_config]
