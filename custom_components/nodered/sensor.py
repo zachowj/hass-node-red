@@ -39,7 +39,7 @@ async def _async_setup_entity(hass, config, async_add_entities):
     async_add_entities([NodeRedSensor(hass, config)])
 
 
-class NodeRedSensor(NodeRedEntity, SensorEntity):
+class NodeRedSensor(SensorEntity, NodeRedEntity):
     """Node-RED Sensor class."""
 
     _component = CONF_SENSOR
