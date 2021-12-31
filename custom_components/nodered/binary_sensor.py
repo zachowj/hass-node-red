@@ -9,7 +9,6 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_UNLOCKED,
 )
-from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import NodeRedEntity
@@ -70,8 +69,7 @@ class NodeRedBinarySensor(NodeRedEntity, BinarySensorEntity):
 
         return False
 
-    @callback
-    def handle_entity_update(self, msg):
-        """Update entity state."""
+    def update_entity_state_attributes(self, msg):
+        """Update entity state attributes."""
+        super().update_entity_state_attributes(msg)
         self._attr_state = msg.get(CONF_STATE)
-        super().handle_entity_update(msg)

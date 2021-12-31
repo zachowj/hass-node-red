@@ -136,19 +136,15 @@ class NodeRedSwitch(NodeRedEntity, ToggleEntity):
             )
         )
 
-    @callback
-    def handle_entity_update(self, msg):
-        """Update entity state."""
+    def update_entity_state_attributes(self, msg):
+        """Update the entity state attributes."""
+        super().update_entity_state_attributes(msg)
         self._attr_state = msg.get(CONF_STATE)
-        super().handle_entity_update(msg)
 
-    @callback
-    def handle_discovery_update(self, msg, connection):
-        """Update entity config."""
-        super().handle_discovery_update(msg, connection)
-        if CONF_REMOVE not in msg:
-            self._attr_icon = msg[CONF_CONFIG].get(CONF_ICON, SWITCH_ICON)
-            self.async_write_ha_state()
+    def update_discover_config(self, msg):
+        """Update the entity config."""
+        super().update_discover_config(msg)
+        self._attr_icon = msg[CONF_CONFIG].get(CONF_ICON, SWITCH_ICON)
 
 
 class NodeRedDeviceTrigger(NodeRedSwitch):

@@ -6,7 +6,6 @@ from typing import Optional
 from dateutil import parser
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_STATE, CONF_UNIT_OF_MEASUREMENT
-from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import NodeRedEntity
@@ -62,17 +61,15 @@ class NodeRedSensor(NodeRedEntity, SensorEntity):
         except (ValueError, TypeError):
             return None
 
-    @callback
-    def handle_entity_update(self, msg):
-        """Update entity state."""
+    def update_entity_state_attributes(self, msg):
+        """Update entity state attributes."""
+        super().update_entity_state_attributes(msg)
         self._attr_native_value = msg.get(CONF_STATE)
-        super().handle_entity_update(msg)
 
-    @callback
-    def handle_discovery_update(self, msg, connection):
+    def update_discover_config(self, msg):
         """Update entity config."""
-        self._attr_unit_of_measurement = None
+        super().update_discover_config(msg)
         self._attr_native_unit_of_measurement = msg[CONF_CONFIG].get(
             CONF_UNIT_OF_MEASUREMENT
         )
-        super().handle_discovery_update(msg, connection)
+        self._attr_unit_of_measurement = None

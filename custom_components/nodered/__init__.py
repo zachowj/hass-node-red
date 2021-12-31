@@ -134,8 +134,12 @@ class NodeRedEntity(Entity):
     def handle_entity_update(self, msg):
         """Update entity state."""
         _LOGGER.debug(f"Entity Update: {msg}")
-        self._attr_extra_state_attributes = msg.get(CONF_ATTRIBUTES, {})
+        self.update_entity_state_attributes(msg)
         self.async_write_ha_state()
+
+    def update_entity_state_attributes(self, msg):
+        """Update entity state attributes."""
+        self._attr_extra_state_attributes = msg.get(CONF_ATTRIBUTES, {})
 
     @callback
     def handle_lost_connection(self):
@@ -165,12 +169,7 @@ class NodeRedEntity(Entity):
             # Remove entity
             self.hass.async_create_task(self.async_remove(force_remove=True))
         else:
-            self._attr_icon = msg[CONF_CONFIG].get(CONF_ICON)
-            self._attr_name = msg[CONF_CONFIG].get(CONF_NAME, f"{NAME} {self._node_id}")
-            self._attr_device_class = msg[CONF_CONFIG].get(CONF_DEVICE_CLASS)
-            self._attr_unit_of_measurement = msg[CONF_CONFIG].get(
-                CONF_UNIT_OF_MEASUREMENT
-            )
+            self.update_discover_config(msg)
 
             if self._bidirectional:
                 self._attr_available = True
@@ -180,6 +179,14 @@ class NodeRedEntity(Entity):
                     msg[CONF_ID]
                 ] = self.handle_lost_connection
             self.async_write_ha_state()
+
+    def update_discover_config(self, msg):
+        """Update entity config."""
+        self._config = msg[CONF_CONFIG]
+        self._attr_icon = self._config.get(CONF_ICON)
+        self._attr_name = self._config.get(CONF_NAME, f"{NAME} {self._node_id}")
+        self._attr_device_class = self._config.get(CONF_DEVICE_CLASS)
+        self._attr_unit_of_measurement = self._config.get(CONF_UNIT_OF_MEASUREMENT)
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
