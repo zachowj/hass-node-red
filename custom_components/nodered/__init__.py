@@ -13,7 +13,6 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ICON,
     CONF_ID,
-    CONF_STATE,
     CONF_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
 )
@@ -25,6 +24,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 
 from .const import (
+    CONF_ATTRIBUTES,
     CONF_COMPONENT,
     CONF_CONFIG,
     CONF_DEVICE_INFO,
@@ -97,9 +97,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 class NodeRedEntity(Entity):
     """nodered Sensor class."""
 
-    attr = {}
     _component = None
-    _state = None
     remove_signal_discovery_update = None
     remove_signal_entity_update = None
     _bidirectional = False
@@ -112,40 +110,13 @@ class NodeRedEntity(Entity):
         self._server_id = config[CONF_SERVER_ID]
         self._node_id = config[CONF_NODE_ID]
 
-    @property
-    def should_poll(self) -> bool:
-        """Return the polling state."""
-        return False
-
-    @property
-    def unique_id(self) -> Optional[str]:
-        """Return a unique ID to use for this sensor."""
-        return f"{DOMAIN}-{self._server_id}-{self._node_id}"
-
-    @property
-    def device_class(self) -> Optional[str]:
-        """Return the class of this binary_sensor."""
-        return self._config.get(CONF_DEVICE_CLASS)
-
-    @property
-    def name(self) -> Optional[str]:
-        """Return the name of the sensor."""
-        return self._config.get(CONF_NAME, f"{NAME} {self._node_id}")
-
-    @property
-    def icon(self) -> Optional[str]:
-        """Return the icon of the sensor."""
-        return self._config.get(CONF_ICON)
-
-    @property
-    def unit_of_measurement(self) -> Optional[str]:
-        """Return the unit this state is expressed in."""
-        return self._config.get(CONF_UNIT_OF_MEASUREMENT)
-
-    @property
-    def extra_state_attributes(self) -> Optional[Dict[str, Any]]:
-        """Return the state attributes."""
-        return self.attr
+        self._attr_extra_state_attributes = config.get(CONF_ATTRIBUTES, {})
+        self._attr_icon = self._config.get(CONF_ICON)
+        self._attr_name = self._config.get(CONF_NAME, f"{NAME} {self._node_id}")
+        self._attr_device_class = self._config.get(CONF_DEVICE_CLASS)
+        self._attr_unit_of_measurement = self._config.get(CONF_UNIT_OF_MEASUREMENT)
+        self._attr_unique_id = f"{DOMAIN}-{self._server_id}-{self._node_id}"
+        self._attr_should_poll = False
 
     @property
     def device_info(self) -> Optional[Dict[str, Any]]:
@@ -163,8 +134,7 @@ class NodeRedEntity(Entity):
     def handle_entity_update(self, msg):
         """Update entity state."""
         _LOGGER.debug(f"Entity Update: {msg}")
-        self.attr = msg.get("attributes", {})
-        self._state = msg[CONF_STATE]
+        self._attr_extra_state_attributes = msg.get(CONF_ATTRIBUTES, {})
         self.async_write_ha_state()
 
     @callback
@@ -195,7 +165,13 @@ class NodeRedEntity(Entity):
             # Remove entity
             self.hass.async_create_task(self.async_remove(force_remove=True))
         else:
-            self._config = msg[CONF_CONFIG]
+            self._attr_icon = msg[CONF_CONFIG].get(CONF_ICON)
+            self._attr_name = msg[CONF_CONFIG].get(CONF_NAME, f"{NAME} {self._node_id}")
+            self._attr_device_class = msg[CONF_CONFIG].get(CONF_DEVICE_CLASS)
+            self._attr_unit_of_measurement = msg[CONF_CONFIG].get(
+                CONF_UNIT_OF_MEASUREMENT
+            )
+
             if self._bidirectional:
                 self._attr_available = True
                 self._message_id = msg[CONF_ID]
