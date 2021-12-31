@@ -1,5 +1,12 @@
 # Changelog
 
+### [1.0.4](https://www.github.com/zachowj/hass-node-red/compare/v1.0.3...v1.0.4) (2021-12-31)
+
+
+### Bug Fixes
+
+* Fix unit_of_measurement being overridden in the sensor entity ([5224dc7](https://www.github.com/zachowj/hass-node-red/commit/5224dc7c51bc2b8f888b82ced714650d483cf508))
+
 ### [1.0.3](https://www.github.com/zachowj/hass-node-red/compare/v1.0.2...v1.0.3) (2021-12-31)
 
 
