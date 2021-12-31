@@ -1,5 +1,12 @@
 # Changelog
 
+### [1.0.3](https://www.github.com/zachowj/hass-node-red/compare/v1.0.2...v1.0.3) (2021-12-31)
+
+
+### Miscellaneous Chores
+
+* Force Release 1.0.3 ([641b5ef](https://www.github.com/zachowj/hass-node-red/commit/641b5ef85ad369c0a01c04e7dc0184518eeb129f))
+
 ### [1.0.2](https://www.github.com/zachowj/hass-node-red/compare/v1.0.1...v1.0.2) (2021-12-30)
 
 
