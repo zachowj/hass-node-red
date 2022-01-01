@@ -1,5 +1,12 @@
 # Changelog
 
+### [1.0.5](https://www.github.com/zachowj/hass-node-red/compare/v1.0.4...v1.0.5) (2022-01-01)
+
+
+### Bug Fixes
+
+* **button:** Add component type ([6f7bab2](https://www.github.com/zachowj/hass-node-red/commit/6f7bab2ada1b093ad487502282c49fb94d637132))
+
 ### [1.0.4](https://www.github.com/zachowj/hass-node-red/compare/v1.0.3...v1.0.4) (2021-12-31)
 
 
