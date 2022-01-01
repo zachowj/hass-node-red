@@ -35,6 +35,7 @@ class NodeRedButton(NodeRedEntity, ButtonEntity):
     """Node-RED button class."""
 
     _bidirectional = True
+    _component = CONF_BUTTON
 
     def __init__(self, hass, config, connection):
         """Initialize the button."""
