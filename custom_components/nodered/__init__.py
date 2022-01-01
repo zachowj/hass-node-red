@@ -22,6 +22,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_registry import async_get
 
 from .const import (
     CONF_ATTRIBUTES,
@@ -105,18 +106,14 @@ class NodeRedEntity(Entity):
     def __init__(self, hass, config):
         """Initialize the entity."""
         self.hass = hass
-        self._config = config[CONF_CONFIG]
         self._device_info = config.get(CONF_DEVICE_INFO)
         self._server_id = config[CONF_SERVER_ID]
         self._node_id = config[CONF_NODE_ID]
-
-        self._attr_extra_state_attributes = config.get(CONF_ATTRIBUTES, {})
-        self._attr_icon = self._config.get(CONF_ICON)
-        self._attr_name = self._config.get(CONF_NAME, f"{NAME} {self._node_id}")
-        self._attr_device_class = self._config.get(CONF_DEVICE_CLASS)
-        self._attr_unit_of_measurement = self._config.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_unique_id = f"{DOMAIN}-{self._server_id}-{self._node_id}"
         self._attr_should_poll = False
+
+        self.update_discovery_config(config)
+        self.update_entity_state_attributes(config)
 
     @property
     def device_info(self) -> Optional[Dict[str, Any]]:
@@ -169,7 +166,7 @@ class NodeRedEntity(Entity):
             # Remove entity
             self.hass.async_create_task(self.async_remove(force_remove=True))
         else:
-            self.update_discover_config(msg)
+            self.update_discovery_config(msg)
 
             if self._bidirectional:
                 self._attr_available = True
@@ -180,7 +177,7 @@ class NodeRedEntity(Entity):
                 ] = self.handle_lost_connection
             self.async_write_ha_state()
 
-    def update_discover_config(self, msg):
+    def update_discovery_config(self, msg):
         """Update entity config."""
         self._config = msg[CONF_CONFIG]
         self._attr_icon = self._config.get(CONF_ICON)
@@ -217,14 +214,14 @@ class NodeRedEntity(Entity):
         del self.hass.data[DOMAIN_DATA][ALREADY_DISCOVERED][self.unique_id]
 
         # Remove the entity_id from the entity registry
-        registry = await self.hass.helpers.entity_registry.async_get_registry()
-        entity_id = registry.async_get_entity_id(
+        entity_registry = async_get(self.hass)
+        entity_id = entity_registry.async_get_entity_id(
             self._component,
             DOMAIN,
             self.unique_id,
         )
         if entity_id:
-            registry.async_remove(entity_id)
+            entity_registry.async_remove(entity_id)
             _LOGGER.info(f"Entity removed: {entity_id}")
 
 

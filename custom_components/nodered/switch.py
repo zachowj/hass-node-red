@@ -141,9 +141,9 @@ class NodeRedSwitch(NodeRedEntity, ToggleEntity):
         super().update_entity_state_attributes(msg)
         self._attr_state = msg.get(CONF_STATE)
 
-    def update_discover_config(self, msg):
+    def update_discovery_config(self, msg):
         """Update the entity config."""
-        super().update_discover_config(msg)
+        super().update_discovery_config(msg)
         self._attr_icon = msg[CONF_CONFIG].get(CONF_ICON, SWITCH_ICON)
 
 

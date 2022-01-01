@@ -66,9 +66,9 @@ class NodeRedSensor(NodeRedEntity, SensorEntity):
         super().update_entity_state_attributes(msg)
         self._attr_native_value = msg.get(CONF_STATE)
 
-    def update_discover_config(self, msg):
+    def update_discovery_config(self, msg):
         """Update entity config."""
-        super().update_discover_config(msg)
+        super().update_discovery_config(msg)
         self._attr_native_unit_of_measurement = msg[CONF_CONFIG].get(
             CONF_UNIT_OF_MEASUREMENT
         )
