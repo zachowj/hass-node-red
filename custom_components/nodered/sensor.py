@@ -1,10 +1,10 @@
 """Sensor platform for nodered."""
 from datetime import datetime
 import logging
-from typing import Optional
+from typing import Optional, Union
 
 from dateutil import parser
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import CONF_STATE, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -47,7 +47,7 @@ class NodeRedSensor(NodeRedEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(hass, config)
         self._attr_unit_of_measurement = None
-        self._attr_native_value = config.get(CONF_STATE)
+        self._attr_native_value = self.convert_state(config.get(CONF_STATE))
         self._attr_native_unit_of_measurement = self._config.get(
             CONF_UNIT_OF_MEASUREMENT
         )
@@ -56,15 +56,26 @@ class NodeRedSensor(NodeRedEntity, SensorEntity):
     @property
     def last_reset(self) -> Optional[datetime]:
         """Return the last reset."""
+        return self.parse_isodate(self._config.get(CONF_LAST_RESET))
+
+    def convert_state(self, state) -> Union[datetime, float, int, str, bool]:
+        """Convert state if needed."""
+        if self.device_class == SensorDeviceClass.TIMESTAMP:
+            return self.parse_isodate(state)
+
+        return state
+
+    def parse_isodate(self, value) -> Optional[datetime]:
+        """Parse ISO date."""
         try:
-            return parser.parse(self._config.get(CONF_LAST_RESET))
+            return parser.parse(value)
         except (ValueError, TypeError):
             return None
 
     def update_entity_state_attributes(self, msg):
         """Update entity state attributes."""
         super().update_entity_state_attributes(msg)
-        self._attr_native_value = msg.get(CONF_STATE)
+        self._attr_native_value = self.convert_state(msg.get(CONF_STATE))
 
     def update_discovery_config(self, msg):
         """Update entity config."""
