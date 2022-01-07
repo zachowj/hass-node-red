@@ -2,7 +2,7 @@
 # Base component constants
 DOMAIN = "nodered"
 DOMAIN_DATA = f"{DOMAIN}_data"
-VERSION = "1.0.4"
+VERSION = "1.0.6"
 
 ISSUE_URL = "https://github.com/zachowj/hass-node-red/issues"
 
