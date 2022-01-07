@@ -56,21 +56,29 @@ class NodeRedSensor(NodeRedEntity, SensorEntity):
     @property
     def last_reset(self) -> Optional[datetime]:
         """Return the last reset."""
-        return self.parse_isodate(self._config.get(CONF_LAST_RESET))
+        reset = self._config.get(CONF_LAST_RESET)
+        if reset is not None:
+            try:
+                return parser.parse(reset)
+            except (ValueError, TypeError):
+                _LOGGER.error(
+                    f"Invalid iso date ({reset}): {self.entity_id} requires last_reset to be an iso date formatted string"
+                )
+
+        return None
 
     def convert_state(self, state) -> Union[datetime, float, int, str, bool]:
         """Convert state if needed."""
-        if self.device_class == SensorDeviceClass.TIMESTAMP:
-            return self.parse_isodate(state)
+        if state is not None and self.device_class == SensorDeviceClass.TIMESTAMP:
+            try:
+                return parser.parse(state)
+            except (ValueError, TypeError):
+                _LOGGER.error(
+                    f"Invalid iso date ({state}): {self.entity_id} has a timestamp device class"
+                )
+                return None
 
         return state
-
-    def parse_isodate(self, value) -> Optional[datetime]:
-        """Parse ISO date."""
-        try:
-            return parser.parse(value)
-        except (ValueError, TypeError):
-            return None
 
     def update_entity_state_attributes(self, msg):
         """Update entity state attributes."""
