@@ -1,5 +1,13 @@
 # Changelog
 
+### [1.0.6](https://www.github.com/zachowj/hass-node-red/compare/v1.0.5...v1.0.6) (2022-01-08)
+
+
+### Bug Fixes
+
+* Allow binary sensors and sensors to be set to unknown by setting state to null ([ab1d854](https://www.github.com/zachowj/hass-node-red/commit/ab1d854ddf4068c6c12daed3d91140474bb051f5)), closes [#102](https://www.github.com/zachowj/hass-node-red/issues/102)
+* **sensor:** Convert sensor native state to a datetime when device class is set to timestamp ([90ed37a](https://www.github.com/zachowj/hass-node-red/commit/90ed37a94a4445e5975b83101d4614f2282184cd)), closes [#103](https://www.github.com/zachowj/hass-node-red/issues/103)
+
 ### [1.0.5](https://www.github.com/zachowj/hass-node-red/compare/v1.0.4...v1.0.5) (2022-01-01)
 
 
