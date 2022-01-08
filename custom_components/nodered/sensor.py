@@ -62,7 +62,7 @@ class NodeRedSensor(NodeRedEntity, SensorEntity):
                 return parser.parse(reset)
             except (ValueError, TypeError):
                 _LOGGER.error(
-                    f"Invalid iso date ({reset}): {self.entity_id} requires last_reset to be an iso date formatted string"
+                    f"Invalid ISO date string ({reset}): {self.entity_id} requires last_reset to be an iso date formatted string"
                 )
 
         return None
@@ -74,7 +74,7 @@ class NodeRedSensor(NodeRedEntity, SensorEntity):
                 return parser.parse(state)
             except (ValueError, TypeError):
                 _LOGGER.error(
-                    f"Invalid iso date ({state}): {self.entity_id} has a timestamp device class"
+                    f"Invalid ISO date string ({state}): {self.entity_id} has a timestamp device class"
                 )
                 return None
 
@@ -83,6 +83,7 @@ class NodeRedSensor(NodeRedEntity, SensorEntity):
     def update_entity_state_attributes(self, msg):
         """Update entity state attributes."""
         super().update_entity_state_attributes(msg)
+        print(msg)
         self._attr_native_value = self.convert_state(msg.get(CONF_STATE))
 
     def update_discovery_config(self, msg):

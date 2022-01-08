@@ -58,6 +58,8 @@ class NodeRedBinarySensor(NodeRedEntity, BinarySensorEntity):
         """Return true if the binary sensor is on."""
         value = self._attr_state
 
+        if value is None:
+            return None
         if isinstance(value, bool):
             return value
         if isinstance(value, str):
