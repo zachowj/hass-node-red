@@ -83,7 +83,6 @@ class NodeRedSensor(NodeRedEntity, SensorEntity):
     def update_entity_state_attributes(self, msg):
         """Update entity state attributes."""
         super().update_entity_state_attributes(msg)
-        print(msg)
         self._attr_native_value = self.convert_state(msg.get(CONF_STATE))
 
     def update_discovery_config(self, msg):
