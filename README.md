@@ -19,32 +19,43 @@ _Companion Component to [node-red-contrib-home-assistant-websocket](https://gith
 
 ## Installation
 
-_This integration is available in [HACS](https://hacs.xyz) (Home Assistant Community Store)_
+1. Install via [HACS](https://hacs.xyz) (Home Assistant Community Store) or manually.
 
-1. Using the tool of choice open the directory (folder) for your HA configuration (where you find `configuration.yaml`).
-2. If you do not have a `custom_components` directory (folder) there, you need to create it.
-3. In the `custom_components` directory (folder) create a new folder called `nodered`.
-4. Download _all_ the files from the `custom_components/nodered/` directory (folder) in this repository.
-5. Place the files you downloaded in the new directory (folder) you created.
-6. Restart Home Assistant
-7. Refresh your browser window (bug in HA where it doesn't update the integration list after a reboot)
-8. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Node-RED Companion"
+    HACS
+    - Go to HACS -> Integrations -> "+ Explore & Download Repos"
+    - Find "Node-RED Companion".
+    - Open the search result and click "Download this Repository with HACS".
 
-Using your HA configuration directory (folder) as a starting point you should now also have this:
+    Manual Steps
+    
+    - Using the tool of choice open the directory (folder) for your HA configuration (where you find `configuration.yaml`).
+    - If you do not have a `custom_components` directory (folder) there, you need to create it.
+    - In the `custom_components` directory (folder) create a new folder called `nodered`.
+    - Download _all_ the files from the `custom_components/nodered/` directory (folder) in this repository.
+    - Place the files you downloaded in the new directory (folder) you created.
+    - Restart Home Assistant
+    - Refresh your browser window (bug in HA where it doesn't update the integration list after a reboot)
 
-```text
-custom_components/nodered/translations/en.json
-custom_components/nodered/__init__.py
-custom_components/nodered/binary_sensor.py
-custom_components/nodered/config_flow.py
-custom_components/nodered/const.py
-custom_components/nodered/discovery.py
-custom_components/nodered/manifest.json
-custom_components/nodered/sensor.py
-custom_components/nodered/services.yaml
-custom_components/nodered/switch.py
-custom_components/nodered/websocket.py
-```
+
+    Using your HA configuration directory (folder) as a starting point you should have this:
+
+    ```text
+    custom_components/nodered/translations/en.json
+    custom_components/nodered/__init__.py
+    custom_components/nodered/binary_sensor.py
+    custom_components/nodered/config_flow.py
+    custom_components/nodered/const.py
+    custom_components/nodered/discovery.py
+    custom_components/nodered/manifest.json
+    custom_components/nodered/sensor.py
+    custom_components/nodered/services.yaml
+    custom_components/nodered/switch.py
+    custom_components/nodered/websocket.py
+    ```
+
+2. In the HA UI go to "Configuration" -> "Devices & Services" -> "+ Add Integration" and search for "Node-RED Companion"
+
+
 
 ## Configuration
 
