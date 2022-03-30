@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "Node-RED Begleiter",
+                "description": "Möchtest du den Node-RED Begleiter wirklich einrichten?"
+            }
+        },
+        "abort": {
+            "single_instance_allowed": "Es ist kann nur eine Konfiguration für den Node-RED Begleiter geben."
+        }
+    }
+}
