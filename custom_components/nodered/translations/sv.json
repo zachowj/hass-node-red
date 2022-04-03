@@ -1,0 +1,12 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Vill du lägga till Node-RED Companion till Home Assistant?"
+            }
+        },
+        "abort": {
+            "single_instance_allowed": "Redan konfigurerad. Bara en konfiguration är möjlig."
+        }
+    }
+}
