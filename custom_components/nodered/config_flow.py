@@ -1,11 +1,7 @@
 """Adds config flow for Node-RED."""
-import logging
-
 from homeassistant import config_entries
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -29,6 +25,6 @@ class NodeRedFlowHandler(config_entries.ConfigFlow):
         if user_input is None:
             return self.async_show_form(step_id="user")
         return self.async_create_entry(
-            title="Node-RED",
+            title="Node-RED Companion",
             data={},
         )
