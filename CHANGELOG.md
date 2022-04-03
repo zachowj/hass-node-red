@@ -1,5 +1,22 @@
 # Changelog
 
+### [1.0.7](https://www.github.com/zachowj/hass-node-red/compare/v1.0.6...v1.0.7) (2022-04-03)
+
+
+### Bug Fixes
+
+* Add Companion to component title in config ([7079554](https://www.github.com/zachowj/hass-node-red/commit/70795544538f3f5969f0c6557721bd4562d2cf32))
+
+
+### Documentation
+
+* Add Brazilian Portuguese Translation ([f91adb8](https://www.github.com/zachowj/hass-node-red/commit/f91adb8aaecdd81221eb8ccf48329235ac103c92))
+* Add Danish translations ([#112](https://www.github.com/zachowj/hass-node-red/issues/112)) ([2a11f2e](https://www.github.com/zachowj/hass-node-red/commit/2a11f2e0d96fac862a30be7c8b273f1b1acf53ea))
+* Add german translation ([#127](https://www.github.com/zachowj/hass-node-red/issues/127)) ([fcc5a4f](https://www.github.com/zachowj/hass-node-red/commit/fcc5a4f09e7a3831699b2a0da6e7b5fd5f81b3f5))
+* Rename Brazilian Portuguese Translation ([#125](https://www.github.com/zachowj/hass-node-red/issues/125)) ([2a6df42](https://www.github.com/zachowj/hass-node-red/commit/2a6df4231abea31547b7951097c5e44cc5c95af7))
+* Separate install instructions ([ba49e7a](https://www.github.com/zachowj/hass-node-red/commit/ba49e7ac73ec1d531df82acb8e7dcbd3f908ce14))
+* Update install instructions in readme ([#117](https://www.github.com/zachowj/hass-node-red/issues/117)) ([3f9e83b](https://www.github.com/zachowj/hass-node-red/commit/3f9e83bc6584eaf7235ec79241769518aff5d19b))
+
 ### [1.0.6](https://www.github.com/zachowj/hass-node-red/compare/v1.0.5...v1.0.6) (2022-01-08)
 
 
