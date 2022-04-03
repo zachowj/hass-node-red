@@ -1,9 +1,9 @@
 // See https://aka.ms/vscode-remote/devcontainer.json for format details.
 {
-	"image": "ludeeus/container:integration-debian",
+	"image": "ghcr.io/ludeeus/devcontainer/integration:stable",
 	"context": "..",
 	"appPort": [
-		"9123:8123"
+		"8123:8123"
 	],
 	"postCreateCommand": "container install && pip install --ignore-installed pre-commit && pre-commit install && touch /config/automations.yaml",
 	"extensions": [
@@ -20,6 +20,10 @@
 		"python.analysis.autoSearchPaths": false,
 		"python.linting.pylintEnabled": true,
 		"python.linting.enabled": true,
+		"python.linting.pylintArgs": [
+			"--disable",
+			"import-error"
+		],
 		"python.formatting.provider": "black",
 		"editor.formatOnPaste": false,
 		"editor.formatOnSave": true,
