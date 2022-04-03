@@ -2,12 +2,11 @@
     "config": {
         "step": {
             "user": {
-                "title": "Node-RED Companion",
-                "description": "Are you sure you want to set up Node-RED Companion?"
+                "description": "Do you want to add Node-RED Companion to Home Assistant?"
             }
         },
         "abort": {
-            "single_instance_allowed": "Only a single configuration of Node-RED Companion is allowed."
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
         }
     }
 }

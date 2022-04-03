@@ -2,7 +2,6 @@
     "config": {
         "step": {
             "user": {
-                "title": "Node-RED",
                 "description": "Er du sikker på at du vil konfigurere Node-RED?"
             }
         },

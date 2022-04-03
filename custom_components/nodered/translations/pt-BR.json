@@ -2,7 +2,6 @@
     "config": {
         "step": {
             "user": {
-                "title": "Node-RED Companion",
                 "description": "Tem certeza de que deseja configurar o Node-RED Companion?"
             }
         },
