@@ -7,7 +7,10 @@ from homeassistant.components.device_automation.exceptions import (
     DeviceNotFound,
     InvalidDeviceAutomationConfig,
 )
-from homeassistant.components.device_automation.trigger import TRIGGER_SCHEMA
+from homeassistant.components.device_automation.trigger import (
+    TRIGGER_SCHEMA,
+    DeviceAutomationType,
+)
 from homeassistant.components.websocket_api import (
     async_register_command,
     async_response,
@@ -72,7 +75,7 @@ async def websocket_device_action(hass, connection, msg):
     """Sensor command."""
     context = connection.context(msg)
     platform = await device_automation.async_get_device_automation_platform(
-        hass, msg["action"][CONF_DOMAIN], "action"
+        hass, msg["action"][CONF_DOMAIN], DeviceAutomationType.ACTION
     )
 
     try:
