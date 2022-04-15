@@ -1,5 +1,17 @@
 # Changelog
 
+### [1.0.8](https://www.github.com/zachowj/hass-node-red/compare/v1.0.7...v1.0.8) (2022-04-15)
+
+
+### Bug Fixes
+
+* Use enum for device automation type ([205df7b](https://www.github.com/zachowj/hass-node-red/commit/205df7b8aa2a872876ce0557cb3d15abd1a89168))
+
+
+### Documentation
+
+* Add Swedish translation ([21f1932](https://www.github.com/zachowj/hass-node-red/commit/21f193207b536ebe19b0acc49d311d67d774d6a6))
+
 ### [1.0.7](https://www.github.com/zachowj/hass-node-red/compare/v1.0.6...v1.0.7) (2022-04-03)
 
 
