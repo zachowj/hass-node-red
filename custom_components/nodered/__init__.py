@@ -36,7 +36,6 @@ from .const import (
     CONF_VERSION,
     DOMAIN,
     DOMAIN_DATA,
-    NAME,
     NODERED_DISCOVERY_UPDATED,
     NODERED_ENTITY,
     STARTUP_MESSAGE,
@@ -181,7 +180,7 @@ class NodeRedEntity(Entity):
         """Update entity config."""
         self._config = msg[CONF_CONFIG]
         self._attr_icon = self._config.get(CONF_ICON)
-        self._attr_name = self._config.get(CONF_NAME, f"{NAME} {self._node_id}")
+        self._attr_name = self._config.get(CONF_NAME, f"{DOMAIN} {self._node_id}")
         self._attr_device_class = self._config.get(CONF_DEVICE_CLASS)
         self._attr_unit_of_measurement = self._config.get(CONF_UNIT_OF_MEASUREMENT)
 

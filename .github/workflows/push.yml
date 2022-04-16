@@ -8,7 +8,7 @@ jobs:
     runs-on: "ubuntu-latest"
     name: Validate
     steps:
-        - uses: "actions/checkout@v2"
+        - uses: "actions/checkout@v3"
 
         - name: HACS validation
           uses: "hacs/action@main"
@@ -23,12 +23,12 @@ jobs:
     runs-on: ubuntu-latest
     name: Check style formatting
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v3
       name: Set up Python
       with:
         python-version: 3.8
-    - uses: pre-commit/action@v2.0.0
+    - uses: pre-commit/action@v2.0.3
 
   release-please:
     runs-on: ubuntu-latest
@@ -43,9 +43,9 @@ jobs:
     name: Run tests
     steps:
       - name: Check out code from GitHub
-        uses: "actions/checkout@v2"
+        uses: "actions/checkout@v3"
       - name: Setup Python
-        uses: "actions/setup-python@v1"
+        uses: "actions/setup-python@v3"
         with:
           python-version: 3.x
       - name: Install requirements

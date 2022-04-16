@@ -40,7 +40,7 @@ NODERED_ENTITY = "nodered_entity_{}_{}"
 SERVICE_TRIGGER = "trigger"
 
 # Defaults
-NAME = DOMAIN
+NAME = "Node-RED Companion"
 SWITCH_ICON = "mdi:electric-switch-closed"
 
 STARTUP_MESSAGE = f"""
