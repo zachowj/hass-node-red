@@ -1,5 +1,19 @@
 # Changelog
 
+### [1.0.9](https://www.github.com/zachowj/hass-node-red/compare/v1.0.8...v1.0.9) (2022-07-08)
+
+
+### Bug Fixes
+
+* Remove domains key from hacs.json ([60e389e](https://www.github.com/zachowj/hass-node-red/commit/60e389ed55d55f84cac3f4dcae535134934a43ea))
+* Remove iot_class from hacs.json ([8d7fa98](https://www.github.com/zachowj/hass-node-red/commit/8d7fa980e2a620289b30ea4f12d7526cfa55273d))
+* remove update listener on entry unload to avoid multiple listeners ([73dfce5](https://www.github.com/zachowj/hass-node-red/commit/73dfce507ae1ad206ac0bbc8b085d2727263a19c))
+
+
+### Documentation
+
+* Create French translation. ([#132](https://www.github.com/zachowj/hass-node-red/issues/132)) ([1b1cc39](https://www.github.com/zachowj/hass-node-red/commit/1b1cc39f49837dd91852893a391ef2f5b8d473fe))
+
 ### [1.0.8](https://www.github.com/zachowj/hass-node-red/compare/v1.0.7...v1.0.8) (2022-04-15)
 
 
