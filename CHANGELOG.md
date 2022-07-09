@@ -1,5 +1,12 @@
 # Changelog
 
+### [1.0.10](https://www.github.com/zachowj/hass-node-red/compare/v1.0.9...v1.0.10) (2022-07-09)
+
+
+### Bug Fixes
+
+* Fix import that was moved in HA ([abe7411](https://www.github.com/zachowj/hass-node-red/commit/abe741126855800ad61ceaabb7961dd4de482eb9))
+
 ### [1.0.9](https://www.github.com/zachowj/hass-node-red/compare/v1.0.8...v1.0.9) (2022-07-08)
 
 
