@@ -3,14 +3,12 @@ import json
 import logging
 
 from homeassistant.components import device_automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.device_automation.exceptions import (
     DeviceNotFound,
     InvalidDeviceAutomationConfig,
 )
-from homeassistant.components.device_automation.trigger import (
-    TRIGGER_SCHEMA,
-    DeviceAutomationType,
-)
+from homeassistant.components.device_automation.trigger import TRIGGER_SCHEMA
 from homeassistant.components.websocket_api import (
     async_register_command,
     async_response,
