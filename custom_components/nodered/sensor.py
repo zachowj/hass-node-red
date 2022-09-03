@@ -69,9 +69,17 @@ class NodeRedSensor(NodeRedEntity, SensorEntity):
 
     def convert_state(self, state) -> Union[datetime, float, int, str, bool]:
         """Convert state if needed."""
-        if state is not None and self.device_class == SensorDeviceClass.TIMESTAMP:
+        if state is not None and self.device_class in [
+            SensorDeviceClass.TIMESTAMP,
+            SensorDeviceClass.DATE,
+        ]:
             try:
-                return parser.parse(state)
+                datetime = parser.parse(state)
+                if self.device_class is SensorDeviceClass.DATE:
+                    return datetime.date()
+
+                return datetime
+
             except (ValueError, TypeError):
                 _LOGGER.error(
                     f"Invalid ISO date string ({state}): {self.entity_id} has a timestamp device class"
