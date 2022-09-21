@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.1.0](https://www.github.com/zachowj/hass-node-red/compare/v1.0.9...v1.1.0) (2022-09-21)
+
+
+### Features
+
+* Add websocket command to remove device ([075e0f1](https://www.github.com/zachowj/hass-node-red/commit/075e0f133169ccc3d48a37df904aa0b19e79c3f2))
+* Add websocket command to update config dynamically ([075e0f1](https://www.github.com/zachowj/hass-node-red/commit/075e0f133169ccc3d48a37df904aa0b19e79c3f2))
+
+
+### Bug Fixes
+
+* Fix import that was moved in HA ([abe7411](https://www.github.com/zachowj/hass-node-red/commit/abe741126855800ad61ceaabb7961dd4de482eb9))
+* Use the correct Date type for device classes ([2e23897](https://www.github.com/zachowj/hass-node-red/commit/2e238970bc19abffca6ec3da56e47516532a6250))
+
 ### [1.0.9](https://www.github.com/zachowj/hass-node-red/compare/v1.0.8...v1.0.9) (2022-07-08)
 
 
