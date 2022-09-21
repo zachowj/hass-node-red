@@ -128,6 +128,8 @@ class NodeRedEntity(Entity):
             del self._device_info["id"]
             info.update(self._device_info)
 
+        return info
+
     @callback
     def handle_config_update(self, msg):
         """Handle config update."""
