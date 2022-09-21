@@ -98,7 +98,7 @@ class NodeRedSwitch(NodeRedEntity, ToggleEntity):
         self._connection = connection
 
         self._attr_state = config.get(CONF_STATE, True)
-        self._attr_icon = self._config.get(CONF_ICON, SWITCH_ICON)
+        self._attr_icon = self._config.get(CONF_ICON)
 
     @property
     def is_on(self) -> bool:
