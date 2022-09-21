@@ -1,5 +1,12 @@
 # Changelog
 
+### [1.1.1](https://www.github.com/zachowj/hass-node-red/compare/v1.1.0...v1.1.1) (2022-09-21)
+
+
+### Bug Fixes
+
+* Return device info ([3a10a71](https://www.github.com/zachowj/hass-node-red/commit/3a10a71a1e4ad98521233ef3504bb879ecd04358))
+
 ## [1.1.0](https://www.github.com/zachowj/hass-node-red/compare/v1.0.9...v1.1.0) (2022-09-21)
 
 
