@@ -11,18 +11,21 @@ from typing import Any, Dict, Optional
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
+    CONF_ENTITY_CATEGORY,
     CONF_ICON,
     CONF_ID,
     CONF_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_registry import async_get
+from homeassistant.helpers.entity import Entity, EntityCategory
+from homeassistant.helpers.entity_registry import async_entries_for_device, async_get
 
 from .const import (
     CONF_ATTRIBUTES,
@@ -36,6 +39,7 @@ from .const import (
     CONF_VERSION,
     DOMAIN,
     DOMAIN_DATA,
+    NODERED_CONFIG_UPDATE,
     NODERED_DISCOVERY_UPDATED,
     NODERED_ENTITY,
     STARTUP_MESSAGE,
@@ -124,7 +128,11 @@ class NodeRedEntity(Entity):
             del self._device_info["id"]
             info.update(self._device_info)
 
-        return info
+    @callback
+    def handle_config_update(self, msg):
+        """Handle config update."""
+        self.update_config(msg)
+        self.async_write_ha_state()
 
     @callback
     def handle_entity_update(self, msg):
@@ -166,6 +174,7 @@ class NodeRedEntity(Entity):
             self.hass.async_create_task(self.async_remove(force_remove=True))
         else:
             self.update_discovery_config(msg)
+            self.update_discovery_device_info(msg)
 
             if self._bidirectional:
                 self._attr_available = True
@@ -176,13 +185,62 @@ class NodeRedEntity(Entity):
                 ] = self.handle_lost_connection
             self.async_write_ha_state()
 
+    def entity_category_mapper(self, category):
+        """Map Node-RED category to Home Assistant entity category."""
+        if category == "config":
+            return EntityCategory.CONFIG
+        if category == "diagnostic":
+            return EntityCategory.DIAGNOSTIC
+        return None
+
     def update_discovery_config(self, msg):
         """Update entity config."""
         self._config = msg[CONF_CONFIG]
         self._attr_icon = self._config.get(CONF_ICON)
         self._attr_name = self._config.get(CONF_NAME, f"{DOMAIN} {self._node_id}")
         self._attr_device_class = self._config.get(CONF_DEVICE_CLASS)
+        self._attr_entity_category = self.entity_category_mapper(
+            self._config.get(CONF_ENTITY_CATEGORY)
+        )
         self._attr_unit_of_measurement = self._config.get(CONF_UNIT_OF_MEASUREMENT)
+
+    def update_config(self, msg):
+        """Update entity config."""
+        config = msg.get(CONF_CONFIG, {})
+
+        if config.get(CONF_NAME):
+            self._attr_name = config.get(CONF_NAME)
+        if config.get(CONF_ICON):
+            self._attr_icon = config.get(CONF_ICON)
+
+    def update_discovery_device_info(self, msg):
+        """Update entity device info."""
+        entity_registry = async_get(self.hass)
+        entity_id = entity_registry.async_get_entity_id(
+            self._component,
+            DOMAIN,
+            self.unique_id,
+        )
+        self._device_info = msg.get(CONF_DEVICE_INFO)
+
+        # Remove entity from device registry if device info is removed
+        if self._device_info is None and entity_id is not None:
+            entity_registry.async_update_entity(entity_id, device_id=None)
+
+        # Update device info
+        if self._device_info is not None:
+            device_registry = dr.async_get(self.hass)
+            device_info = self.device_info
+            indentifiers = device_info.pop("identifiers")
+            device = device_registry.async_get_device(indentifiers)
+            if device is not None:
+                device_registry.async_update_device(
+                    device.id,
+                    **device_info,
+                )
+                # add entity to device
+                if entity_id is not None:
+                    entity_registry.async_update_entity(entity_id, device_id=device.id)
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
@@ -196,6 +254,11 @@ class NodeRedEntity(Entity):
             self.hass,
             NODERED_DISCOVERY_UPDATED.format(self.unique_id),
             self.handle_discovery_update,
+        )
+        self._remove_signal_config_update = async_dispatcher_connect(
+            self.hass,
+            NODERED_CONFIG_UPDATE.format(self._server_id, self._node_id),
+            self.handle_config_update,
         )
 
         if self._bidirectional:
@@ -228,3 +291,17 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Reload config entry."""
     await async_unload_entry(hass, entry)
     await async_setup_entry(hass, entry)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+) -> bool:
+    """Remove a entry from the device registry."""
+    entity_registry = async_get(hass)
+    entries = async_entries_for_device(entity_registry, device_entry.id)
+    # Remove entities from device before removing device so the entities are not removed from HA
+    if entries:
+        for entry in entries:
+            entity_registry.async_update_entity(entry.entity_id, device_id=None)
+
+    return True

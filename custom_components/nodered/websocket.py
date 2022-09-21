@@ -27,8 +27,9 @@ from homeassistant.const import (
     CONF_WEBHOOK_ID,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity_registry import async_entries_for_device, async_get
 from homeassistant.helpers.typing import HomeAssistantType
 import voluptuous as vol
 
@@ -43,6 +44,7 @@ from .const import (
     CONF_SERVER_ID,
     CONF_SUB_TYPE,
     DOMAIN,
+    NODERED_CONFIG_UPDATE,
     NODERED_DISCOVERY,
     NODERED_ENTITY,
     VERSION,
@@ -54,11 +56,13 @@ _LOGGER = logging.getLogger(__name__)
 def register_websocket_handlers(hass: HomeAssistantType):
     """Register the websocket handlers."""
 
-    async_register_command(hass, websocket_version)
-    async_register_command(hass, websocket_webhook)
+    async_register_command(hass, websocket_device_action)
+    async_register_command(hass, websocket_device_remove)
     async_register_command(hass, websocket_discovery)
     async_register_command(hass, websocket_entity)
-    async_register_command(hass, websocket_device_action)
+    async_register_command(hass, websocket_config_update)
+    async_register_command(hass, websocket_version)
+    async_register_command(hass, websocket_webhook)
 
 
 @require_admin
@@ -85,6 +89,32 @@ async def websocket_device_action(hass, connection, msg):
         connection.send_message(
             error_message(msg[CONF_ID], "device_not_found", str(err))
         )
+
+
+@require_admin
+@async_response
+@websocket_command(
+    {
+        vol.Required(CONF_TYPE): "nodered/device/remove",
+        vol.Required(CONF_NODE_ID): cv.string,
+        vol.Optional(CONF_CONFIG, default={}): dict,
+    }
+)
+async def websocket_device_remove(hass, connection, msg):
+    """Remove a device."""
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_device({(DOMAIN, msg[CONF_NODE_ID])})
+    if device is not None:
+        entity_registry = async_get(hass)
+        entries = async_entries_for_device(entity_registry, device.id)
+        # Remove entities from device before removing device so the entities are not removed from HA
+        if entries:
+            for entry in entries:
+                entity_registry.async_update_entity(entry.entity_id, device_id=None)
+
+        device_registry.async_remove_device(device.id)
+
+    connection.send_message(result_message(msg[CONF_ID], {"success": True}))
 
 
 @require_admin
@@ -126,6 +156,24 @@ def websocket_entity(hass, connection, msg):
 
     async_dispatcher_send(
         hass, NODERED_ENTITY.format(msg[CONF_SERVER_ID], msg[CONF_NODE_ID]), msg
+    )
+    connection.send_message(result_message(msg[CONF_ID], {"success": True}))
+
+
+@require_admin
+@websocket_command(
+    {
+        vol.Required(CONF_TYPE): "nodered/entity/update_config",
+        vol.Required(CONF_SERVER_ID): cv.string,
+        vol.Required(CONF_NODE_ID): cv.string,
+        vol.Optional(CONF_CONFIG, default={}): dict,
+    }
+)
+def websocket_config_update(hass, connection, msg):
+    """Sensor command."""
+
+    async_dispatcher_send(
+        hass, NODERED_CONFIG_UPDATE.format(msg[CONF_SERVER_ID], msg[CONF_NODE_ID]), msg
     )
     connection.send_message(result_message(msg[CONF_ID], {"success": True}))
 
