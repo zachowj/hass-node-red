@@ -100,3 +100,4 @@ class NodeRedSensor(NodeRedEntity, SensorEntity):
             CONF_UNIT_OF_MEASUREMENT
         )
         self._attr_unit_of_measurement = None
+        self._attr_state_class = msg[CONF_CONFIG].get(CONF_STATE_CLASS)
