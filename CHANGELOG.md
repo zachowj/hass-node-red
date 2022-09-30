@@ -1,5 +1,12 @@
 # Changelog
 
+### [1.1.2](https://www.github.com/zachowj/hass-node-red/compare/v1.1.1...v1.1.2) (2022-09-30)
+
+
+### Bug Fixes
+
+* **sensor:** Update state class on new discovery message ([280061b](https://www.github.com/zachowj/hass-node-red/commit/280061b0b43ae490ce0c37ffeec61fb25d7a00f4))
+
 ### [1.1.1](https://www.github.com/zachowj/hass-node-red/compare/v1.1.0...v1.1.1) (2022-09-21)
 
 
