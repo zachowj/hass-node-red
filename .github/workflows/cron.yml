@@ -22,7 +22,7 @@ jobs:
           uses: "home-assistant/actions/hassfest@master"
 
         - name: Setup Python
-          uses: "actions/setup-python@v3"
+          uses: "actions/setup-python@v4"
           with:
             python-version: 3.x
         - name: Install requirements
