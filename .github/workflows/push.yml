@@ -28,7 +28,7 @@ jobs:
       name: Set up Python
       with:
         python-version: 3.8
-    - uses: pre-commit/action@v2.0.3
+    - uses: pre-commit/action@v3.0.0
 
   release-please:
     runs-on: ubuntu-latest
