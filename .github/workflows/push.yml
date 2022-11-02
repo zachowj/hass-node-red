@@ -37,6 +37,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           release-type: python
+          changelog-notes-type: "github"
 
   tests:
     runs-on: "ubuntu-latest"
