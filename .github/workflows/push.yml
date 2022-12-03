@@ -8,27 +8,27 @@ jobs:
     runs-on: "ubuntu-latest"
     name: Validate
     steps:
-        - uses: "actions/checkout@v3"
+      - uses: "actions/checkout@v3"
 
-        - name: HACS validation
-          uses: "hacs/action@main"
-          with:
-            category: "integration"
-            ignore: brands
+      - name: HACS validation
+        uses: "hacs/action@main"
+        with:
+          category: "integration"
+          ignore: brands
 
-        - name: Hassfest validation
-          uses: "home-assistant/actions/hassfest@master"
+      - name: Hassfest validation
+        uses: "home-assistant/actions/hassfest@master"
 
   style:
     runs-on: ubuntu-latest
     name: Check style formatting
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v4
-      name: Set up Python
-      with:
-        python-version: 3.8
-    - uses: pre-commit/action@v3.0.0
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        name: Set up Python
+        with:
+          python-version: 3.8
+      - uses: pre-commit/action@v3.0.0
 
   release-please:
     runs-on: ubuntu-latest

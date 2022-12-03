@@ -5,6 +5,7 @@ While tests aren't required to publish a custom component for Home Assistant, th
 # Getting Started
 
 To begin, it is recommended to create a virtual environment to install dependencies:
+
 ```bash
 python3 -m venv venv
 source venv/bin/activate
@@ -17,8 +18,8 @@ This will install `homeassistant`, `pytest`, and `pytest-homeassistant-custom-co
 
 # Useful commands
 
-Command | Description
-------- | -----------
-`pytest tests/` | This will run all tests in `tests/` and tell you how many passed/failed
-`pytest --durations=10 --cov-report term-missing --cov=custom_components.nodered tests` | This tells `pytest` that your target module to test is `custom_components.nodered` so that it can give you a [code coverage](https://en.wikipedia.org/wiki/Code_coverage) summary, including % of code that was executed and the line numbers of missed executions.
-`pytest tests/test_init.py -k test_setup_unload_and_reload_entry` | Runs the `test_setup_unload_and_reload_entry` test function located in `tests/test_init.py`
+| Command                                                                                 | Description                                                                                                                                                                                                                                                         |
+| --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pytest tests/`                                                                         | This will run all tests in `tests/` and tell you how many passed/failed                                                                                                                                                                                             |
+| `pytest --durations=10 --cov-report term-missing --cov=custom_components.nodered tests` | This tells `pytest` that your target module to test is `custom_components.nodered` so that it can give you a [code coverage](https://en.wikipedia.org/wiki/Code_coverage) summary, including % of code that was executed and the line numbers of missed executions. |
+| `pytest tests/test_init.py -k test_setup_unload_and_reload_entry`                       | Runs the `test_setup_unload_and_reload_entry` test function located in `tests/test_init.py`                                                                                                                                                                         |

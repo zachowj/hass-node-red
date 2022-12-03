@@ -1,12 +1,12 @@
 {
-    "config": {
-        "step": {
-            "user": {
-                "description": "Er du sikker på at du vil konfigurere Node-RED?"
-            }
-        },
-        "abort": {
-            "single_instance_allowed": "Bare en enkelt konfigurasjon av Node-RED er tillatt."
-        }
+  "config": {
+    "step": {
+      "user": {
+        "description": "Er du sikker på at du vil konfigurere Node-RED?"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Bare en enkelt konfigurasjon av Node-RED er tillatt."
     }
+  }
 }

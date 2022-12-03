@@ -6,7 +6,7 @@ https://github.com/zachowj/hass-node-red
 """
 import asyncio
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -119,7 +119,7 @@ class NodeRedEntity(Entity):
         self.update_entity_state_attributes(config)
 
     @property
-    def device_info(self) -> Optional[Dict[str, Any]]:
+    def device_info(self) -> Optional[dict[str, Any]]:
         """Return device specific attributes."""
         info = None
         if self._device_info is not None and "id" in self._device_info:

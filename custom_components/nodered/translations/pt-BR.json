@@ -1,12 +1,12 @@
 {
-    "config": {
-        "step": {
-            "user": {
-                "description": "Tem certeza de que deseja configurar o Node-RED Companion?"
-            }
-        },
-        "abort": {
-            "single_instance_allowed": "Apenas uma única configuração do Node-RED Companion é permitida."
-        }
+  "config": {
+    "step": {
+      "user": {
+        "description": "Tem certeza de que deseja configurar o Node-RED Companion?"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Apenas uma única configuração do Node-RED Companion é permitida."
     }
+  }
 }
