@@ -7,7 +7,7 @@
       }
     },
     "abort": {
-      "single_instance_allowed": "Es ist kann nur eine Konfiguration für den Node-RED Begleiter geben."
+      "single_instance_allowed": "Es kann nur eine Konfiguration für den Node-RED Begleiter geben."
     }
   }
 }
