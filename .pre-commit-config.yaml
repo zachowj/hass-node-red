@@ -42,7 +42,7 @@ repos:
           - --configfile=tests/bandit.yaml
         files: ^(custom_components|tests)/.+\.py$
   - repo: https://github.com/PyCQA/isort
-    rev: 5.10.1
+    rev: 5.12.0
     hooks:
       - id: isort
   - repo: https://github.com/pre-commit/pre-commit-hooks
