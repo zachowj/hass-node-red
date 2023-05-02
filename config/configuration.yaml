@@ -1,4 +1,7 @@
+# https://www.home-assistant.io/integrations/default_config/
 default_config:
+
+# https://www.home-assistant.io/integrations/logger/
 logger:
   default: error
   logs:
