@@ -13,6 +13,7 @@ from .const import (
     CONF_BUTTON,
     CONF_COMPONENT,
     CONF_NODE_ID,
+    CONF_NUMBER,
     CONF_REMOVE,
     CONF_SENSOR,
     CONF_SERVER_ID,
@@ -29,6 +30,7 @@ SUPPORTED_COMPONENTS = [
     CONF_BUTTON,
     CONF_SENSOR,
     CONF_SWITCH,
+    CONF_NUMBER,
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,7 +65,6 @@ async def start_discovery(
         if ALREADY_DISCOVERED not in data:
             data[ALREADY_DISCOVERED] = {}
         if discovery_hash in data[ALREADY_DISCOVERED]:
-
             if data[ALREADY_DISCOVERED][discovery_hash] != component:
                 # Remove old
                 log_text = f"Changing {data[ALREADY_DISCOVERED][discovery_hash]} to"
