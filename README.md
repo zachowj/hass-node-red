@@ -52,6 +52,7 @@ Install via [HACS](https://hacs.xyz) (Home Assistant Community Store)
    custom_components/nodered/const.py
    custom_components/nodered/discovery.py
    custom_components/nodered/manifest.json
+   custom_components/nodered/number.py
    custom_components/nodered/sensor.py
    custom_components/nodered/services.yaml
    custom_components/nodered/switch.py
