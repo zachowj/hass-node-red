@@ -18,6 +18,7 @@ from .const import (
     CONF_SENSOR,
     CONF_SERVER_ID,
     CONF_SWITCH,
+    CONF_TEXT,
     DOMAIN,
     DOMAIN_DATA,
     NODERED_DISCOVERY,
@@ -28,9 +29,10 @@ from .const import (
 SUPPORTED_COMPONENTS = [
     CONF_BINARY_SENSOR,
     CONF_BUTTON,
+    CONF_NUMBER,
     CONF_SENSOR,
     CONF_SWITCH,
-    CONF_NUMBER,
+    CONF_TEXT,
 ]
 
 _LOGGER = logging.getLogger(__name__)

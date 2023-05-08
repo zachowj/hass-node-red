@@ -31,6 +31,7 @@ CONF_SKIP_CONDITION = "skip_condition"
 CONF_STATE_CLASS = "state_class"
 CONF_SUB_TYPE = "sub_type"
 CONF_SWITCH = "switch"
+CONF_TEXT = "text"
 CONF_TRIGGER_ENTITY_ID = "trigger_entity_id"
 CONF_VERSION = "version"
 
