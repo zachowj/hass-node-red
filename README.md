@@ -8,7 +8,13 @@ _Companion Component to [node-red-contrib-home-assistant-websocket](https://gith
 
 ## Features
 
-- Create and update binary sensors, buttons, sensors, and switches from Node-RED
+- Create and update entities from Node-RED
+  - binary sensor
+  - button
+  - number
+  - sensor
+  - switch
+  - text
 - Disable and enable Node-RED flows from Home Assistant UI
 - Create Home Assistant webhooks and handle them in Node-RED
 - Use Device triggers and action from Node-RED
@@ -40,26 +46,6 @@ Install via [HACS](https://hacs.xyz) (Home Assistant Community Store)
 1. Restart Home Assistant
 1. Refresh your browser window (bug in HA where it doesn't update the integration list after a reboot)
 1. In the Home Assistant UI go to "Configuration" -> "Integrations" click "+" and search for "Node-RED" [![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=nodered)
-
-   Using your HA configuration directory (folder) as a starting point you should have this:
-
-   ```text
-   custom_components/nodered/translations/en.json
-   custom_components/nodered/__init__.py
-   custom_components/nodered/binary_sensor.py
-   custom_components/nodered/button.py
-   custom_components/nodered/config_flow.py
-   custom_components/nodered/const.py
-   custom_components/nodered/discovery.py
-   custom_components/nodered/manifest.json
-   custom_components/nodered/number.py
-   custom_components/nodered/sensor.py
-   custom_components/nodered/services.yaml
-   custom_components/nodered/switch.py
-   custom_components/nodered/text.py
-   custom_components/nodered/utils.py
-   custom_components/nodered/websocket.py
-   ```
 
 ## Configuration
 

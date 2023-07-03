@@ -1,11 +1,19 @@
 """Sensor platform for nodered."""
 from homeassistant.components.text import RestoreText, TextMode
 from homeassistant.components.websocket_api import event_message
-from homeassistant.const import CONF_ICON, CONF_ID, CONF_TYPE, EVENT_STATE_CHANGED
+from homeassistant.const import CONF_ICON, CONF_ID, CONF_TYPE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
+from custom_components.nodered.number import CONF_VALUE
+
 from . import NodeRedEntity
-from .const import CONF_CONFIG, CONF_TEXT, NODERED_DISCOVERY_NEW, SWITCH_ICON
+from .const import (
+    CONF_CONFIG,
+    CONF_TEXT,
+    EVENT_VALUE_CHANGE,
+    NODERED_DISCOVERY_NEW,
+    SWITCH_ICON,
+)
 
 CONF_MAX_LENGTH = "max_length"
 CONF_MIN_LENGTH = "min_length"
@@ -69,7 +77,7 @@ class NodeRedText(NodeRedEntity, RestoreText):
         """Set new value."""
         self._connection.send_message(
             event_message(
-                self._message_id, {CONF_TYPE: EVENT_STATE_CHANGED, CONF_STATE: value}
+                self._message_id, {CONF_TYPE: EVENT_VALUE_CHANGE, CONF_VALUE: value}
             )
         )
 

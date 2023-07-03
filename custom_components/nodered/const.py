@@ -35,6 +35,8 @@ CONF_TEXT = "text"
 CONF_TRIGGER_ENTITY_ID = "trigger_entity_id"
 CONF_VERSION = "version"
 
+EVENT_VALUE_CHANGE = "value_change"
+
 NODERED_DISCOVERY = "nodered_discovery"
 NODERED_DISCOVERY_NEW = "nodered_discovery_new_{}"
 NODERED_DISCOVERY_UPDATED = "nodered_discovery_updated_{}"

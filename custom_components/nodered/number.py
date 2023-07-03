@@ -13,14 +13,19 @@ from homeassistant.const import (
     CONF_ICON,
     CONF_ID,
     CONF_TYPE,
-    EVENT_STATE_CHANGED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import NodeRedEntity
-from .const import CONF_CONFIG, CONF_NUMBER, NODERED_DISCOVERY_NEW, SWITCH_ICON
+from .const import (
+    CONF_CONFIG,
+    CONF_NUMBER,
+    EVENT_VALUE_CHANGE,
+    NODERED_DISCOVERY_NEW,
+    SWITCH_ICON,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,6 +35,7 @@ CONF_STEP_VALUE = "step_value"
 CONF_MODE = "mode"
 
 CONF_STATE = "state"
+CONF_VALUE = "value"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -84,7 +90,7 @@ class NodeRedNumber(NodeRedEntity, RestoreNumber):
         """Set new value."""
         self._connection.send_message(
             event_message(
-                self._message_id, {CONF_TYPE: EVENT_STATE_CHANGED, CONF_STATE: value}
+                self._message_id, {CONF_TYPE: EVENT_VALUE_CHANGE, CONF_VALUE: value}
             )
         )
 
