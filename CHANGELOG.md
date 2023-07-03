@@ -16,6 +16,19 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## 1.3.0 (2023-07-03)
+
+## What's Changed
+* add pt-pt by @ViPeR5000 in https://github.com/zachowj/hass-node-red/pull/174
+* build(deps): bump actions/stale from 7 to 8 by @dependabot in https://github.com/zachowj/hass-node-red/pull/176
+* Update README.md by @GeoffState in https://github.com/zachowj/hass-node-red/pull/179
+
+## New Contributors
+* @ViPeR5000 made their first contribution in https://github.com/zachowj/hass-node-red/pull/174
+* @GeoffState made their first contribution in https://github.com/zachowj/hass-node-red/pull/179
+
+**Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.2.0...v1.3.0
+
 ### [1.1.2](https://www.github.com/zachowj/hass-node-red/compare/v1.1.1...v1.1.2) (2022-09-30)
 
 
