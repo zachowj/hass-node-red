@@ -35,6 +35,7 @@ from .const import (
     CONF_ENTITY_PICTURE,
     CONF_NAME,
     CONF_NODE_ID,
+    CONF_OPTIONS,
     CONF_REMOVE,
     CONF_SERVER_ID,
     CONF_VERSION,
@@ -218,6 +219,8 @@ class NodeRedEntity(Entity):
             self._attr_icon = config.get(CONF_ICON)
         if config.get(CONF_ENTITY_PICTURE):
             self._attr_entity_picture = config.get(CONF_ENTITY_PICTURE)
+        if config.get(CONF_OPTIONS):
+            self._attr_options = config.get(CONF_OPTIONS)
 
     def update_discovery_device_info(self, msg):
         """Update entity device info."""
