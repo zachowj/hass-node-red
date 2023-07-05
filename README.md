@@ -12,6 +12,7 @@ _Companion Component to [node-red-contrib-home-assistant-websocket](https://gith
   - binary sensor
   - button
   - number
+  - select
   - sensor
   - switch
   - text
