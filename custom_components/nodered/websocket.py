@@ -1,8 +1,14 @@
 """Websocket API for Node-RED."""
 import json
 import logging
+from typing import Any
 
 from homeassistant.components import device_automation
+from homeassistant.components.conversation import (
+    HOME_ASSISTANT_AGENT,
+    _get_agent_manager,
+)
+from homeassistant.components.conversation.default_agent import DefaultAgent
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.device_automation.exceptions import (
     DeviceNotFound,
@@ -18,6 +24,7 @@ from homeassistant.components.websocket_api import (
     result_message,
     websocket_command,
 )
+from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.const import (
     CONF_DOMAIN,
     CONF_ID,
@@ -26,7 +33,7 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_WEBHOOK_ID,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import async_entries_for_device, async_get
@@ -63,17 +70,20 @@ def register_websocket_handlers(hass: HomeAssistantType):
     async_register_command(hass, websocket_config_update)
     async_register_command(hass, websocket_version)
     async_register_command(hass, websocket_webhook)
+    async_register_command(hass, websocket_sentence)
 
 
 @require_admin
-@async_response
 @websocket_command(
     {
         vol.Required(CONF_TYPE): "nodered/device_action",
         vol.Required("action"): cv.DEVICE_ACTION_SCHEMA,
     }
 )
-async def websocket_device_action(hass, connection, msg):
+@async_response
+async def websocket_device_action(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
     """Sensor command."""
     context = connection.context(msg)
     platform = await device_automation.async_get_device_automation_platform(
@@ -92,7 +102,6 @@ async def websocket_device_action(hass, connection, msg):
 
 
 @require_admin
-@async_response
 @websocket_command(
     {
         vol.Required(CONF_TYPE): "nodered/device/remove",
@@ -100,7 +109,10 @@ async def websocket_device_action(hass, connection, msg):
         vol.Optional(CONF_CONFIG, default={}): dict,
     }
 )
-async def websocket_device_remove(hass, connection, msg):
+@async_response
+async def websocket_device_remove(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
     """Remove a device."""
     device_registry = dr.async_get(hass)
     device = device_registry.async_get_device({(DOMAIN, msg[CONF_NODE_ID])})
@@ -133,7 +145,9 @@ async def websocket_device_remove(hass, connection, msg):
         vol.Optional(CONF_SUB_TYPE): str,
     }
 )
-def websocket_discovery(hass, connection, msg):
+def websocket_discovery(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
     """Sensor command."""
     async_dispatcher_send(
         hass, NODERED_DISCOVERY.format(msg[CONF_COMPONENT]), msg, connection
@@ -151,7 +165,9 @@ def websocket_discovery(hass, connection, msg):
         vol.Optional(CONF_ATTRIBUTES, default={}): dict,
     }
 )
-def websocket_entity(hass, connection, msg):
+def websocket_entity(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
     """Sensor command."""
 
     async_dispatcher_send(
@@ -169,7 +185,9 @@ def websocket_entity(hass, connection, msg):
         vol.Optional(CONF_CONFIG, default={}): dict,
     }
 )
-def websocket_config_update(hass, connection, msg):
+def websocket_config_update(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
     """Sensor command."""
 
     async_dispatcher_send(
@@ -180,14 +198,15 @@ def websocket_config_update(hass, connection, msg):
 
 @require_admin
 @websocket_command({vol.Required(CONF_TYPE): "nodered/version"})
-def websocket_version(hass, connection, msg):
+def websocket_version(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
     """Version command."""
 
     connection.send_message(result_message(msg[CONF_ID], VERSION))
 
 
 @require_admin
-@async_response
 @websocket_command(
     {
         vol.Required(CONF_TYPE): "nodered/webhook",
@@ -196,7 +215,10 @@ def websocket_version(hass, connection, msg):
         vol.Required(CONF_SERVER_ID): cv.string,
     }
 )
-async def websocket_webhook(hass, connection, msg):
+@async_response
+async def websocket_webhook(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
     """Create webhook command."""
     webhook_id = msg[CONF_WEBHOOK_ID]
 
@@ -239,4 +261,51 @@ async def websocket_webhook(hass, connection, msg):
 
     _LOGGER.info(f"Webhook created: {webhook_id[:15]}..")
     connection.subscriptions[msg[CONF_ID]] = remove_webhook
+    connection.send_message(result_message(msg[CONF_ID], {"success": True}))
+
+
+@require_admin
+@websocket_command(
+    {
+        vol.Required(CONF_TYPE): "nodered/sentence",
+        vol.Required(CONF_SERVER_ID): cv.string,
+        vol.Required("sentences", default=[]): [cv.string],
+    }
+)
+@async_response
+async def websocket_sentence(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Create sentence trigger."""
+    sentences = msg["sentences"]
+
+    @callback
+    async def handle_trigger(sentence: str) -> str:
+        """Handle Sentence trigger."""
+
+        _LOGGER.debug(f"Sentence trigger: {sentence}")
+        connection.send_message(
+            event_message(msg[CONF_ID], {"data": {"sentence": sentence}})
+        )
+
+        return "Done"
+
+    def remove_trigger() -> None:
+        """Remove sentence trigger."""
+        _remove_trigger()
+        _LOGGER.info(f"Sentence trigger removed: {sentences}")
+
+    try:
+        default_agent = await _get_agent_manager(hass).async_get_agent(
+            HOME_ASSISTANT_AGENT
+        )
+        assert isinstance(default_agent, DefaultAgent)
+
+        _remove_trigger = default_agent.register_trigger(sentences, handle_trigger)
+    except ValueError:
+        connection.send_message(result_message(msg[CONF_ID], {"success": False}))
+        return
+
+    _LOGGER.info(f"Sentence trigger created: {sentences}")
+    connection.subscriptions[msg[CONF_ID]] = remove_trigger
     connection.send_message(result_message(msg[CONF_ID], {"success": True}))
