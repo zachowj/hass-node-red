@@ -15,6 +15,7 @@ from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.components.device_automation.trigger import TRIGGER_SCHEMA
+from homeassistant.components.webhook import SUPPORTED_METHODS
 from homeassistant.components.websocket_api import (
     async_register_command,
     async_response,
@@ -56,6 +57,9 @@ from .const import (
     NODERED_ENTITY,
     VERSION,
 )
+
+CONF_ALLOWED_METHODS = "allowed_methods"
+CONF_LOCAL_ONLY = "local_only"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -210,9 +214,14 @@ def websocket_version(
 @websocket_command(
     {
         vol.Required(CONF_TYPE): "nodered/webhook",
-        vol.Required(CONF_WEBHOOK_ID): cv.string,
-        vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_SERVER_ID): cv.string,
+        vol.Required(CONF_NAME): cv.string,
+        vol.Required(CONF_WEBHOOK_ID): cv.string,
+        vol.Optional(CONF_ALLOWED_METHODS): vol.All(
+            cv.ensure_list,
+            [vol.All(vol.Upper, vol.In(SUPPORTED_METHODS))],
+            vol.Unique(),
+        ),
     }
 )
 @async_response
@@ -221,6 +230,7 @@ async def websocket_webhook(
 ) -> None:
     """Create webhook command."""
     webhook_id = msg[CONF_WEBHOOK_ID]
+    allowed_methods = msg.get(CONF_ALLOWED_METHODS)
 
     @callback
     async def handle_webhook(hass, id, request):
@@ -253,7 +263,11 @@ async def websocket_webhook(
 
     try:
         hass.components.webhook.async_register(
-            DOMAIN, msg[CONF_NAME], webhook_id, handle_webhook
+            DOMAIN,
+            msg[CONF_NAME],
+            webhook_id,
+            handle_webhook,
+            allowed_methods=allowed_methods,
         )
     except ValueError:
         connection.send_message(result_message(msg[CONF_ID], {"success": False}))
