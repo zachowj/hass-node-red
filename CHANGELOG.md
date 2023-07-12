@@ -16,6 +16,10 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## 1.6.0 (2023-07-12)
+
+**Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.5.0...v1.6.0
+
 ## 1.5.0 (2023-07-12)
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.4.0...v1.5.0
