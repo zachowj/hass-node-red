@@ -23,7 +23,7 @@ _Companion Component to [node-red-contrib-home-assistant-websocket](https://gith
 ## Minimum Requirements
 
 - [node-red-contrib-home-assistant-websocket](https://github.com/zachowj/node-red-contrib-home-assistant-websocket) v0.20+
-- [Home Assistant](https://github.com/home-assistant/core) 2021.12.0
+- [Home Assistant](https://github.com/home-assistant/core) 2023.7.0+
 
 ## Installation
 
