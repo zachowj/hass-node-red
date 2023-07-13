@@ -16,6 +16,16 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## 1.6.1 (2023-07-13)
+
+## What's Changed
+* Create zh-CN.json by @XuyuEre in https://github.com/zachowj/hass-node-red/pull/193
+
+## New Contributors
+* @XuyuEre made their first contribution in https://github.com/zachowj/hass-node-red/pull/193
+
+**Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.6.0...v1.6.1
+
 ## 1.6.0 (2023-07-12)
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.5.0...v1.6.0
