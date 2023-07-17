@@ -34,6 +34,7 @@ CONF_STATE_CLASS = "state_class"
 CONF_SUB_TYPE = "sub_type"
 CONF_SWITCH = "switch"
 CONF_TEXT = "text"
+CONF_TIME = "time"
 CONF_TRIGGER_ENTITY_ID = "trigger_entity_id"
 CONF_VERSION = "version"
 
@@ -51,6 +52,7 @@ SERVICE_TRIGGER = "trigger"
 NAME = "Node-RED Companion"
 SWITCH_ICON = "mdi:electric-switch-closed"
 SELECT_ICON = "mdi:format-list-bulleted"
+TIME_ICON = "mdi:clock-time-three"
 
 STARTUP_MESSAGE = f"""
 -------------------------------------------------------------------

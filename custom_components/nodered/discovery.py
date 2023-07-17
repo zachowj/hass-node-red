@@ -20,6 +20,7 @@ from .const import (
     CONF_SERVER_ID,
     CONF_SWITCH,
     CONF_TEXT,
+    CONF_TIME,
     DOMAIN,
     DOMAIN_DATA,
     NODERED_DISCOVERY,
@@ -35,6 +36,7 @@ SUPPORTED_COMPONENTS = [
     CONF_SENSOR,
     CONF_SWITCH,
     CONF_TEXT,
+    CONF_TIME,
 ]
 
 _LOGGER = logging.getLogger(__name__)
