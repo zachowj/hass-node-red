@@ -50,8 +50,10 @@ SERVICE_TRIGGER = "trigger"
 
 # Defaults
 NAME = "Node-RED Companion"
+NUMBER_ICON = "mdi:numeric"
 SWITCH_ICON = "mdi:electric-switch-closed"
 SELECT_ICON = "mdi:format-list-bulleted"
+TEXT_ICON = "mdi:form-textbox"
 TIME_ICON = "mdi:clock-time-three"
 
 STARTUP_MESSAGE = f"""

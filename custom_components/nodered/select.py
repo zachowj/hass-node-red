@@ -50,10 +50,6 @@ class NodeRedSelect(NodeRedEntity, SelectEntity):
         self._message_id = config[CONF_ID]
         self._connection = connection
 
-        self._attr_icon = self._config.get(CONF_ICON)
-        self._attr_current_option = self._config.get(CONF_STATE)
-        self._attr_options = self._config.get(CONF_OPTIONS)
-
     async def async_select_option(self, option: str) -> None:
         """Set new option."""
         self._connection.send_message(

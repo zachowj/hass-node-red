@@ -19,13 +19,7 @@ from homeassistant.const import (
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import NodeRedEntity
-from .const import (
-    CONF_CONFIG,
-    CONF_NUMBER,
-    EVENT_VALUE_CHANGE,
-    NODERED_DISCOVERY_NEW,
-    SWITCH_ICON,
-)
+from .const import CONF_NUMBER, EVENT_VALUE_CHANGE, NODERED_DISCOVERY_NEW, NUMBER_ICON
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,8 +68,8 @@ class NodeRedNumber(NodeRedEntity, RestoreNumber):
         self._message_id = config[CONF_ID]
         self._connection = connection
 
-        self._attr_icon = self._config.get(CONF_ICON)
-        self._attr_native_value = self._config.get(CONF_STATE)
+        self._attr_icon = self._config.get(CONF_ICON, NUMBER_ICON)
+        self._attr_native_value = config.get(CONF_STATE)
 
         self._attr_native_min_value = self._config.get(
             CONF_MIN_VALUE, DEFAULT_MIN_VALUE
@@ -112,7 +106,7 @@ class NodeRedNumber(NodeRedEntity, RestoreNumber):
         """Update the entity config."""
         super().update_discovery_config(msg)
 
-        self._attr_icon = msg[CONF_CONFIG].get(CONF_ICON, SWITCH_ICON)
+        self._attr_icon = self._config.get(CONF_ICON, NUMBER_ICON)
         self._attr_native_min_value = self._config.get(
             CONF_MIN_VALUE, DEFAULT_MIN_VALUE
         )

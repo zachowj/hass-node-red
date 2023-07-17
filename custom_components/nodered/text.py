@@ -7,13 +7,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from custom_components.nodered.number import CONF_VALUE
 
 from . import NodeRedEntity
-from .const import (
-    CONF_CONFIG,
-    CONF_TEXT,
-    EVENT_VALUE_CHANGE,
-    NODERED_DISCOVERY_NEW,
-    SWITCH_ICON,
-)
+from .const import CONF_TEXT, EVENT_VALUE_CHANGE, NODERED_DISCOVERY_NEW, TEXT_ICON
 
 CONF_MAX_LENGTH = "max_length"
 CONF_MIN_LENGTH = "min_length"
@@ -57,13 +51,6 @@ class NodeRedText(NodeRedEntity, RestoreText):
         self._message_id = config[CONF_ID]
         self._connection = connection
 
-        self._attr_icon = self._config.get(CONF_ICON)
-        self._attr_native_value = self._config.get(CONF_STATE)
-        self._attr_native_min = self._config.get(CONF_MIN_LENGTH, DEFAULT_MIN_LENGTH)
-        self._attr_native_max = self._config.get(CONF_MAX_LENGTH, DEFAULT_MAX_LENGTH)
-        self._attr_pattern = self._config.get(CONF_PATTERN, None)
-        self._attr_mode = TextMode(self._config.get(CONF_MODE, DEFAULT_MODE))
-
     async def async_added_to_hass(self) -> None:
         """Restore native_*."""
         await super().async_added_to_hass()
@@ -90,7 +77,7 @@ class NodeRedText(NodeRedEntity, RestoreText):
         """Update the entity config."""
         super().update_discovery_config(msg)
 
-        self._attr_icon = msg[CONF_CONFIG].get(CONF_ICON, SWITCH_ICON)
+        self._attr_icon = self._config.get(CONF_ICON, TEXT_ICON)
         self._attr_native_min = self._config.get(CONF_MIN_LENGTH, DEFAULT_MIN_LENGTH)
         self._attr_native_max = self._config.get(CONF_MAX_LENGTH, DEFAULT_MAX_LENGTH)
         self._attr_pattern = self._config.get(CONF_PATTERN, None)
