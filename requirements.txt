@@ -1,4 +1,4 @@
 colorlog==6.7.0
 homeassistant
-pip>=21.0,<23.2
+pip>=21.0,<23.3
 pre-commit
