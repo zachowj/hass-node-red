@@ -45,7 +45,6 @@ from .const import (
     NODERED_DISCOVERY_UPDATED,
     NODERED_ENTITY,
     STARTUP_MESSAGE,
-    VERSION,
 )
 from .discovery import (
     ALREADY_DISCOVERED,
@@ -55,6 +54,7 @@ from .discovery import (
     start_discovery,
     stop_discovery,
 )
+from .version import __version__ as VERSION
 from .websocket import register_websocket_handlers
 
 _LOGGER = logging.getLogger(__name__)
