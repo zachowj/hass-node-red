@@ -65,4 +65,5 @@ If you want to contribute please read the [Contribution guidelines](CONTRIBUTING
 [hacsbadge]: https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge
 [release]: https://github.com/zachowj/hass-node-red/releases
 [releasebadge]: https://img.shields.io/github/v/release/zachowj/hass-node-red?style=for-the-badge
-[buildbadge]: https://img.shields.io/github/workflow/status/zachowj/hass-node-red/pre-commit?style=for-the-badge
+[buildbadge]: https://img.shields.io/github/actions/workflow/status/zachowj/hass-node-red/test.yml?branch=main
+
