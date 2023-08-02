@@ -16,6 +16,14 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## 2.1.1 (2023-08-02)
+
+## What's Changed
+* build(deps): update pip requirement from <23.2,>=21.0 to >=21.0,<23.3 by @dependabot in https://github.com/zachowj/hass-node-red/pull/200
+
+
+**Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v2.1.0...v2.1.1
+
 ## 2.1.0 (2023-07-17)
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v2.0.0...v2.1.0
