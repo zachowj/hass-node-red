@@ -60,12 +60,7 @@ from .websocket import register_websocket_handlers
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass, config):
-    """Set up this integration using YAML is not supported."""
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up this integration using UI."""
 
     if hass.data.get(DOMAIN_DATA) is None:
