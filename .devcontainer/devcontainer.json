@@ -1,6 +1,6 @@
 {
   "name": "zachowj/hass-node-red",
-  "image": "mcr.microsoft.com/vscode/devcontainers/python:0-3.10-bullseye",
+  "image": "mcr.microsoft.com/vscode/devcontainers/python:0-3.11-bullseye",
   "postCreateCommand": "bash scripts/setup",
   "forwardPorts": [8123],
   "portsAttributes": {
@@ -12,6 +12,7 @@
   "customizations": {
     "vscode": {
       "extensions": [
+        "GitHub.copilot",
         "ms-python.python",
         "github.vscode-pull-request-github",
         "ryanluker.vscode-coverage-gutters",
