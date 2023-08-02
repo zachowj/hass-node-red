@@ -16,7 +16,8 @@ jobs:
       - name: HACS validation
         uses: "hacs/action@main"
         with:
-          CATEGORY: "integration"
+          category: "integration"
+          ignore: brands
 
       - name: Hassfest validation
         uses: "home-assistant/actions/hassfest@master"
@@ -24,7 +25,7 @@ jobs:
       - name: Setup Python
         uses: "actions/setup-python@v4"
         with:
-          python-version: "3.10"
+          python-version: "3.11"
       - name: Install requirements
         run: python3 -m pip install -r requirements_test.txt
       - name: Run tests
