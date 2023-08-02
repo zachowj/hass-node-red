@@ -3,6 +3,7 @@ import json
 import logging
 from typing import Any
 
+from hassil.recognize import RecognizeResult
 from homeassistant.components import device_automation
 from homeassistant.components.conversation import (
     HOME_ASSISTANT_AGENT,
@@ -294,12 +295,15 @@ async def websocket_sentence(
     sentences = msg["sentences"]
 
     @callback
-    async def handle_trigger(sentence: str) -> str:
+    async def handle_trigger(sentence: str, result: RecognizeResult = None) -> str:
         """Handle Sentence trigger."""
+        """RecognizeResult was added in 2023.8.0"""
 
         _LOGGER.debug(f"Sentence trigger: {sentence}")
         connection.send_message(
-            event_message(msg[CONF_ID], {"data": {"sentence": sentence}})
+            event_message(
+                msg[CONF_ID], {"data": {"sentence": sentence, "result": result}}
+            )
         )
 
         return "Done"
