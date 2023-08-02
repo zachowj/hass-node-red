@@ -16,3 +16,6 @@ coverage.xml
 config/**
 !config/configuration.yaml
 !config/automations.yaml
+
+.venv
+pyvenv.cfg
