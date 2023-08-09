@@ -285,6 +285,7 @@ async def websocket_webhook(
         vol.Required(CONF_TYPE): "nodered/sentence",
         vol.Required(CONF_SERVER_ID): cv.string,
         vol.Required("sentences", default=[]): [cv.string],
+        vol.Optional("response", default="Done"): cv.string,
     }
 )
 @async_response
@@ -293,6 +294,7 @@ async def websocket_sentence(
 ) -> None:
     """Create sentence trigger."""
     sentences = msg["sentences"]
+    response = msg["response"]
 
     @callback
     async def handle_trigger(sentence: str, result: RecognizeResult = None) -> str:
@@ -306,7 +308,7 @@ async def websocket_sentence(
             )
         )
 
-        return "Done"
+        return response
 
     def remove_trigger() -> None:
         """Remove sentence trigger."""
