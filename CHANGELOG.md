@@ -16,6 +16,18 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## [2.2.0](https://github.com/zachowj/hass-node-red/compare/v2.1.1...v2.2.0) (2023-08-09)
+
+
+### Features
+
+* **sentence:** Allow custom responses ([d3b6ebe](https://github.com/zachowj/hass-node-red/commit/d3b6ebe647f0ad83a83ba33335d35d2fb27f22ed))
+
+
+### Documentation
+
+* Fix linting in README ([18243f0](https://github.com/zachowj/hass-node-red/commit/18243f07094081eef1585e93f4ca0ab20112e671))
+
 ## 2.1.1 (2023-08-02)
 
 ## What's Changed
