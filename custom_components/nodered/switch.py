@@ -23,7 +23,6 @@ from .const import (
     CONF_MESSAGE,
     CONF_OUTPUT_PATH,
     CONF_SWITCH,
-    CONF_TRIGGER_ENTITY_ID,
     NODERED_DISCOVERY_NEW,
     SERVICE_TRIGGER,
     SWITCH_ICON,
@@ -34,9 +33,8 @@ _LOGGER = logging.getLogger(__name__)
 SERVICE_TRIGGER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_ids,
-        vol.Optional(CONF_TRIGGER_ENTITY_ID): cv.entity_id,
-        vol.Optional(CONF_OUTPUT_PATH): cv.boolean,
-        vol.Optional(CONF_MESSAGE): vol.Extra,
+        vol.Optional(CONF_OUTPUT_PATH, default="0"): cv.string,
+        vol.Optional(CONF_MESSAGE, default={}): dict,
     }
 )
 EVENT_TRIGGER_NODE = "automation_triggered"
