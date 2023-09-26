@@ -16,6 +16,23 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## [3.0.0](https://github.com/zachowj/hass-node-red/compare/v2.2.0...v3.0.0) (2023-09-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* The trigger service now only accepts output_path and message and require Home Assistant nodes version 0.57.0+
+* Endpoint for device action changed location from nodered/device_action to nodered/device/action It now matches the new device trigger format
+
+### Bug Fixes
+
+* Fix the trigger service schema ([337330e](https://github.com/zachowj/hass-node-red/commit/337330e6420a338a495921a4e2a2c33bf8760291))
+
+
+### Code Refactoring
+
+* Create a separate endpoint for device triggers ([029f88b](https://github.com/zachowj/hass-node-red/commit/029f88b211b01b415c8894e7374eed7416bf9324))
+
 ## [2.2.0](https://github.com/zachowj/hass-node-red/compare/v2.1.1...v2.2.0) (2023-08-09)
 
 
