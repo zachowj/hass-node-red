@@ -36,7 +36,11 @@ from homeassistant.const import (
     CONF_WEBHOOK_ID,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    trigger,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import async_entries_for_device, async_get
 from homeassistant.helpers.typing import HomeAssistantType
@@ -58,6 +62,7 @@ from .const import (
     NODERED_ENTITY,
     VERSION,
 )
+from .utils import NodeRedJSONEncoder
 
 CONF_ALLOWED_METHODS = "allowed_methods"
 CONF_LOCAL_ONLY = "local_only"
@@ -70,6 +75,7 @@ def register_websocket_handlers(hass: HomeAssistantType):
 
     async_register_command(hass, websocket_device_action)
     async_register_command(hass, websocket_device_remove)
+    async_register_command(hass, websocket_device_trigger)
     async_register_command(hass, websocket_discovery)
     async_register_command(hass, websocket_entity)
     async_register_command(hass, websocket_config_update)
@@ -81,7 +87,7 @@ def register_websocket_handlers(hass: HomeAssistantType):
 @require_admin
 @websocket_command(
     {
-        vol.Required(CONF_TYPE): "nodered/device_action",
+        vol.Required(CONF_TYPE): "nodered/device/action",
         vol.Required("action"): cv.DEVICE_ACTION_SCHEMA,
     }
 )
@@ -97,13 +103,15 @@ async def websocket_device_action(
 
     try:
         await platform.async_call_action_from_config(hass, msg["action"], {}, context)
-        connection.send_message(result_message(msg[CONF_ID], {"success": True}))
+        connection.send_message(result_message(msg[CONF_ID]))
     except InvalidDeviceAutomationConfig as err:
         connection.send_message(error_message(msg[CONF_ID], "invalid_config", str(err)))
     except DeviceNotFound as err:
         connection.send_message(
             error_message(msg[CONF_ID], "device_not_found", str(err))
         )
+    except Exception as err:
+        connection.send_message(error_message(msg[CONF_ID], "unknown_error", str(err)))
 
 
 @require_admin
@@ -131,7 +139,7 @@ async def websocket_device_remove(
 
         device_registry.async_remove_device(device.id)
 
-    connection.send_message(result_message(msg[CONF_ID], {"success": True}))
+    connection.send_message(result_message(msg[CONF_ID]))
 
 
 @require_admin
@@ -157,7 +165,7 @@ def websocket_discovery(
     async_dispatcher_send(
         hass, NODERED_DISCOVERY.format(msg[CONF_COMPONENT]), msg, connection
     )
-    connection.send_message(result_message(msg[CONF_ID], {"success": True}))
+    connection.send_message(result_message(msg[CONF_ID]))
 
 
 @require_admin
@@ -178,7 +186,7 @@ def websocket_entity(
     async_dispatcher_send(
         hass, NODERED_ENTITY.format(msg[CONF_SERVER_ID], msg[CONF_NODE_ID]), msg
     )
-    connection.send_message(result_message(msg[CONF_ID], {"success": True}))
+    connection.send_message(result_message(msg[CONF_ID]))
 
 
 @require_admin
@@ -198,7 +206,7 @@ def websocket_config_update(
     async_dispatcher_send(
         hass, NODERED_CONFIG_UPDATE.format(msg[CONF_SERVER_ID], msg[CONF_NODE_ID]), msg
     )
-    connection.send_message(result_message(msg[CONF_ID], {"success": True}))
+    connection.send_message(result_message(msg[CONF_ID]))
 
 
 @require_admin
@@ -260,7 +268,7 @@ async def websocket_webhook(
             pass
 
         _LOGGER.info(f"Webhook removed: {webhook_id[:15]}..")
-        connection.send_message(result_message(msg[CONF_ID], {"success": True}))
+        connection.send_message(result_message(msg[CONF_ID]))
 
     try:
         hass.components.webhook.async_register(
@@ -270,13 +278,16 @@ async def websocket_webhook(
             handle_webhook,
             allowed_methods=allowed_methods,
         )
-    except ValueError:
-        connection.send_message(result_message(msg[CONF_ID], {"success": False}))
+    except ValueError as err:
+        connection.send_message(error_message(msg[CONF_ID], "value_error", str(err)))
+        return
+    except Exception as err:
+        connection.send_message(error_message(msg[CONF_ID], "unknown_error", str(err)))
         return
 
     _LOGGER.info(f"Webhook created: {webhook_id[:15]}..")
     connection.subscriptions[msg[CONF_ID]] = remove_webhook
-    connection.send_message(result_message(msg[CONF_ID], {"success": True}))
+    connection.send_message(result_message(msg[CONF_ID]))
 
 
 @require_admin
@@ -322,10 +333,78 @@ async def websocket_sentence(
         assert isinstance(default_agent, DefaultAgent)
 
         _remove_trigger = default_agent.register_trigger(sentences, handle_trigger)
-    except ValueError:
-        connection.send_message(result_message(msg[CONF_ID], {"success": False}))
+    except ValueError as err:
+        connection.send_message(error_message(msg[CONF_ID], "value_error", str(err)))
+        return
+    except Exception as err:
+        connection.send_message(error_message(msg[CONF_ID], "unknown_error", str(err)))
         return
 
     _LOGGER.info(f"Sentence trigger created: {sentences}")
     connection.subscriptions[msg[CONF_ID]] = remove_trigger
-    connection.send_message(result_message(msg[CONF_ID], {"success": True}))
+    connection.send_message(result_message(msg[CONF_ID]))
+
+
+@require_admin
+@websocket_command(
+    {
+        vol.Required(CONF_TYPE): "nodered/device/trigger",
+        vol.Required(CONF_NODE_ID): cv.string,
+        vol.Required(CONF_DEVICE_TRIGGER, default={}): dict,
+    }
+)
+@async_response
+async def websocket_device_trigger(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Create device trigger."""
+    node_id = msg[CONF_NODE_ID]
+    trigger_data = msg[CONF_DEVICE_TRIGGER]
+
+    def forward_trigger(event, context=None):
+        """Forward events to websocket."""
+        message = event_message(
+            msg[CONF_ID],
+            {"type": "device_trigger", "data": event["trigger"]},
+        )
+        connection.send_message(
+            json.dumps(message, cls=NodeRedJSONEncoder, allow_nan=False)
+        )
+
+    def unsubscribe() -> None:
+        """Remove device trigger."""
+        remove_trigger()
+        _LOGGER.info(f"Device trigger removed: {node_id}")
+
+    try:
+        trigger_config = await trigger.async_validate_trigger_config(
+            hass, [trigger_data]
+        )
+        remove_trigger = await trigger.async_initialize_triggers(
+            hass,
+            trigger_config,
+            forward_trigger,
+            DOMAIN,
+            DOMAIN,
+            _LOGGER.log,
+        )
+
+    except vol.MultipleInvalid as err:
+        _LOGGER.error(
+            f"Error initializing device trigger '{node_id}': {str(err)}",
+        )
+        connection.send_message(
+            error_message(msg[CONF_ID], "invalid_trigger", str(err))
+        )
+        return
+    except Exception as err:
+        _LOGGER.error(
+            f"Error initializing device trigger '{node_id}': {str(err)}",
+        )
+        connection.send_message(error_message(msg[CONF_ID], "unknown_error", str(err)))
+        return
+
+    _LOGGER.info(f"Device trigger created: {node_id}")
+    _LOGGER.debug(f"Device trigger config for {node_id}: {trigger_data}")
+    connection.subscriptions[msg[CONF_ID]] = unsubscribe
+    connection.send_message(result_message(msg[CONF_ID]))
