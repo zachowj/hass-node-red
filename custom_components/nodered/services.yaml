@@ -1,7 +1,4 @@
 trigger:
-  name: Trigger a Node-RED Node
-  description: >
-    Trigger a Node-RED node.
   target:
     entity:
       integration: nodered
@@ -9,11 +6,9 @@ trigger:
   fields:
     output_path:
       default: "0"
-      description: Comma separated list of paths to send the message to. Zero is used to send the message to all paths.
       example: "1,2"
       selector:
         text:
     message:
-      description: The message object that will be sent to the next node.
       selector:
         object:

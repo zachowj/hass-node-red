@@ -1,12 +1,28 @@
 {
   "config": {
+    "abort": {
+      "single_instance_allowed": "Already configured. Only a single configuration possible."
+    },
     "step": {
       "user": {
         "description": "Do you want to add Node-RED Companion to Home Assistant?"
       }
-    },
-    "abort": {
-      "single_instance_allowed": "Already configured. Only a single configuration possible."
+    }
+  },
+  "services": {
+    "trigger": {
+      "description": "Send a message to a Node-RED flow that has been exposed to Home Assistant.",
+      "fields": {
+        "message": {
+          "description": "The message object that will be sent to the next node.",
+          "name": "Message"
+        },
+        "output_path": {
+          "description": "Comma separated list of paths to send the message to. Zero is used to send the message to all paths.",
+          "name": "Output Path"
+        }
+      },
+      "name": "Trigger a Node-RED flow"
     }
   }
 }
