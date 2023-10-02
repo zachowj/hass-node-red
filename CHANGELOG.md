@@ -16,6 +16,13 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## [3.0.1](https://github.com/zachowj/hass-node-red/compare/v3.0.0...v3.0.1) (2023-10-02)
+
+
+### Documentation
+
+* Move service data to translations ([0e126a7](https://github.com/zachowj/hass-node-red/commit/0e126a7e904b9b30cbd442b8794661e2414bafc1))
+
 ## [3.0.0](https://github.com/zachowj/hass-node-red/compare/v2.2.0...v3.0.0) (2023-09-26)
 
 
