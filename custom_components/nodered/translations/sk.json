@@ -1,0 +1,28 @@
+{
+  "config": {
+    "abort": {
+      "single_instance_allowed": "Už je nakonfigurovaný. Možná len jedna konfigurácia."
+    },
+    "step": {
+      "user": {
+        "description": "Chcete pridať Node-RED Companion do aplikácie Home Assistant?"
+      }
+    }
+  },
+  "services": {
+    "trigger": {
+      "description": "Odoslanie správy do toku Node-RED, ktorý bol vystavený aplikácii Home Assistant.",
+      "fields": {
+        "message": {
+          "description": "Objekt správy, ktorý bude odoslaný ďalšiemu uzlu.",
+          "name": "Správa"
+        },
+        "output_path": {
+          "description": "Zoznam ciest oddelených čiarkou, na ktoré sa má správa odoslať. Nula sa používa na odoslanie správy na všetky cesty.",
+          "name": "Výstupná cesta"
+        }
+      },
+      "name": "Spustenie priebehu Node-RED"
+    }
+  }
+}
