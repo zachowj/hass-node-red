@@ -16,6 +16,18 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## [3.1.0](https://github.com/zachowj/hass-node-red/compare/v3.0.1...v3.1.0) (2023-11-05)
+
+
+### Features
+
+* Slovak translation ([5179512](https://github.com/zachowj/hass-node-red/commit/517951220990cd428fff20662acf994e6288ab40))
+
+
+### Bug Fixes
+
+* Change sensors with the category config to none ([5607880](https://github.com/zachowj/hass-node-red/commit/56078807990de1879fb526dd9eae026465b8344f)), closes [#225](https://github.com/zachowj/hass-node-red/issues/225)
+
 ## [3.0.1](https://github.com/zachowj/hass-node-red/compare/v3.0.0...v3.0.1) (2023-10-02)
 
 
