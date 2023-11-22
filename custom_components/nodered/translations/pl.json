@@ -1,0 +1,28 @@
+{
+  "config": {
+    "abort": {
+      "single_instance_allowed": "Już skonfigurowano. Tylko jedna configuracja możliwa."
+    },
+    "step": {
+      "user": {
+        "description": "Czy chcesz dodać Asystenta Node-RED do Home Assistanta?"
+      }
+    }
+  },
+  "services": {
+    "trigger": {
+      "description": "Wyślij wiadomość do przepływu Node-RED, który został wystawiony w Home Assistancie.",
+      "fields": {
+        "message": {
+          "description": "Obiekt wiadomości, któ©y zostanie wysłany do następnego węzła.",
+          "name": "Wiadomość"
+        },
+        "output_path": {
+          "description": "Oddzielona przecinkami lista ścieżek do których wysłać wiadomość. Zero aby wysłać wiadomość do wszystkich ścieżek.",
+          "name": "Ścieżka wyjściowa"
+        }
+      },
+      "name": "Wyzwól przepływ Node-RED"
+    }
+  }
+}
