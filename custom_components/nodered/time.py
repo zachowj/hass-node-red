@@ -24,7 +24,7 @@ CONF_VALUE = "value"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up the number platform."""
+    """Set up the time platform."""
 
     async def async_discover(config, connection):
         await _async_setup_entity(hass, config, async_add_entities, connection)
@@ -37,27 +37,31 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 async def _async_setup_entity(hass, config, async_add_entities, connection):
-    """Set up the Node-RED number."""
+    """Set up the Node-RED time."""
 
-    async_add_entities([NodeRedNumber(hass, config, connection)])
+    async_add_entities([NodeRedTime(hass, config, connection)])
 
 
 def _convert_string_to_time(value):
     """Convert string to time."""
     if value is None:
         return None
-    return parser.parse(value).time()
+    try:
+        return parser.parse(value).time()
+    except ValueError:
+        _LOGGER.error(f"Unable to parse time: {value}")
+        return None
 
 
-class NodeRedNumber(NodeRedEntity, TimeEntity):
-    """Node-RED number class."""
+class NodeRedTime(NodeRedEntity, TimeEntity):
+    """Node-RED time class."""
 
     _attr_native_value = None
     _bidirectional = True
     _component = CONF_TIME
 
     def __init__(self, hass, config, connection):
-        """Initialize the number."""
+        """Initialize the time."""
         super().__init__(hass, config)
         self._message_id = config[CONF_ID]
         self._connection = connection
