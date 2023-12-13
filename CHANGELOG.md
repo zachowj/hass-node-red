@@ -16,6 +16,13 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## [3.1.2](https://github.com/zachowj/hass-node-red/compare/v3.1.1...v3.1.2) (2023-12-13)
+
+
+### Bug Fixes
+
+* **time:** Catch invalid time format ([c071fe0](https://github.com/zachowj/hass-node-red/commit/c071fe05c20833d381eeb42725c2a42b860bed83))
+
 ## [3.1.1](https://github.com/zachowj/hass-node-red/compare/v3.1.0...v3.1.1) (2023-11-05)
 
 
