@@ -4,7 +4,7 @@
   "extra-files": [
     {
       "type": "json",
-      "path": "custom_integration/nodered/manifest.json",
+      "path": "custom_components/nodered/manifest.json",
       "jsonpath": "$.version"
     }
   ]
