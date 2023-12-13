@@ -36,7 +36,6 @@ jobs:
       - uses: GoogleCloudPlatform/release-please-action@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          release-type: python
 
   # tests:
   #   runs-on: "ubuntu-latest"
