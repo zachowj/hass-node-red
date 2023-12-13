@@ -1,5 +1,6 @@
 {
   "bootstrap-sha": "039c01ac9dd1ae9a60a653a4b14a4e623e63b2e4",
+  "group-pull-request-title-pattern": "release v${version}",
   "packages": {
     ".": {
       "release-type": "python",
