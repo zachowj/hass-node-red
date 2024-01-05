@@ -16,6 +16,13 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## [3.1.3](https://github.com/zachowj/hass-node-red/compare/v3.1.2...v3.1.3) (2024-01-05)
+
+
+### Bug Fixes
+
+* Fix failure during loading due to MQTT init ([#239](https://github.com/zachowj/hass-node-red/issues/239)) ([6302ea6](https://github.com/zachowj/hass-node-red/commit/6302ea688eb28979cc994680359ef25f4c57e62b))
+
 ## [3.1.2](https://github.com/zachowj/hass-node-red/compare/v3.1.1...v3.1.2) (2023-12-13)
 
 
