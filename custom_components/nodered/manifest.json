@@ -1,6 +1,7 @@
 {
   "domain": "nodered",
   "name": "Node-RED Companion",
+  "after_dependencies": ["mqtt"],
   "codeowners": ["@zachowj"],
   "config_flow": true,
   "dependencies": [],
