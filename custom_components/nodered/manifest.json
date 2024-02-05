@@ -1,12 +1,8 @@
 {
   "domain": "nodered",
   "name": "Node-RED Companion",
-  "after_dependencies": [
-    "mqtt"
-  ],
-  "codeowners": [
-    "@zachowj"
-  ],
+  "after_dependencies": ["mqtt"],
+  "codeowners": ["@zachowj"],
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://zachowj.github.io/node-red-contrib-home-assistant-websocket/guide/custom_integration/",
