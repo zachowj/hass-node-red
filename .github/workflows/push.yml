@@ -34,8 +34,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: GoogleCloudPlatform/release-please-action@v4
+        id: release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create zip
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          cd ${{ github.workspace }}/custom_components/nodered
+          zip nodered.zip -r ./
+      - name: Upload release
+        if: ${{ steps.release.outputs.release_created }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload ${{ steps.release.outputs.release_tag }} ${{ github.workspace }}/custom_components/nodered/nodered.zip
 
   # tests:
   #   runs-on: "ubuntu-latest"
