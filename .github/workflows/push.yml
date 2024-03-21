@@ -28,7 +28,7 @@ jobs:
         name: Set up Python
         with:
           python-version: "3.11"
-      - uses: pre-commit/action@v3.0.0
+      - uses: pre-commit/action@v3.0.1
 
   release-please:
     runs-on: ubuntu-latest
