@@ -35,7 +35,7 @@ Install via [HACS](https://hacs.xyz) (Home Assistant Community Store)
 1. Find "Node-RED Companion".
 1. Open the search result and click "Download this Repository with HACS".
 1. Refresh your browser window (bug in HA where it doesn't update the integration list after a reboot)
-1. In the Home Assistant UI go to "Configuration" -> "Integrations" click "+" and search for "Node-RED" [![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=nodered)
+1. From "Settings" in the Home Assistant sidebar, select "Devices and Services", click the blue [+ Add integration] button (in bottom right of the page) and search for "Node-RED", and install it. [![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=nodered)
 
 ### Manual
 
@@ -46,7 +46,7 @@ Install via [HACS](https://hacs.xyz) (Home Assistant Community Store)
 1. Place the files you downloaded in the new directory (folder) you created.
 1. Restart Home Assistant
 1. Refresh your browser window (bug in HA where it doesn't update the integration list after a reboot)
-1. In the Home Assistant UI go to "Configuration" -> "Integrations" click "+" and search for "Node-RED" [![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=nodered)
+1. From "Settings" in the Home Assistant sidebar, select "Devices and Services", click the blue [+ Add integration] button (in bottom right of the page) and search for "Node-RED", and install it. [![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=nodered)
 
 ## Configuration
 
