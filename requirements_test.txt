@@ -1,1 +1,5 @@
 pytest-homeassistant-custom-component
+httpx>=0.23.0 # not directly required, pinned by Snyk to avoid a vulnerability
+pylint>=2.6.1 # not directly required, pinned by Snyk to avoid a vulnerability
+pyyaml>=5.4 # not directly required, pinned by Snyk to avoid a vulnerability
+requests>=2.31.0 # not directly required, pinned by Snyk to avoid a vulnerability
