@@ -1,0 +1,17 @@
+{
+  "bootstrap-sha": "039c01ac9dd1ae9a60a653a4b14a4e623e63b2e4",
+  "group-pull-request-title-pattern": "release v${version}",
+  "include-component-in-tag": false,
+  "packages": {
+    ".": {
+      "release-type": "python",
+      "extra-files": [
+        {
+          "type": "json",
+          "path": "custom_components/nodered/manifest.json",
+          "jsonpath": "$.version"
+        }
+      ]
+    }
+  }
+}

@@ -1,18 +1,14 @@
 trigger:
-  description: Trigger a Node-RED Node
   target:
     entity:
       integration: nodered
       domain: switch
   fields:
-    trigger_entity_id:
-      description: Entity Id to trigger the event node with. Only needed if the node is not triggered by a single entity.
-      example: sun.sun
-    skip_condition:
-      description: Skip conditions of the node (defaults to false)
-      example: true
     output_path:
-      description: Which output of the node to use (defaults to true, the top output). Only used when skip_condition is set to true.
-      example: true
-    payload:
-      description: The payload the node will output when triggered. Works only when triggering an entity node, not an event node.
+      default: "0"
+      example: "1,2"
+      selector:
+        text:
+    message:
+      selector:
+        object:

@@ -1,6 +1,6 @@
 # Node-RED Companion Integration
 
-[![hacs][hacsbadge]][hacs] [![releasebadge]][release] ![buildbadge] [![License][license-shield]](LICENSE.md)
+[![hacs][hacsbadge]][hacs] [![releasebadge]][release] [![Build Status][buildstatus-shield]][buildstatus-link] [![License][license-shield]](LICENSE.md)
 
 [![BuyMeCoffee][buymecoffeebadge]][buymecoffee]
 
@@ -8,15 +8,22 @@ _Companion Component to [node-red-contrib-home-assistant-websocket](https://gith
 
 ## Features
 
-- Create and update binary sensors, buttons, sensors, and switches from Node-RED
+- Create and update entities from Node-RED
+  - binary sensor
+  - button
+  - number
+  - select
+  - sensor
+  - switch
+  - text
 - Disable and enable Node-RED flows from Home Assistant UI
 - Create Home Assistant webhooks and handle them in Node-RED
 - Use Device triggers and action from Node-RED
 
 ## Minimum Requirements
 
-- [node-red-contrib-home-assistant-websocket](https://github.com/zachowj/node-red-contrib-home-assistant-websocket) v0.20+
-- [Home Assistant](https://github.com/home-assistant/core) 2021.12.0
+- [node-red-contrib-home-assistant-websocket](https://github.com/zachowj/node-red-contrib-home-assistant-websocket) v0.57+
+- [Home Assistant](https://github.com/home-assistant/core) 2023.7.0+
 
 ## Installation
 
@@ -28,7 +35,7 @@ Install via [HACS](https://hacs.xyz) (Home Assistant Community Store)
 1. Find "Node-RED Companion".
 1. Open the search result and click "Download this Repository with HACS".
 1. Refresh your browser window (bug in HA where it doesn't update the integration list after a reboot)
-1. In the Home Assistant UI go to "Configuration" -> "Integrations" click "+" and search for "Node-RED" [![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=nodered)
+1. From "Settings" in the Home Assistant sidebar, select "Devices and Services", click the blue [+ Add integration] button (in bottom right of the page) and search for "Node-RED", and install it. [![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=nodered)
 
 ### Manual
 
@@ -39,23 +46,7 @@ Install via [HACS](https://hacs.xyz) (Home Assistant Community Store)
 1. Place the files you downloaded in the new directory (folder) you created.
 1. Restart Home Assistant
 1. Refresh your browser window (bug in HA where it doesn't update the integration list after a reboot)
-1. In the Home Assistant UI go to "Configuration" -> "Integrations" click "+" and search for "Node-RED" [![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=nodered)
-
-   Using your HA configuration directory (folder) as a starting point you should have this:
-
-   ```text
-   custom_components/nodered/translations/en.json
-   custom_components/nodered/__init__.py
-   custom_components/nodered/binary_sensor.py
-   custom_components/nodered/config_flow.py
-   custom_components/nodered/const.py
-   custom_components/nodered/discovery.py
-   custom_components/nodered/manifest.json
-   custom_components/nodered/sensor.py
-   custom_components/nodered/services.yaml
-   custom_components/nodered/switch.py
-   custom_components/nodered/websocket.py
-   ```
+1. From "Settings" in the Home Assistant sidebar, select "Devices and Services", click the blue [+ Add integration] button (in bottom right of the page) and search for "Node-RED", and install it. [![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=nodered)
 
 ## Configuration
 
@@ -74,4 +65,5 @@ If you want to contribute please read the [Contribution guidelines](CONTRIBUTING
 [hacsbadge]: https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge
 [release]: https://github.com/zachowj/hass-node-red/releases
 [releasebadge]: https://img.shields.io/github/v/release/zachowj/hass-node-red?style=for-the-badge
-[buildbadge]: https://img.shields.io/github/workflow/status/zachowj/hass-node-red/pre-commit?style=for-the-badge
+[buildstatus-shield]: https://img.shields.io/github/actions/workflow/status/zachowj/hass-node-red/push.yml?branch=main&style=for-the-badge
+[buildstatus-link]: https://github.com/zachowj/hass-node-red/actions

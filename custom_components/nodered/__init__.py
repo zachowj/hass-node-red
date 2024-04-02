@@ -35,6 +35,7 @@ from .const import (
     CONF_ENTITY_PICTURE,
     CONF_NAME,
     CONF_NODE_ID,
+    CONF_OPTIONS,
     CONF_REMOVE,
     CONF_SERVER_ID,
     CONF_VERSION,
@@ -44,7 +45,6 @@ from .const import (
     NODERED_DISCOVERY_UPDATED,
     NODERED_ENTITY,
     STARTUP_MESSAGE,
-    VERSION,
 )
 from .discovery import (
     ALREADY_DISCOVERED,
@@ -54,17 +54,13 @@ from .discovery import (
     start_discovery,
     stop_discovery,
 )
+from .version import __version__ as VERSION
 from .websocket import register_websocket_handlers
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass, config):
-    """Set up this integration using YAML is not supported."""
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up this integration using UI."""
 
     if hass.data.get(DOMAIN_DATA) is None:
@@ -218,6 +214,8 @@ class NodeRedEntity(Entity):
             self._attr_icon = config.get(CONF_ICON)
         if config.get(CONF_ENTITY_PICTURE):
             self._attr_entity_picture = config.get(CONF_ENTITY_PICTURE)
+        if config.get(CONF_OPTIONS):
+            self._attr_options = config.get(CONF_OPTIONS)
 
     def update_discovery_device_info(self, msg):
         """Update entity device info."""

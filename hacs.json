@@ -1,4 +1,6 @@
 {
+  "filename": "nodered.zip",
+  "homeassistant": "2023.7.0",
   "name": "Node-RED Companion",
-  "homeassistant": "2021.12.0"
+  "zip_release": true
 }

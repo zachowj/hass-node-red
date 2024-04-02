@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+set -e
+
+cd "$(dirname "$0")/.."
+
+chmod 755 scripts/*
+python3 -m pip install --requirement requirements.txt --requirement requirements_test.txt
+pre-commit install
+pre-commit install-hooks
+
+touch config/automations.yaml

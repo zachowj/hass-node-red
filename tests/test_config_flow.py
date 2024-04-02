@@ -13,7 +13,10 @@ from custom_components.nodered.const import CONF_NAME, DOMAIN
 @pytest.fixture(autouse=True)
 def bypass_setup_fixture():
     """Prevent setup."""
-    with patch("custom_components.nodered.async_setup", return_value=True,), patch(
+    with patch(
+        "custom_components.nodered.async_setup",
+        return_value=True,
+    ), patch(
         "custom_components.nodered.async_setup_entry",
         return_value=True,
     ):

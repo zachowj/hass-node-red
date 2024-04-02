@@ -16,6 +16,126 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## [3.1.3](https://github.com/zachowj/hass-node-red/compare/v3.1.2...v3.1.3) (2024-01-05)
+
+
+### Bug Fixes
+
+* Fix failure during loading due to MQTT init ([#239](https://github.com/zachowj/hass-node-red/issues/239)) ([6302ea6](https://github.com/zachowj/hass-node-red/commit/6302ea688eb28979cc994680359ef25f4c57e62b))
+
+## [3.1.2](https://github.com/zachowj/hass-node-red/compare/v3.1.1...v3.1.2) (2023-12-13)
+
+
+### Bug Fixes
+
+* **time:** Catch invalid time format ([c071fe0](https://github.com/zachowj/hass-node-red/commit/c071fe05c20833d381eeb42725c2a42b860bed83))
+
+## [3.1.1](https://github.com/zachowj/hass-node-red/compare/v3.1.0...v3.1.1) (2023-11-05)
+
+
+### Bug Fixes
+
+* **number:** Use correct attr for unit of measurement ([4847f98](https://github.com/zachowj/hass-node-red/commit/4847f98cc728536372279ad503c27a3c519d6bd4))
+
+## [3.1.0](https://github.com/zachowj/hass-node-red/compare/v3.0.1...v3.1.0) (2023-11-05)
+
+
+### Features
+
+* Slovak translation ([5179512](https://github.com/zachowj/hass-node-red/commit/517951220990cd428fff20662acf994e6288ab40))
+
+
+### Bug Fixes
+
+* Change sensors with the category config to none ([5607880](https://github.com/zachowj/hass-node-red/commit/56078807990de1879fb526dd9eae026465b8344f)), closes [#225](https://github.com/zachowj/hass-node-red/issues/225)
+
+## [3.0.1](https://github.com/zachowj/hass-node-red/compare/v3.0.0...v3.0.1) (2023-10-02)
+
+
+### Documentation
+
+* Move service data to translations ([0e126a7](https://github.com/zachowj/hass-node-red/commit/0e126a7e904b9b30cbd442b8794661e2414bafc1))
+
+## [3.0.0](https://github.com/zachowj/hass-node-red/compare/v2.2.0...v3.0.0) (2023-09-26)
+
+
+### ⚠ BREAKING CHANGES
+
+* The trigger service now only accepts output_path and message and require Home Assistant nodes version 0.57.0+
+* Endpoint for device action changed location from nodered/device_action to nodered/device/action It now matches the new device trigger format
+
+### Bug Fixes
+
+* Fix the trigger service schema ([337330e](https://github.com/zachowj/hass-node-red/commit/337330e6420a338a495921a4e2a2c33bf8760291))
+
+
+### Code Refactoring
+
+* Create a separate endpoint for device triggers ([029f88b](https://github.com/zachowj/hass-node-red/commit/029f88b211b01b415c8894e7374eed7416bf9324))
+
+## [2.2.0](https://github.com/zachowj/hass-node-red/compare/v2.1.1...v2.2.0) (2023-08-09)
+
+
+### Features
+
+* **sentence:** Allow custom responses ([d3b6ebe](https://github.com/zachowj/hass-node-red/commit/d3b6ebe647f0ad83a83ba33335d35d2fb27f22ed))
+
+
+### Documentation
+
+* Fix linting in README ([18243f0](https://github.com/zachowj/hass-node-red/commit/18243f07094081eef1585e93f4ca0ab20112e671))
+
+## 2.1.1 (2023-08-02)
+
+## What's Changed
+* build(deps): update pip requirement from <23.2,>=21.0 to >=21.0,<23.3 by @dependabot in https://github.com/zachowj/hass-node-red/pull/200
+
+
+**Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v2.1.0...v2.1.1
+
+## 2.1.0 (2023-07-17)
+
+**Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v2.0.0...v2.1.0
+
+## 2.0.0 (2023-07-13)
+
+**Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.6.1...v2.0.0
+
+## 1.6.1 (2023-07-13)
+
+## What's Changed
+* Create zh-CN.json by @XuyuEre in https://github.com/zachowj/hass-node-red/pull/193
+
+## New Contributors
+* @XuyuEre made their first contribution in https://github.com/zachowj/hass-node-red/pull/193
+
+**Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.6.0...v1.6.1
+
+## 1.6.0 (2023-07-12)
+
+**Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.5.0...v1.6.0
+
+## 1.5.0 (2023-07-12)
+
+**Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.4.0...v1.5.0
+
+## 1.4.0 (2023-07-05)
+
+**Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.3.0...v1.4.0
+
+## 1.3.0 (2023-07-03)
+
+## What's Changed
+* add pt-pt by @ViPeR5000 in https://github.com/zachowj/hass-node-red/pull/174
+* build(deps): bump actions/stale from 7 to 8 by @dependabot in https://github.com/zachowj/hass-node-red/pull/176
+* Update README.md by @GeoffState in https://github.com/zachowj/hass-node-red/pull/179
+
+## New Contributors
+* @ViPeR5000 made their first contribution in https://github.com/zachowj/hass-node-red/pull/174
+* @GeoffState made their first contribution in https://github.com/zachowj/hass-node-red/pull/179
+
+**Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.2.0...v1.3.0
+
 ### [1.1.2](https://www.github.com/zachowj/hass-node-red/compare/v1.1.1...v1.1.2) (2022-09-30)
 
 

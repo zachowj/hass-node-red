@@ -1,0 +1,12 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "您是否要将 Node-RED Companion 添加到 Home Assistant?"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "已经配置好了。 只能进行单一配置。"
+    }
+  }
+}
