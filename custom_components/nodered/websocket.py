@@ -1,4 +1,5 @@
 """Websocket API for Node-RED."""
+
 import json
 import logging
 from typing import Any
@@ -308,14 +309,28 @@ async def websocket_sentence(
     response = msg["response"]
 
     @callback
-    async def handle_trigger(sentence: str, result: RecognizeResult = None) -> str:
-        """Handle Sentence trigger."""
-        """RecognizeResult was added in 2023.8.0"""
+    async def handle_trigger(
+        sentence: str,
+        result: RecognizeResult | None = None,
+        device_id: str | None = None,
+    ) -> str:
+        """
+        Handle Sentence trigger.
+        RecognizeResult was added in 2023.8.0
+        device_id was added in 2024.4.0
+        """
 
         _LOGGER.debug(f"Sentence trigger: {sentence}")
         connection.send_message(
             event_message(
-                msg[CONF_ID], {"data": {"sentence": sentence, "result": result}}
+                msg[CONF_ID],
+                {
+                    "data": {
+                        "sentence": sentence,
+                        "result": result,
+                        "deviceId": device_id,
+                    }
+                },
             )
         )
 
