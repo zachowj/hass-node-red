@@ -16,6 +16,18 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## [3.1.4](https://github.com/zachowj/hass-node-red/compare/v3.1.3...v3.1.4) (2024-04-04)
+
+
+### Bug Fixes
+
+* **sentence:** Fix to handle sentence trigger signature change ([03d34da](https://github.com/zachowj/hass-node-red/commit/03d34da80d7135ce21f6f93809307be7fff53f13)), closes [#260](https://github.com/zachowj/hass-node-red/issues/260)
+
+
+### Documentation
+
+* Update README to new location to install integrations ([16b40cd](https://github.com/zachowj/hass-node-red/commit/16b40cda30b0ca11811813e7fc90d57fff431c56))
+
 ## [3.1.3](https://github.com/zachowj/hass-node-red/compare/v3.1.2...v3.1.3) (2024-01-05)
 
 
