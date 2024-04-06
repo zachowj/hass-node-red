@@ -16,6 +16,13 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## [3.1.5](https://github.com/zachowj/hass-node-red/compare/v3.1.4...v3.1.5) (2024-04-06)
+
+
+### Miscellaneous Chores
+
+* release 3.1.5 ([b30c397](https://github.com/zachowj/hass-node-red/commit/b30c3977b372ac6aca5218157c3a9ae3729d3151))
+
 ## [3.1.4](https://github.com/zachowj/hass-node-red/compare/v3.1.3...v3.1.4) (2024-04-04)
 
 
