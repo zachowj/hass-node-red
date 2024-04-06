@@ -8,8 +8,16 @@ from hassil.recognize import RecognizeResult
 from homeassistant.components import device_automation
 from homeassistant.components.conversation import (
     HOME_ASSISTANT_AGENT,
-    get_agent_manager,
 )
+
+try:
+    from homeassistant.components.conversation import get_agent_manager
+except ImportError:
+    # _get_agent_manager was renamed to get_agent_manager in 2024.4.0
+    from homeassistant.components.conversation import (
+        _get_agent_manager as get_agent_manager,
+    )
+
 from homeassistant.components.conversation.default_agent import DefaultAgent
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.device_automation.exceptions import (
