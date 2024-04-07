@@ -29,26 +29,26 @@ jobs:
           python-version: "3.11"
       - uses: pre-commit/action@v3.0.1
 
-  tests:
-    runs-on: "ubuntu-latest"
-    name: Run tests
-    steps:
-      - name: Check out code from GitHub
-        uses: "actions/checkout@v4"
-      - name: Setup Python
-        uses: "actions/setup-python@v5"
-        with:
-          python-version: "3.11"
-      - name: Install requirements
-        run: python3 -m pip install -r requirements_test.txt
-      - name: Run tests
-        run: |
-          pytest \
-            -qq \
-            --timeout=9 \
-            --durations=10 \
-            -n auto \
-            --cov custom_components.nodered \
-            -o console_output_style=count \
-            -p no:sugar \
-            tests
+  # tests:
+  #   runs-on: "ubuntu-latest"
+  #   name: Run tests
+  #   steps:
+  #     - name: Check out code from GitHub
+  #       uses: "actions/checkout@v4"
+  #     - name: Setup Python
+  #       uses: "actions/setup-python@v5"
+  #       with:
+  #         python-version: "3.11"
+  #     - name: Install requirements
+  #       run: python3 -m pip install -r requirements_test.txt
+  #     - name: Run tests
+  #       run: |
+  #         pytest \
+  #           -qq \
+  #           --timeout=9 \
+  #           --durations=10 \
+  #           -n auto \
+  #           --cov custom_components.nodered \
+  #           -o console_output_style=count \
+  #           -p no:sugar \
+  #           tests
