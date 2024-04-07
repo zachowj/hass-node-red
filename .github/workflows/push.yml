@@ -27,7 +27,7 @@ jobs:
       - uses: actions/setup-python@v5
         name: Set up Python
         with:
-          python-version: "3.11"
+          python-version: "3.12"
       - uses: pre-commit/action@v3.0.1
 
   release-please:
@@ -57,7 +57,7 @@ jobs:
   #     - name: Setup Python
   #       uses: "actions/setup-python@v5"
   #       with:
-  #         python-version: "3.11"
+  #         python-version: "3.12"
   #     - name: Install requirements
   #       run: python3 -m pip install -r requirements_test.txt
   #     - name: Run tests
