@@ -25,7 +25,11 @@ from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.components.device_automation.trigger import TRIGGER_SCHEMA
-from homeassistant.components.webhook import SUPPORTED_METHODS
+from homeassistant.components.webhook import (
+    async_register as webhook_async_register,
+    async_unregister as webhook_async_unregister,
+    SUPPORTED_METHODS,
+)
 from homeassistant.components.websocket_api import (
     async_register_command,
     async_response,
@@ -54,6 +58,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import async_entries_for_device, async_get
 from homeassistant.helpers.typing import HomeAssistantType
 import voluptuous as vol
+
 
 from .const import (
     CONF_ATTRIBUTES,
@@ -271,7 +276,7 @@ async def websocket_webhook(
     def remove_webhook() -> None:
         """Remove webhook command."""
         try:
-            hass.components.webhook.async_unregister(webhook_id)
+            webhook_async_unregister(hass, webhook_id)
 
         except ValueError:
             pass
@@ -280,7 +285,8 @@ async def websocket_webhook(
         connection.send_message(result_message(msg[CONF_ID]))
 
     try:
-        hass.components.webhook.async_register(
+        webhook_async_register(
+            hass,
             DOMAIN,
             msg[CONF_NAME],
             webhook_id,
