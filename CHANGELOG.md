@@ -16,6 +16,13 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## [3.1.6](https://github.com/zachowj/hass-node-red/compare/v3.1.5...v3.1.6) (2024-04-07)
+
+
+### Bug Fixes
+
+* **webhook:** Fix deprecated has.components.webhook ([24270d7](https://github.com/zachowj/hass-node-red/commit/24270d76122e22f4b1ed191e67e66faa3fd9e47b)), closes [#258](https://github.com/zachowj/hass-node-red/issues/258)
+
 ## [3.1.5](https://github.com/zachowj/hass-node-red/compare/v3.1.4...v3.1.5) (2024-04-06)
 
 
