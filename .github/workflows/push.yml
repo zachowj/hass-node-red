@@ -38,6 +38,8 @@ jobs:
         id: release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v4
+        if: ${{ steps.release.outputs.release_created }}
       - name: Create zip
         if: ${{ steps.release.outputs.release_created }}
         run: |
