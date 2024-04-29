@@ -2,11 +2,11 @@
 import asyncio
 import logging
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.core import HomeAssistant
 
 from .const import (
     CONF_BINARY_SENSOR,
