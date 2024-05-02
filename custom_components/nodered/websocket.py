@@ -56,7 +56,6 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import async_entries_for_device, async_get
-from homeassistant.helpers.typing import HomeAssistantType
 import voluptuous as vol
 
 
@@ -84,7 +83,7 @@ CONF_LOCAL_ONLY = "local_only"
 _LOGGER = logging.getLogger(__name__)
 
 
-def register_websocket_handlers(hass: HomeAssistantType):
+def register_websocket_handlers(hass: HomeAssistant):
     """Register the websocket handlers."""
 
     async_register_command(hass, websocket_device_action)
