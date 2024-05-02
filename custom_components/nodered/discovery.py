@@ -48,9 +48,7 @@ CONFIG_ENTRY_IS_SETUP = "config_entry_is_setup"
 DISCOVERY_DISPATCHED = "discovery_dispatched"
 
 
-async def start_discovery(
-    hass: HomeAssistant, hass_config, config_entry=None
-) -> bool:
+async def start_discovery(hass: HomeAssistant, hass_config, config_entry=None) -> bool:
     """Initialize of Node-RED Discovery."""
 
     async def async_device_message_received(msg, connection):
