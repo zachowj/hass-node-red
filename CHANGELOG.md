@@ -16,6 +16,17 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## [4.0.0](https://github.com/zachowj/hass-node-red/compare/v3.1.7...v4.0.0) (2024-05-02)
+
+
+### ⚠ BREAKING CHANGES
+
+* **sentence:** Changes made to conversation agent now require Home Assistant 2024.5+ for sentence node to work
+
+### Bug Fixes
+
+* **sentence:** Fix getting default conversation agent ([60e81ce](https://github.com/zachowj/hass-node-red/commit/60e81cea91c100407d0b2caa6b26d7a69a2f4fd0)), closes [#270](https://github.com/zachowj/hass-node-red/issues/270)
+
 ## [3.1.7](https://github.com/zachowj/hass-node-red/compare/v3.1.6...v3.1.7) (2024-05-02)
 
 
