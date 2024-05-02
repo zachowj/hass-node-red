@@ -16,6 +16,13 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## [3.1.7](https://github.com/zachowj/hass-node-red/compare/v3.1.6...v3.1.7) (2024-05-02)
+
+
+### Bug Fixes
+
+* Replace deprecated HomeAssistantType with HomeAssistant ([#268](https://github.com/zachowj/hass-node-red/issues/268)) ([8730766](https://github.com/zachowj/hass-node-red/commit/873076695d9db24a6688c1a784488c8a1b129664)), closes [#267](https://github.com/zachowj/hass-node-red/issues/267)
+
 ## [3.1.6](https://github.com/zachowj/hass-node-red/compare/v3.1.5...v3.1.6) (2024-04-07)
 
 
