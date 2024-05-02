@@ -2,6 +2,7 @@
   "domain": "nodered",
   "name": "Node-RED Companion",
   "after_dependencies": [
+    "conversation",
     "mqtt"
   ],
   "codeowners": [

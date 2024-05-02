@@ -6,17 +6,7 @@ from typing import Any
 
 from hassil.recognize import RecognizeResult
 from homeassistant.components import device_automation
-from homeassistant.components.conversation import (
-    HOME_ASSISTANT_AGENT,
-)
-
-try:
-    from homeassistant.components.conversation import get_agent_manager
-except ImportError:
-    # _get_agent_manager was renamed to get_agent_manager in 2024.4.0
-    from homeassistant.components.conversation import (
-        _get_agent_manager as get_agent_manager,
-    )
+from homeassistant.components.conversation.default_agent import async_get_default_agent
 
 from homeassistant.components.conversation.default_agent import DefaultAgent
 from homeassistant.components.device_automation import DeviceAutomationType
@@ -355,9 +345,7 @@ async def websocket_sentence(
         _LOGGER.info(f"Sentence trigger removed: {sentences}")
 
     try:
-        default_agent = await get_agent_manager(hass).async_get_agent(
-            HOME_ASSISTANT_AGENT
-        )
+        default_agent = async_get_default_agent(hass)
         assert isinstance(default_agent, DefaultAgent)
 
         _remove_trigger = default_agent.register_trigger(sentences, handle_trigger)
