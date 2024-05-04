@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Feature Request
+    url: https://github.com/zachowj/hass-node-red/discussions/new
+    about: Suggest an idea for this project
+  - name: I have a question or need support
+    url: https://github.com/zachowj/hass-node-red/discussions/new
+    about: Use Github Discussions to find support and ask general questions
