@@ -1,14 +1,13 @@
 """Websocket API for Node-RED."""
+
 import json
 import logging
 from typing import Any
 
 from hassil.recognize import RecognizeResult
 from homeassistant.components import device_automation
-from homeassistant.components.conversation import (
-    HOME_ASSISTANT_AGENT,
-    _get_agent_manager,
-)
+from homeassistant.components.conversation.default_agent import async_get_default_agent
+
 from homeassistant.components.conversation.default_agent import DefaultAgent
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.device_automation.exceptions import (
@@ -16,7 +15,11 @@ from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.components.device_automation.trigger import TRIGGER_SCHEMA
-from homeassistant.components.webhook import SUPPORTED_METHODS
+from homeassistant.components.webhook import (
+    async_register as webhook_async_register,
+    async_unregister as webhook_async_unregister,
+    SUPPORTED_METHODS,
+)
 from homeassistant.components.websocket_api import (
     async_register_command,
     async_response,
@@ -43,8 +46,8 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import async_entries_for_device, async_get
-from homeassistant.helpers.typing import HomeAssistantType
 import voluptuous as vol
+
 
 from .const import (
     CONF_ATTRIBUTES,
@@ -70,7 +73,7 @@ CONF_LOCAL_ONLY = "local_only"
 _LOGGER = logging.getLogger(__name__)
 
 
-def register_websocket_handlers(hass: HomeAssistantType):
+def register_websocket_handlers(hass: HomeAssistant):
     """Register the websocket handlers."""
 
     async_register_command(hass, websocket_device_action)
@@ -262,7 +265,7 @@ async def websocket_webhook(
     def remove_webhook() -> None:
         """Remove webhook command."""
         try:
-            hass.components.webhook.async_unregister(webhook_id)
+            webhook_async_unregister(hass, webhook_id)
 
         except ValueError:
             pass
@@ -271,7 +274,8 @@ async def websocket_webhook(
         connection.send_message(result_message(msg[CONF_ID]))
 
     try:
-        hass.components.webhook.async_register(
+        webhook_async_register(
+            hass,
             DOMAIN,
             msg[CONF_NAME],
             webhook_id,
@@ -308,14 +312,28 @@ async def websocket_sentence(
     response = msg["response"]
 
     @callback
-    async def handle_trigger(sentence: str, result: RecognizeResult = None) -> str:
-        """Handle Sentence trigger."""
-        """RecognizeResult was added in 2023.8.0"""
+    async def handle_trigger(
+        sentence: str,
+        result: RecognizeResult | None = None,
+        device_id: str | None = None,
+    ) -> str:
+        """
+        Handle Sentence trigger.
+        RecognizeResult was added in 2023.8.0
+        device_id was added in 2024.4.0
+        """
 
         _LOGGER.debug(f"Sentence trigger: {sentence}")
         connection.send_message(
             event_message(
-                msg[CONF_ID], {"data": {"sentence": sentence, "result": result}}
+                msg[CONF_ID],
+                {
+                    "data": {
+                        "sentence": sentence,
+                        "result": result,
+                        "deviceId": device_id,
+                    }
+                },
             )
         )
 
@@ -327,9 +345,7 @@ async def websocket_sentence(
         _LOGGER.info(f"Sentence trigger removed: {sentences}")
 
     try:
-        default_agent = await _get_agent_manager(hass).async_get_agent(
-            HOME_ASSISTANT_AGENT
-        )
+        default_agent = async_get_default_agent(hass)
         assert isinstance(default_agent, DefaultAgent)
 
         _remove_trigger = default_agent.register_trigger(sentences, handle_trigger)

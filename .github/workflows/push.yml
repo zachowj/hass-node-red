@@ -27,16 +27,19 @@ jobs:
       - uses: actions/setup-python@v5
         name: Set up Python
         with:
-          python-version: "3.11"
+          python-version: "3.12"
       - uses: pre-commit/action@v3.0.1
 
   release-please:
+    needs: [validate, style]
     runs-on: ubuntu-latest
     steps:
       - uses: GoogleCloudPlatform/release-please-action@v4
         id: release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v4
+        if: ${{ steps.release.outputs.release_created }}
       - name: Create zip
         if: ${{ steps.release.outputs.release_created }}
         run: |
@@ -46,7 +49,7 @@ jobs:
         if: ${{ steps.release.outputs.release_created }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload ${{ steps.release.outputs.release_tag }} ${{ github.workspace }}/custom_components/nodered/nodered.zip
+        run: gh release upload ${{ steps.release.outputs.tag_name }} ${{ github.workspace }}/custom_components/nodered/nodered.zip
 
   # tests:
   #   runs-on: "ubuntu-latest"
@@ -57,7 +60,7 @@ jobs:
   #     - name: Setup Python
   #       uses: "actions/setup-python@v5"
   #       with:
-  #         python-version: "3.11"
+  #         python-version: "3.12"
   #     - name: Install requirements
   #       run: python3 -m pip install -r requirements_test.txt
   #     - name: Run tests

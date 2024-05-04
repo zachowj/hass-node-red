@@ -1,0 +1,52 @@
+name: Bug report
+description: Create a report to help us improve
+body:
+  - type: textarea
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: To Reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. Scroll down to '...'
+        4. See error
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: Expected behavior
+      description: A clear and concise description of what you expected to happen.
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: Screenshots
+      description: If applicable, add screenshots to help explain your problem.
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: Example Flow
+      description: If applicable, add an example in exported JSON format of a flow exhibiting the issue to aid in reproduction.
+      render: json
+    validations:
+      required: false
+  - type: textarea
+    attributes:
+      label: Environment Information
+      description: Retrieve this information using the [diagnostic information button](https://zachowj.github.io/node-red-contrib-home-assistant-websocket/guide/diagnostics.html)
+      placeholder: Get information from the link above
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Additional context
+      description: Add any other context about the problem.
+    validations:
+      required: false

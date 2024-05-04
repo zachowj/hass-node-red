@@ -16,6 +16,50 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## [4.0.0](https://github.com/zachowj/hass-node-red/compare/v3.1.7...v4.0.0) (2024-05-02)
+
+
+### ⚠ BREAKING CHANGES
+
+* **sentence:** Changes made to conversation agent now require Home Assistant 2024.5+ for sentence node to work
+
+### Bug Fixes
+
+* **sentence:** Fix getting default conversation agent ([60e81ce](https://github.com/zachowj/hass-node-red/commit/60e81cea91c100407d0b2caa6b26d7a69a2f4fd0)), closes [#270](https://github.com/zachowj/hass-node-red/issues/270)
+
+## [3.1.7](https://github.com/zachowj/hass-node-red/compare/v3.1.6...v3.1.7) (2024-05-02)
+
+
+### Bug Fixes
+
+* Replace deprecated HomeAssistantType with HomeAssistant ([#268](https://github.com/zachowj/hass-node-red/issues/268)) ([8730766](https://github.com/zachowj/hass-node-red/commit/873076695d9db24a6688c1a784488c8a1b129664)), closes [#267](https://github.com/zachowj/hass-node-red/issues/267)
+
+## [3.1.6](https://github.com/zachowj/hass-node-red/compare/v3.1.5...v3.1.6) (2024-04-07)
+
+
+### Bug Fixes
+
+* **webhook:** Fix deprecated has.components.webhook ([24270d7](https://github.com/zachowj/hass-node-red/commit/24270d76122e22f4b1ed191e67e66faa3fd9e47b)), closes [#258](https://github.com/zachowj/hass-node-red/issues/258)
+
+## [3.1.5](https://github.com/zachowj/hass-node-red/compare/v3.1.4...v3.1.5) (2024-04-06)
+
+
+### Miscellaneous Chores
+
+* release 3.1.5 ([b30c397](https://github.com/zachowj/hass-node-red/commit/b30c3977b372ac6aca5218157c3a9ae3729d3151))
+
+## [3.1.4](https://github.com/zachowj/hass-node-red/compare/v3.1.3...v3.1.4) (2024-04-04)
+
+
+### Bug Fixes
+
+* **sentence:** Fix to handle sentence trigger signature change ([03d34da](https://github.com/zachowj/hass-node-red/commit/03d34da80d7135ce21f6f93809307be7fff53f13)), closes [#260](https://github.com/zachowj/hass-node-red/issues/260)
+
+
+### Documentation
+
+* Update README to new location to install integrations ([16b40cd](https://github.com/zachowj/hass-node-red/commit/16b40cda30b0ca11811813e7fc90d57fff431c56))
+
 ## [3.1.3](https://github.com/zachowj/hass-node-red/compare/v3.1.2...v3.1.3) (2024-01-05)
 
 
