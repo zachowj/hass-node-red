@@ -16,6 +16,13 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## [4.0.1](https://github.com/zachowj/hass-node-red/compare/v4.0.0...v4.0.1) (2024-07-07)
+
+
+### Bug Fixes
+
+* Replace deprecated async_forward_entry_setup function ([89150df](https://github.com/zachowj/hass-node-red/commit/89150dffb1c78b2d9bda01528a0f1edb542e7500))
+
 ## [4.0.0](https://github.com/zachowj/hass-node-red/compare/v3.1.7...v4.0.0) (2024-05-02)
 
 
