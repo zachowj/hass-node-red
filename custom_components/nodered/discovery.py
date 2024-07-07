@@ -92,8 +92,8 @@ async def start_discovery(hass: HomeAssistant, hass_config, config_entry=None) -
 
             async with data[CONFIG_ENTRY_LOCK]:
                 if component not in data[CONFIG_ENTRY_IS_SETUP]:
-                    await hass.config_entries.async_forward_entry_setup(
-                        config_entry, component
+                    await hass.config_entries.async_forward_entry_setups(
+                        config_entry, [component]
                     )
                     data[CONFIG_ENTRY_IS_SETUP].add(component)
 
