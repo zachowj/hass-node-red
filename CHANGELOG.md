@@ -16,6 +16,13 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## [4.0.2](https://github.com/zachowj/hass-node-red/compare/v4.0.1...v4.0.2) (2024-08-16)
+
+
+### Bug Fixes
+
+* **device:** Convert entity registry id into entity id to fix device action ([78e854a](https://github.com/zachowj/hass-node-red/commit/78e854a088d0b7463ddfce4abee97df6da7f985e))
+
 ## [4.0.1](https://github.com/zachowj/hass-node-red/compare/v4.0.0...v4.0.1) (2024-07-07)
 
 
