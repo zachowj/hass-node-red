@@ -4,21 +4,29 @@
 
 [![BuyMeCoffee][buymecoffeebadge]][buymecoffee]
 
-_Companion Component to [node-red-contrib-home-assistant-websocket](https://github.com/zachowj/node-red-contrib-home-assistant-websocket) to integrate Node-RED with Home Assistant._
+_Companion Component to [node-red-contrib-home-assistant-websocket](https://github.com/zachowj/node-red-contrib-home-assistant-websocket) for seamless integration of Node-RED with Home Assistant._
 
-## Features
+## Overview
 
-- Create and update entities from Node-RED
-  - binary sensor
-  - button
-  - number
-  - select
-  - sensor
-  - switch
-  - text
-- Disable and enable Node-RED flows from Home Assistant UI
-- Create Home Assistant webhooks and handle them in Node-RED
-- Use Device triggers and action from Node-RED
+The Node-RED Companion Integration bridges Node-RED and Home Assistant, allowing you to manage Home Assistant entities and automations directly from Node-RED. This integration enhances your smart home automation setup by enabling dynamic interaction between these two powerful tools.
+
+## Key Features
+
+- **Entity Management:**
+  - Create and update Home Assistant entities from Node-RED, including:
+    - Binary Sensors
+    - Buttons
+    - Numbers
+    - Selects
+    - Sensors
+    - Switches
+    - Text fields
+- **Flow Control:**
+  - Enable or disable Node-RED flows directly from the Home Assistant UI.
+- **Webhooks:**
+  - Create and manage Home Assistant webhooks, with handling in Node-RED.
+- **Device Automation:**
+  - Utilize device triggers and actions within Node-RED for advanced automation capabilities.
 
 ## Minimum Requirements
 
@@ -27,34 +35,44 @@ _Companion Component to [node-red-contrib-home-assistant-websocket](https://gith
 
 ## Installation
 
-### HACS
+### Option 1: HACS (Home Assistant Community Store)
 
-Install via [HACS](https://hacs.xyz) (Home Assistant Community Store)
+To install via HACS:
 
-1. Go to HACS -> Integrations -> "+ Explore & Download Repos"
-1. Find "Node-RED Companion".
-1. Open the search result and click "Download this Repository with HACS".
-1. Refresh your browser window (bug in HA where it doesn't update the integration list after a reboot)
-1. From "Settings" in the Home Assistant sidebar, select "Devices and Services", click the blue [+ Add integration] button (in bottom right of the page) and search for "Node-RED", and install it. [![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=nodered)
+1. Navigate to HACS -> Integrations -> "+ Explore & Download Repos".
+2. Search for "Node-RED Companion".
+3. Click on the result and select "Download this Repository with HACS".
+4. Refresh your browser (due to a known HA bug that may not update the integration list immediately).
+5. Go to "Settings" in the Home Assistant sidebar, then select "Devices and Services".
+6. Click the blue [+ Add Integration] button at the bottom right, search for "Node-RED", and install it.  
+   [![Set up a new integration in Home Assistant](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=nodered)
 
-### Manual
+### Option 2: Manual Installation
 
-1. Using your tool of choice open the directory (folder) for your HA configuration (where you find `configuration.yaml`).
-1. If you do not have a `custom_components` directory (folder) there, you need to create it.
-1. In the `custom_components` directory (folder) create a new folder called `nodered`.
-1. Download _all_ the files from the `custom_components/nodered/` directory (folder) in this repository.
-1. Place the files you downloaded in the new directory (folder) you created.
-1. Restart Home Assistant
-1. Refresh your browser window (bug in HA where it doesn't update the integration list after a reboot)
-1. From "Settings" in the Home Assistant sidebar, select "Devices and Services", click the blue [+ Add integration] button (in bottom right of the page) and search for "Node-RED", and install it. [![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=nodered)
+For manual installation:
+
+1. Access your Home Assistant configuration directory (`configuration.yaml` location).
+2. If it doesn’t already exist, create a `custom_components` directory.
+3. Within `custom_components`, create a new folder named `nodered`.
+4. Download all files from the `custom_components/nodered/` directory in this repository.
+5. Place these files in the newly created `nodered` directory.
+6. Restart Home Assistant.
+7. Refresh your browser window.
+8. From "Settings" in the Home Assistant sidebar, select "Devices and Services", click the blue [+ Add Integration] button, search for "Node-RED", and install it.  
+   [![Set up a new integration in Home Assistant](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=nodered)
 
 ## Configuration
 
-Once installed and added via Home-Assistant Integrations all configuration is done from within Node-RED.
+Once the Node-RED Companion Integration is installed and added via Home Assistant Integrations, all further configuration is managed from within Node-RED.
 
-## Contributions are welcome!
+## Contributing
 
-If you want to contribute please read the [Contribution guidelines](CONTRIBUTING.md)
+Contributions are welcome! If you're interested in contributing, please review our [Contribution Guidelines](CONTRIBUTING.md) before submitting a pull request or issue.
+
+## Support
+
+If you find this project helpful and want to support its development, consider buying me a coffee!  
+[![Buy Me a Coffee][buymecoffeebadge]][buymecoffee]
 
 ---
 

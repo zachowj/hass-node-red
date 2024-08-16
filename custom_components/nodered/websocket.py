@@ -99,12 +99,18 @@ async def websocket_device_action(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Sensor command."""
+
     context = connection.context(msg)
     platform = await device_automation.async_get_device_automation_platform(
         hass, msg["action"][CONF_DOMAIN], DeviceAutomationType.ACTION
     )
 
     try:
+        if "entity_id" in msg["action"]:
+            entity_registry = async_get(hass)
+            entity_id = entity_registry.async_get(msg["action"]["entity_id"]).entity_id
+            msg["action"]["entity_id"] = entity_id
+
         await platform.async_call_action_from_config(hass, msg["action"], {}, context)
         connection.send_message(result_message(msg[CONF_ID]))
     except InvalidDeviceAutomationConfig as err:
