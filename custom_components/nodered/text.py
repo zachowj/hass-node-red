@@ -1,4 +1,5 @@
 """Sensor platform for nodered."""
+
 from homeassistant.components.text import RestoreText, TextMode
 from homeassistant.components.websocket_api import event_message
 from homeassistant.const import CONF_ICON, CONF_ID, CONF_TYPE

@@ -1,4 +1,5 @@
 """Adds config flow for Node-RED."""
+
 from homeassistant import config_entries
 
 from .const import CONF_NAME, DOMAIN

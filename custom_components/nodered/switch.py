@@ -1,4 +1,5 @@
 """Switch platform for nodered."""
+
 import logging
 
 from homeassistant.components.websocket_api import event_message

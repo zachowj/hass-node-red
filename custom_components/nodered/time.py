@@ -1,4 +1,5 @@
 """Sensor platform for nodered."""
+
 import logging
 
 from dateutil import parser

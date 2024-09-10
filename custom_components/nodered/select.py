@@ -1,4 +1,5 @@
 """Select platform for nodered."""
+
 from homeassistant.components.select import SelectEntity
 from homeassistant.components.websocket_api import event_message
 from homeassistant.const import CONF_ICON, CONF_ID, CONF_TYPE

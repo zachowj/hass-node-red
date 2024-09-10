@@ -1,4 +1,5 @@
 """Constants for Node-RED."""
+
 from .version import __version__ as VERSION
 
 # Base component constants

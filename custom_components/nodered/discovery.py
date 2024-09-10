@@ -1,4 +1,5 @@
 """Support for Node-RED discovery."""
+
 import asyncio
 import logging
 

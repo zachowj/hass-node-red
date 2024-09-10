@@ -1,4 +1,5 @@
 """Sensor platform for nodered."""
+
 from datetime import datetime
 import logging
 from typing import Optional, Union

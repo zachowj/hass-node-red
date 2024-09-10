@@ -1,4 +1,5 @@
 """Test helpers."""
+
 from datetime import timedelta
 
 from custom_components.nodered.utils import NodeRedJSONEncoder

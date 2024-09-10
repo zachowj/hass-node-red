@@ -1,4 +1,5 @@
 """Binary sensor platform for nodered."""
+
 from numbers import Number
 
 from homeassistant.components.binary_sensor import BinarySensorEntity

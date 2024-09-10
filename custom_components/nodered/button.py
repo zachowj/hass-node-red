@@ -1,4 +1,5 @@
 """Button platform for nodered."""
+
 import logging
 
 from homeassistant.components.button import ButtonEntity
