@@ -4,11 +4,7 @@ import json
 import logging
 from typing import Any
 
-from hassil.recognize import RecognizeResult
 from homeassistant.components import device_automation
-from homeassistant.components.conversation.default_agent import async_get_default_agent
-
-from homeassistant.components.conversation.default_agent import DefaultAgent
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.device_automation.exceptions import (
     DeviceNotFound,
@@ -16,9 +12,9 @@ from homeassistant.components.device_automation.exceptions import (
 )
 from homeassistant.components.device_automation.trigger import TRIGGER_SCHEMA
 from homeassistant.components.webhook import (
+    SUPPORTED_METHODS,
     async_register as webhook_async_register,
     async_unregister as webhook_async_unregister,
-    SUPPORTED_METHODS,
 )
 from homeassistant.components.websocket_api import (
     async_register_command,
@@ -48,6 +44,10 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import async_entries_for_device, async_get
 import voluptuous as vol
 
+from custom_components.nodered.sentence import (
+    websocket_sentence,
+    websocket_sentence_response,
+)
 
 from .const import (
     CONF_ATTRIBUTES,
@@ -85,6 +85,7 @@ def register_websocket_handlers(hass: HomeAssistant):
     async_register_command(hass, websocket_version)
     async_register_command(hass, websocket_webhook)
     async_register_command(hass, websocket_sentence)
+    async_register_command(hass, websocket_sentence_response)
 
 
 @require_admin
@@ -297,73 +298,6 @@ async def websocket_webhook(
 
     _LOGGER.info(f"Webhook created: {webhook_id[:15]}..")
     connection.subscriptions[msg[CONF_ID]] = remove_webhook
-    connection.send_message(result_message(msg[CONF_ID]))
-
-
-@require_admin
-@websocket_command(
-    {
-        vol.Required(CONF_TYPE): "nodered/sentence",
-        vol.Required(CONF_SERVER_ID): cv.string,
-        vol.Required("sentences", default=[]): [cv.string],
-        vol.Optional("response", default="Done"): cv.string,
-    }
-)
-@async_response
-async def websocket_sentence(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
-) -> None:
-    """Create sentence trigger."""
-    sentences = msg["sentences"]
-    response = msg["response"]
-
-    @callback
-    async def handle_trigger(
-        sentence: str,
-        result: RecognizeResult | None = None,
-        device_id: str | None = None,
-    ) -> str:
-        """
-        Handle Sentence trigger.
-        RecognizeResult was added in 2023.8.0
-        device_id was added in 2024.4.0
-        """
-
-        _LOGGER.debug(f"Sentence trigger: {sentence}")
-        connection.send_message(
-            event_message(
-                msg[CONF_ID],
-                {
-                    "data": {
-                        "sentence": sentence,
-                        "result": result,
-                        "deviceId": device_id,
-                    }
-                },
-            )
-        )
-
-        return response
-
-    def remove_trigger() -> None:
-        """Remove sentence trigger."""
-        _remove_trigger()
-        _LOGGER.info(f"Sentence trigger removed: {sentences}")
-
-    try:
-        default_agent = async_get_default_agent(hass)
-        assert isinstance(default_agent, DefaultAgent)
-
-        _remove_trigger = default_agent.register_trigger(sentences, handle_trigger)
-    except ValueError as err:
-        connection.send_message(error_message(msg[CONF_ID], "value_error", str(err)))
-        return
-    except Exception as err:
-        connection.send_message(error_message(msg[CONF_ID], "unknown_error", str(err)))
-        return
-
-    _LOGGER.info(f"Sentence trigger created: {sentences}")
-    connection.subscriptions[msg[CONF_ID]] = remove_trigger
     connection.send_message(result_message(msg[CONF_ID]))
 
 
