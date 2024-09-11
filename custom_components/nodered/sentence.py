@@ -42,7 +42,9 @@ class ResponseType(Enum):
         vol.Required(CONF_SERVER_ID): cv.string,
         vol.Required("sentences", default=[]): [cv.string],
         vol.Optional("response", default="Done"): cv.string,
-        vol.Optional("response_type", default=False): vol.Coerce(ResponseType),
+        vol.Optional("response_type", default=ResponseType.FIXED): vol.Coerce(
+            ResponseType
+        ),
         vol.Optional("response_timeout", default=1): cv.positive_float,
     }
 )
