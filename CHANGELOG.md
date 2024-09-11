@@ -16,6 +16,18 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## [4.1.0](https://github.com/zachowj/hass-node-red/compare/v4.0.2...v4.1.0) (2024-09-11)
+
+
+### Features
+
+* **sentence:** add support for custom responses in the Sentence node ([80e1afa](https://github.com/zachowj/hass-node-red/commit/80e1afa00ee95c36016d1bb154a7e858eb546dd3))
+
+
+### Bug Fixes
+
+* **sentence:** Fix default value for response_type ([314ae11](https://github.com/zachowj/hass-node-red/commit/314ae119da80f10782fe9dcf9074ceb47483d57c))
+
 ## [4.0.2](https://github.com/zachowj/hass-node-red/compare/v4.0.1...v4.0.2) (2024-08-16)
 
 
