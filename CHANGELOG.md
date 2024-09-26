@@ -16,6 +16,13 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## [4.1.1](https://github.com/zachowj/hass-node-red/compare/v4.1.0...v4.1.1) (2024-09-26)
+
+
+### Bug Fixes
+
+* **sentence:** fix sentence issue in HA 2024.10.x ([8114e1b](https://github.com/zachowj/hass-node-red/commit/8114e1b7d18517f3beaf4d2c6e104b520f4a5394))
+
 ## [4.1.0](https://github.com/zachowj/hass-node-red/compare/v4.0.2...v4.1.0) (2024-09-11)
 
 
