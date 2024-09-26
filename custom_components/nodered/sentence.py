@@ -5,8 +5,8 @@ from typing import Any
 
 from hassil.recognize import RecognizeResult
 from homeassistant.components.conversation.default_agent import (
+    DATA_DEFAULT_ENTITY,
     DefaultAgent,
-    async_get_default_agent,
 )
 from homeassistant.components.websocket_api import (
     async_response,
@@ -121,7 +121,7 @@ async def websocket_sentence(
         _LOGGER.info(f"Sentence trigger removed: {sentences}")
 
     try:
-        default_agent = async_get_default_agent(hass)
+        default_agent = hass.data[DATA_DEFAULT_ENTITY]
         assert isinstance(default_agent, DefaultAgent)
 
         _remove_trigger = default_agent.register_trigger(sentences, handle_trigger)
