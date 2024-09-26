@@ -4,8 +4,10 @@ import logging
 from typing import Any
 
 from hassil.recognize import RecognizeResult
-from homeassistant.components.conversation.const import DATA_DEFAULT_ENTITY
-from homeassistant.components.conversation.default_agent import DefaultAgent
+from homeassistant.components.conversation.default_agent import (
+    DATA_DEFAULT_ENTITY,
+    DefaultAgent,
+)
 from homeassistant.components.websocket_api import (
     async_response,
     error_message,
