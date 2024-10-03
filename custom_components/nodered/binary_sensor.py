@@ -5,7 +5,7 @@ from numbers import Number
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.components.lock import LockState
 from homeassistant.const import (
-    CONF_STATE, 
+    CONF_STATE,
     STATE_HOME,
     STATE_ON,
     STATE_OPEN,
