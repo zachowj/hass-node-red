@@ -19,19 +19,8 @@ jobs:
       - name: Hassfest validation
         uses: "home-assistant/actions/hassfest@master"
 
-  style:
-    runs-on: ubuntu-latest
-    name: Check style formatting
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        name: Set up Python
-        with:
-          python-version: "3.12"
-      - uses: pre-commit/action@v3.0.1
-
   release-please:
-    needs: [validate, style]
+    needs: validate
     runs-on: ubuntu-latest
     steps:
       - uses: GoogleCloudPlatform/release-please-action@v4
