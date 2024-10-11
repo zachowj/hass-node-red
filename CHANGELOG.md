@@ -16,6 +16,14 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## [4.1.2](https://github.com/zachowj/hass-node-red/compare/v4.1.1...v4.1.2) (2024-10-11)
+
+
+### Bug Fixes
+
+* **binary_sensor:** handle LockState import and use fallback for STATE_UNLOCKED ([2413954](https://github.com/zachowj/hass-node-red/commit/2413954fbc426c4fa537d83b6100d342dfeba46f))
+* Replace deprecated constant ([5c3e865](https://github.com/zachowj/hass-node-red/commit/5c3e865cb344fb06f5c543886c3e91820ec61177)), closes [#307](https://github.com/zachowj/hass-node-red/issues/307)
+
 ## [4.1.1](https://github.com/zachowj/hass-node-red/compare/v4.1.0...v4.1.1) (2024-09-26)
 
 
