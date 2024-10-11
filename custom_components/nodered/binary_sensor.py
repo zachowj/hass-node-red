@@ -3,12 +3,18 @@
 from numbers import Number
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.components.lock import LockState
 from homeassistant.const import CONF_STATE, STATE_HOME, STATE_ON, STATE_OPEN
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import NodeRedEntity
 from .const import CONF_BINARY_SENSOR, NODERED_DISCOVERY_NEW
+
+try:
+    from homeassistant.components.lock import LockState
+
+    STATE_UNLOCKED = LockState.UNLOCKED
+except ImportError:
+    from homeassistant.const import STATE_UNLOCKED
 
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
@@ -40,7 +46,7 @@ class NodeRedBinarySensor(NodeRedEntity, BinarySensorEntity):
         STATE_ON,
         STATE_OPEN,
         STATE_HOME,
-        LockState.UNLOCKED,
+        STATE_UNLOCKED,
     )
     _component = CONF_BINARY_SENSOR
 
