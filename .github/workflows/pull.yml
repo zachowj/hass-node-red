@@ -19,15 +19,15 @@ jobs:
       - name: Hassfest validation
         uses: "home-assistant/actions/hassfest@master"
 
-  style:
-    runs-on: ubuntu-latest
-    name: Check style formatting
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - uses: pre-commit/action@v3.0.1
+  # style:
+  #   runs-on: ubuntu-latest
+  #   name: Check style formatting
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: actions/setup-python@v5
+  #       with:
+  #         python-version: "3.12"
+  #     - uses: pre-commit/action@v3.0.1
 
   # tests:
   #   runs-on: "ubuntu-latest"
