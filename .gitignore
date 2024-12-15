@@ -17,5 +17,5 @@ config/**
 !config/configuration.yaml
 !config/automations.yaml
 
-.venv
+.venv*
 pyvenv.cfg
