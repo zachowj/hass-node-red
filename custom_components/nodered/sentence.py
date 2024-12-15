@@ -3,6 +3,7 @@ from enum import Enum
 import logging
 from typing import Any
 
+from hassil.expression import Sentence
 from hassil.recognize import RecognizeResult
 from homeassistant.components.conversation.default_agent import (
     DATA_DEFAULT_ENTITY,
@@ -71,6 +72,9 @@ async def websocket_sentence(
         device_id was added in 2024.4.0
         """
 
+        # RecognizeResult in 2024.12 is not serializable, so we need to convert it to a serializable format
+        serialized = convert_recognize_result_to_dict(result)
+
         _LOGGER.debug(f"Sentence trigger: {sentence}")
         connection.send_message(
             event_message(
@@ -78,7 +82,7 @@ async def websocket_sentence(
                 {
                     "data": {
                         "sentence": sentence,
-                        "result": result,
+                        "result": serialized,
                         "deviceId": device_id,
                         "responseId": message_id,
                     }
@@ -174,3 +178,34 @@ async def websocket_sentence_response(
             connection.send_message(
                 error_message(message_id, "sentence_response_not_found", message),
             )
+
+
+def convert_recognize_result_to_dict(result: Any) -> dict:
+    """
+    Serializes a RecognizeResult object into a JSON-serializable dictionary.
+    """
+
+    def serialize(obj):
+        if isinstance(obj, Sentence):
+            # Custom serialization for Sentence
+            return {
+                "text": obj.text,
+                "pattern": obj.pattern.pattern if obj.pattern else None,
+            }
+        elif hasattr(obj, "__dict__"):
+            # For objects with attributes, serialize attributes
+            return {key: serialize(value) for key, value in vars(obj).items()}
+        elif isinstance(obj, list):
+            # Recursively handle lists
+            return [serialize(item) for item in obj]
+        elif isinstance(obj, dict):
+            # Recursively handle dictionaries
+            return {key: serialize(value) for key, value in obj.items()}
+        elif isinstance(obj, (int, float, str, type(None))):
+            # Primitive types are already serializable
+            return obj
+        else:
+            # Fallback for non-serializable types
+            return str(obj)
+
+    return serialize(result)
