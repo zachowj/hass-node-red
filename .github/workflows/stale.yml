@@ -7,13 +7,17 @@ on:
 jobs:
   stale:
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
 
     steps:
       - uses: actions/stale@v9
         with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          days-before-stale: 60
+          any-of-issue-labels: "waiting-for-response"
+          days-before-issue-stale: 30
+          stale-issue-label: stale
           stale-issue-message: >
-            This issue has been automatically marked as stale because it has not had
+            This issue has been automatically marked as abandoned because it has not had
             recent activity. It will be closed if no further activity occurs. Thank you
             for your contributions.
+          exempt-issue-labels: "no-stale, bug, documentation"
