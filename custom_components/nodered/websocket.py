@@ -323,8 +323,9 @@ async def websocket_device_trigger(
             msg[CONF_ID],
             {"type": "device_trigger", "data": event["trigger"]},
         )
-        connection.send_message(
-            json.dumps(message, cls=NodeRedJSONEncoder, allow_nan=False)
+        hass.loop.call_soon_threadsafe(
+            connection.send_message,
+            json.dumps(message, cls=NodeRedJSONEncoder, allow_nan=False),
         )
 
     def unsubscribe() -> None:
