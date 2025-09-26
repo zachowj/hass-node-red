@@ -5,7 +5,6 @@ from typing import Any
 
 from hassil.expression import Sentence
 from hassil.recognize import RecognizeResult
-from homeassistant.components.conversation import async_get_agent
 from homeassistant.components.websocket_api import (
     async_response,
     error_message,
@@ -122,9 +121,25 @@ async def websocket_sentence(
         _LOGGER.info(f"Sentence trigger removed: {sentences}")
 
     try:
-        default_agent = await async_get_agent(hass)
-        if default_agent is None:
-            raise ValueError(f"Default Agent not found.")
+        from homeassistant.components.conversation import get_agent_manager
+        from homeassistant.components.conversation.trigger import TriggerDetails
+
+        manager = get_agent_manager(hass)
+        if manager is None:
+            raise ValueError("Conversation integration not loaded")
+
+        _remove_trigger = manager.register_trigger(
+            TriggerDetails(sentences, handle_trigger)
+        )
+    except ImportError:
+        # Fallback for Home Assistant versions before 2025.10.0
+        from homeassistant.components.conversation.default_agent import (
+            DATA_DEFAULT_ENTITY,
+            DefaultAgent,
+        )
+
+        default_agent = hass.data[DATA_DEFAULT_ENTITY]
+        assert isinstance(default_agent, DefaultAgent)
 
         _remove_trigger = default_agent.register_trigger(sentences, handle_trigger)
     except ValueError as err:
@@ -188,7 +203,11 @@ def convert_recognize_result_to_dict(result: Any) -> dict:
             # Custom serialization for Sentence
             return {
                 "text": obj.text,
-                "pattern": obj.pattern.pattern if obj.pattern else None,
+                "pattern": (
+                    obj.pattern.pattern
+                    if hasattr(obj, "pattern") and getattr(obj, "pattern") is not None
+                    else None
+                ),
             }
         elif hasattr(obj, "__dict__"):
             # For objects with attributes, serialize attributes
