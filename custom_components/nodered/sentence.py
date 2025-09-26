@@ -5,10 +5,7 @@ from typing import Any
 
 from hassil.expression import Sentence
 from hassil.recognize import RecognizeResult
-from homeassistant.components.conversation.default_agent import (
-    DATA_DEFAULT_ENTITY,
-    DefaultAgent,
-)
+from homeassistant.components.conversation import async_get_agent
 from homeassistant.components.websocket_api import (
     async_response,
     error_message,
@@ -125,8 +122,9 @@ async def websocket_sentence(
         _LOGGER.info(f"Sentence trigger removed: {sentences}")
 
     try:
-        default_agent = hass.data[DATA_DEFAULT_ENTITY]
-        assert isinstance(default_agent, DefaultAgent)
+        default_agent = await async_get_agent(hass)
+        if default_agent is None:
+            raise ValueError(f"Default Agent not found.")
 
         _remove_trigger = default_agent.register_trigger(sentences, handle_trigger)
     except ValueError as err:
