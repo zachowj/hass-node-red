@@ -13,5 +13,5 @@
   "documentation": "https://zachowj.github.io/node-red-contrib-home-assistant-websocket/guide/custom_integration/",
   "iot_class": "local_push",
   "issue_tracker": "https://github.com/zachowj/hass-node-red/issues",
-  "version": "4.1.2"
+  "version": "4.1.3"
 }
