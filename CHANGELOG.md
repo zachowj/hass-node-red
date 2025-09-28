@@ -16,6 +16,35 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## [4.1.3](https://github.com/zachowj/hass-node-red/compare/v4.1.2...v4.1.3) (2025-09-28)
+
+
+### Bug Fixes
+
+* **sentence:** update trigger registration for compatibility with newer Home Assistant versions ([b167475](https://github.com/zachowj/hass-node-red/commit/b167475442475012bf737a94188f385b72fd8558)), closes [#346](https://github.com/zachowj/hass-node-red/issues/346)
+* **websocket:** use call_soon_threadsafe for sending messages in websocket_device_trigger ([680897b](https://github.com/zachowj/hass-node-red/commit/680897b2414490fe522277960f56b8e22cf5f2f7))
+
+
+### Build System
+
+* **deps:** update pip requirement from &lt;24.4,&gt;=21.0 to &gt;=21.0,&lt;25.1 ([#332](https://github.com/zachowj/hass-node-red/issues/332)) ([18c2cde](https://github.com/zachowj/hass-node-red/commit/18c2cde78ce0de0b1313c382a6a4556b7c542496))
+
+
+### Continuous Integration
+
+* add workflow to remove 'waiting-for-response' label on author comments and update stale workflow settings ([943d298](https://github.com/zachowj/hass-node-red/commit/943d298a67fb99f3cd8ee665339f1fda90d75039))
+* **cron:** add workflow_dispatch trigger and enhance validation steps ([737b0fd](https://github.com/zachowj/hass-node-red/commit/737b0fd33a4a2021d5f4f0fc6a901264ed213f5c))
+* **cron:** correct import path for Home Assistant version retrieval ([d1cf490](https://github.com/zachowj/hass-node-red/commit/d1cf4907f25d452fef23119574d8434ea388be5d))
+* **pre-commit:** update ruff hook configuration ([1655c4a](https://github.com/zachowj/hass-node-red/commit/1655c4a82c04cd7b11bf94c480319b1b856fe82e))
+
+
+### Miscellaneous Chores
+
+* **pre-commit:** update dependencies for isort, ruff, bandit, and python-typing-update ([eec2aaf](https://github.com/zachowj/hass-node-red/commit/eec2aaffa65f3bb6538ecab0274bc4f62bb6d8bb))
+* **release-please:** add changelog sections for better organization ([e7498fc](https://github.com/zachowj/hass-node-red/commit/e7498fc3b3a4fedd3ddf820393e35ba89708916a))
+* **setup.cfg:** remove isort not_skip configuration for __init__.py ([91c21d5](https://github.com/zachowj/hass-node-red/commit/91c21d5af7734233ca36dc135359f57af21f1e81))
+* update virtual environment entry to ignore all variations of .venv ([ae1f6d3](https://github.com/zachowj/hass-node-red/commit/ae1f6d3cc07c9cea4d04a63c31ddabdc09efb263))
+
 ## [4.1.2](https://github.com/zachowj/hass-node-red/compare/v4.1.1...v4.1.2) (2024-12-15)
 
 
