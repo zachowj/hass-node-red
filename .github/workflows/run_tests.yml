@@ -65,10 +65,8 @@ jobs:
             REF="$HA_VERSION"
             python -m pip install --constraint https://raw.githubusercontent.com/home-assistant/core/${REF}/homeassistant/package_constraints.txt homeassistant==${HA_VERSION}
             
-            if [ "$PHAC_VERSION" = "latest" ]; then
-              python -m pip install pytest-homeassistant-custom-component
-            else
-              python -m pip install "pytest-homeassistant-custom-component==${PHAC_VERSION}"
+            if [ "$PHAC_VERSION" != "latest" ]; then
+              python -m pip install --force-reinstall "pytest-homeassistant-custom-component==${PHAC_VERSION}"
             fi
           elif [ "$HA_CHANNEL" = "latest" ]; then
             python -m pip install homeassistant
