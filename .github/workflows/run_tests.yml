@@ -30,6 +30,7 @@ jobs:
             python: "3.12"
             ha_channel: pinned
             ha_version: "2024.5.0"
+            phac_version: "0.13.120"
           - name: ha-latest
             python: "3.13"
             ha_channel: latest
@@ -56,12 +57,19 @@ jobs:
         env:
           HA_CHANNEL: ${{ matrix.ha_channel }}
           HA_VERSION: ${{ matrix.ha_version }}
+          PHAC_VERSION: ${{ matrix.phac_version || 'latest' }}
         run: |
           set -e
           echo "Channel: $HA_CHANNEL  Version: $HA_VERSION"
           if [ "$HA_CHANNEL" = "pinned" ]; then
             REF="$HA_VERSION"
             python -m pip install --constraint https://raw.githubusercontent.com/home-assistant/core/${REF}/homeassistant/package_constraints.txt homeassistant==${HA_VERSION}
+            
+            if [ "$PHAC_VERSION" = "latest" ]; then
+              python -m pip install pytest-homeassistant-custom-component
+            else
+              python -m pip install "pytest-homeassistant-custom-component==${PHAC_VERSION}"
+            fi
           elif [ "$HA_CHANNEL" = "latest" ]; then
             python -m pip install homeassistant
           else
