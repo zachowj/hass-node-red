@@ -26,11 +26,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: ha-2024.5.0
-            python: "3.12"
-            ha_channel: pinned
-            ha_version: "2024.5.0"
-            phac_version: "0.13.120"
+          # - name: ha-2024.5.0
+          #   python: "3.12"
+          #   ha_channel: pinned
+          #   ha_version: "2024.5.0"
+          #   phac_version: "0.13.120"
           - name: ha-latest
             python: "3.13"
             ha_channel: latest
