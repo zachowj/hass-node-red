@@ -40,26 +40,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh release upload ${{ steps.release.outputs.tag_name }} ${{ github.workspace }}/custom_components/nodered/nodered.zip
 
-  # tests:
-  #   runs-on: "ubuntu-latest"
-  #   name: Run tests
-  #   steps:
-  #     - name: Check out code from GitHub
-  #       uses: "actions/checkout@v4"
-  #     - name: Setup Python
-  #       uses: "actions/setup-python@v5"
-  #       with:
-  #         python-version: "3.12"
-  #     - name: Install requirements
-  #       run: python3 -m pip install -r requirements_test.txt
-  #     - name: Run tests
-  #       run: |
-  #         pytest \
-  #           -qq \
-  #           --timeout=9 \
-  #           --durations=10 \
-  #           -n auto \
-  #           --cov custom_components.nodered \
-  #           -o console_output_style=count \
-  #           -p no:sugar \
-  #           tests
+  tests:
+    uses: ./.github/workflows/run_tests.yml
+    secrets: inherit

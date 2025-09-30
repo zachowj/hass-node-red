@@ -69,7 +69,7 @@ jobs:
             echo "Unknown HA_CHANNEL: $HA_CHANNEL" >&2
             exit 1
           fi
-          python -c "import homeassistant; print('Installed HA version:', homeassistant.const.__version__)"
+          python -c "import importlib.metadata as m; print('Installed HA version:', m.version('homeassistant'))"
 
       - name: Run tests
         run: |
