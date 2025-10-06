@@ -16,6 +16,27 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## [4.1.4](https://github.com/zachowj/hass-node-red/compare/v4.1.3...v4.1.4) (2025-10-06)
+
+
+### Build System
+
+* **deps:** bump actions/checkout from 4 to 5 ([#353](https://github.com/zachowj/hass-node-red/issues/353)) ([ca761bf](https://github.com/zachowj/hass-node-red/commit/ca761bf69a81917bfcaccda926b1284876cd24ac))
+* **deps:** bump actions/github-script from 7 to 8 ([#354](https://github.com/zachowj/hass-node-red/issues/354)) ([b61750e](https://github.com/zachowj/hass-node-red/commit/b61750e08f404bf81f0a6d8eaba9edf33845ded4))
+* **deps:** bump actions/setup-python from 5 to 6 ([#351](https://github.com/zachowj/hass-node-red/issues/351)) ([e40bcb6](https://github.com/zachowj/hass-node-red/commit/e40bcb6b04bf5d57f717ddd695631036d9e0785d))
+* **deps:** bump actions/stale from 9 to 10 ([#352](https://github.com/zachowj/hass-node-red/issues/352)) ([edac0e3](https://github.com/zachowj/hass-node-red/commit/edac0e3d780d6fb9a1f851952e4ed62736b1797d))
+
+
+### Continuous Integration
+
+* **workflows:** add conditional check for beta channel in validation job ([b7e35fa](https://github.com/zachowj/hass-node-red/commit/b7e35facf670b2e6f91ec5c38b379d19e79143d9))
+* **workflows:** add phac_version parameter to test jobs and update installation logic ([05f4eea](https://github.com/zachowj/hass-node-red/commit/05f4eea039df505e93d3f63e8fbd7d10b6560803))
+* **workflows:** add workflow_call trigger to run_tests.yml ([983b07d](https://github.com/zachowj/hass-node-red/commit/983b07dc2d8eaea42c53d19874e672d96fd30994))
+* **workflows:** comment out specific matrix configuration for HA version 2024.5.0 ([8752f8f](https://github.com/zachowj/hass-node-red/commit/8752f8f99182543bad3347c416eb4a8d459fba01))
+* **workflows:** refactor pull and push workflows to include tests ([7dde0a5](https://github.com/zachowj/hass-node-red/commit/7dde0a5d9733588eb350d5be73f3a997af68297d))
+* **workflows:** simplify validation jobs and reintroduce beta validation ([95ae875](https://github.com/zachowj/hass-node-red/commit/95ae8759eebb87bfe33583b4c0cce94596e4d7ff))
+* **workflows:** update PHAC_VERSION installation logic for pytest-homeassistant-custom-component ([9603fe6](https://github.com/zachowj/hass-node-red/commit/9603fe69c6b2ca75a4b6e0613a4d4f1815b76751))
+
 ## [4.1.3](https://github.com/zachowj/hass-node-red/compare/v4.1.2...v4.1.3) (2025-09-28)
 
 
