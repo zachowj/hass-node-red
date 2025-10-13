@@ -1,11 +1,11 @@
 repos:
   - repo: https://github.com/pycqa/isort
-    rev: 6.0.1
+    rev: 7.0.0
     hooks:
       - id: isort
         name: isort (python)
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.13.2
+    rev: v0.14.0
     hooks:
       # Run the linter.
       - id: ruff-check
@@ -29,7 +29,7 @@ repos:
       - id: check-json
         exclude: (.vscode|.devcontainer)
   - repo: https://github.com/cdce8p/python-typing-update
-    rev: v0.7.2
+    rev: v0.7.3
     hooks:
       - id: python-typing-update
         stages: [manual]
