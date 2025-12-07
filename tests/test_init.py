@@ -19,6 +19,7 @@ async def test_setup_unload_and_reload_entry(hass):
     """Test entry setup and unload."""
     # Create a mock entry so we don't have to go through config flow
     config_entry = MockConfigEntry(domain=DOMAIN, data={})
+    config_entry.add_to_hass(hass)
 
     # Set up the entry and assert that the values set during setup are where we expect
     # them to be.

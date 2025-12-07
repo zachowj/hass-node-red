@@ -6,7 +6,7 @@ from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResultType
 import pytest
 
-from custom_components.nodered.const import CONF_NAME, DOMAIN
+from custom_components.nodered.const import DOMAIN
 
 
 # This fixture bypasses the actual setup of the integration
@@ -50,7 +50,7 @@ async def test_successful_config_flow(hass, enable_custom_integrations):
     # Check that the config flow is complete and a new entry is created with
     # the input data
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == CONF_NAME
+    assert result["title"] == "Node-RED"
     assert result["data"] == {}
     assert result["result"]
 
