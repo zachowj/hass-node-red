@@ -40,10 +40,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async def async_discover(config, connection):
         await _async_setup_entity(hass, config, async_add_entities, connection)
 
-    async_dispatcher_connect(
-        hass,
-        NODERED_DISCOVERY_NEW.format(CONF_NUMBER),
-        async_discover,
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            NODERED_DISCOVERY_NEW.format(CONF_NUMBER),
+            async_discover,
+        )
     )
 
 

@@ -50,8 +50,8 @@ from .const import (
 from .discovery import (
     ALREADY_DISCOVERED,
     CHANGE_ENTITY_TYPE,
-    CONFIG_ENTRY_IS_SETUP,
     NODERED_DISCOVERY,
+    PLATFORMS_LOADED,
     start_discovery,
     stop_discovery,
 )
@@ -83,7 +83,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         await asyncio.gather(
             *[
                 hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in hass.data[DOMAIN_DATA][CONFIG_ENTRY_IS_SETUP]
+                for platform in hass.data[DOMAIN_DATA].get(PLATFORMS_LOADED, set())
             ]
         )
     )
@@ -169,6 +169,17 @@ class NodeRedEntity(Entity):
                     )
 
                 self.async_on_remove(recreate_entity)
+            else:
+                # Clean up discovery tracking for permanent removal
+                @callback
+                def cleanup_discovery():
+                    """Remove from discovery tracking."""
+                    if DOMAIN_DATA in self.hass.data:
+                        self.hass.data[DOMAIN_DATA].get(ALREADY_DISCOVERED, {}).pop(
+                            self.unique_id, None
+                        )
+
+                self.async_on_remove(cleanup_discovery)
 
             # Remove entity
             self.hass.async_create_task(self.async_remove(force_remove=True))
@@ -277,25 +288,13 @@ class NodeRedEntity(Entity):
             self._remove_signal_entity_update()
         if self._remove_signal_discovery_update is not None:
             self._remove_signal_discovery_update()
-
-        del self.hass.data[DOMAIN_DATA][ALREADY_DISCOVERED][self.unique_id]
-
-        # Remove the entity_id from the entity registry
-        entity_registry = async_get(self.hass)
-        entity_id = entity_registry.async_get_entity_id(
-            self._component,
-            DOMAIN,
-            self.unique_id,
-        )
-        if entity_id:
-            entity_registry.async_remove(entity_id)
-            _LOGGER.info(f"Entity removed: {entity_id}")
+        if self._remove_signal_config_update is not None:
+            self._remove_signal_config_update()
 
 
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Reload config entry."""
-    await async_unload_entry(hass, entry)
-    await async_setup_entry(hass, entry)
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_remove_config_entry_device(

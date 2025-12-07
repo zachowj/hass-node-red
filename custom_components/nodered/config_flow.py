@@ -2,7 +2,7 @@
 
 from homeassistant import config_entries
 
-from .const import CONF_NAME, DOMAIN
+from .const import DOMAIN
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -26,6 +26,6 @@ class NodeRedFlowHandler(config_entries.ConfigFlow):
         if user_input is None:
             return self.async_show_form(step_id="user")
         return self.async_create_entry(
-            title=CONF_NAME,
+            title="Node-RED",
             data={},
         )

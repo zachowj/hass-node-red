@@ -42,10 +42,10 @@ SUPPORTED_COMPONENTS = [
 
 _LOGGER = logging.getLogger(__name__)
 
-ALREADY_DISCOVERED = "discovered_components"
+ALREADY_DISCOVERED = "already_discovered"
 CHANGE_ENTITY_TYPE = "change_entity_type"
-CONFIG_ENTRY_LOCK = "config_entry_lock"
-CONFIG_ENTRY_IS_SETUP = "config_entry_is_setup"
+PLATFORM_SETUP_LOCK = "platform_setup_lock"
+PLATFORMS_LOADED = "platforms_loaded"
 DISCOVERY_DISPATCHED = "discovery_dispatched"
 
 
@@ -68,42 +68,40 @@ async def start_discovery(hass: HomeAssistant, hass_config, config_entry=None) -
         _LOGGER.debug(f"Discovery message: {msg}")
 
         if ALREADY_DISCOVERED not in data:
-            data[ALREADY_DISCOVERED] = {}
-        if discovery_hash in data[ALREADY_DISCOVERED]:
-            if data[ALREADY_DISCOVERED][discovery_hash] != component:
-                # Remove old
-                log_text = f"Changing {data[ALREADY_DISCOVERED][discovery_hash]} to"
-                msg[CONF_REMOVE] = CHANGE_ENTITY_TYPE
-            elif CONF_REMOVE in msg:
+            data[ALREADY_DISCOVERED] = set()
+
+        # Check if already discovered
+        already_discovered = discovery_hash in data[ALREADY_DISCOVERED]
+
+        if already_discovered:
+            if CONF_REMOVE in msg:
                 log_text = "Removing"
             else:
-                # Dispatch update
                 log_text = "Updating"
 
             _LOGGER.info(f"{log_text} {component} {server_id} {node_id}")
 
-            data[ALREADY_DISCOVERED][discovery_hash] = component
             async_dispatcher_send(
                 hass, NODERED_DISCOVERY_UPDATED.format(discovery_hash), msg, connection
             )
         else:
-            # Add component
+            # Add component - ensure platform is set up first
             _LOGGER.info(f"Creating {component} {server_id} {node_id}")
-            data[ALREADY_DISCOVERED][discovery_hash] = component
 
-            async with data[CONFIG_ENTRY_LOCK]:
-                if component not in data[CONFIG_ENTRY_IS_SETUP]:
+            async with data.setdefault(PLATFORM_SETUP_LOCK, {}).setdefault(
+                component, asyncio.Lock()
+            ):
+                if component not in data.get(PLATFORMS_LOADED, set()):
                     await hass.config_entries.async_forward_entry_setups(
                         config_entry, [component]
                     )
-                    data[CONFIG_ENTRY_IS_SETUP].add(component)
+                    data.setdefault(PLATFORMS_LOADED, set()).add(component)
+
+            data[ALREADY_DISCOVERED].add(discovery_hash)
 
             async_dispatcher_send(
                 hass, NODERED_DISCOVERY_NEW.format(component), msg, connection
             )
-
-    hass.data[DOMAIN_DATA][CONFIG_ENTRY_LOCK] = asyncio.Lock()
-    hass.data[DOMAIN_DATA][CONFIG_ENTRY_IS_SETUP] = set()
 
     hass.data[DOMAIN_DATA][DISCOVERY_DISPATCHED] = async_dispatcher_connect(
         hass,

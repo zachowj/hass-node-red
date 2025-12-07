@@ -23,10 +23,12 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     async def async_discover(config, connection):
         await _async_setup_entity(hass, config, async_add_devices)
 
-    async_dispatcher_connect(
-        hass,
-        NODERED_DISCOVERY_NEW.format(CONF_BINARY_SENSOR),
-        async_discover,
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            NODERED_DISCOVERY_NEW.format(CONF_BINARY_SENSOR),
+            async_discover,
+        )
     )
 
 
