@@ -1,5 +1,5 @@
 colorlog==6.10.1
 homeassistant
-pip>=21.0,<25.3
+pip>=21.0,<25.4
 pre-commit
 hassil
