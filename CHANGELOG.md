@@ -16,6 +16,54 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## [4.1.4](https://github.com/zachowj/hass-node-red/compare/v4.1.3...v4.1.4) (2025-12-07)
+
+
+### Bug Fixes
+
+* properly unsubscribe from discovery listeners when the component unloads ([ec149e8](https://github.com/zachowj/hass-node-red/commit/ec149e8e40fd677bea4153b97deef1a4ac9a76f0))
+
+
+### Documentation
+
+* add Node-RED Companion AI guide with architecture overview and developer workflows ([7065841](https://github.com/zachowj/hass-node-red/commit/7065841268076a892be1e0d1cfa2f19bf1682dd5))
+
+
+### Code Refactoring
+
+* streamline discovery flow and entity management for Node-RED components ([ec149e8](https://github.com/zachowj/hass-node-red/commit/ec149e8e40fd677bea4153b97deef1a4ac9a76f0)), closes [#333](https://github.com/zachowj/hass-node-red/issues/333) [#331](https://github.com/zachowj/hass-node-red/issues/331)
+
+
+### Build System
+
+* **deps:** bump actions/checkout from 4 to 5 ([#353](https://github.com/zachowj/hass-node-red/issues/353)) ([ca761bf](https://github.com/zachowj/hass-node-red/commit/ca761bf69a81917bfcaccda926b1284876cd24ac))
+* **deps:** bump actions/checkout from 5 to 6 ([#367](https://github.com/zachowj/hass-node-red/issues/367)) ([d025401](https://github.com/zachowj/hass-node-red/commit/d025401d360c03d441b36de778614a1dbe2b0c9b))
+* **deps:** bump actions/github-script from 7 to 8 ([#354](https://github.com/zachowj/hass-node-red/issues/354)) ([b61750e](https://github.com/zachowj/hass-node-red/commit/b61750e08f404bf81f0a6d8eaba9edf33845ded4))
+* **deps:** bump actions/setup-python from 5 to 6 ([#351](https://github.com/zachowj/hass-node-red/issues/351)) ([e40bcb6](https://github.com/zachowj/hass-node-red/commit/e40bcb6b04bf5d57f717ddd695631036d9e0785d))
+* **deps:** bump actions/stale from 9 to 10 ([#352](https://github.com/zachowj/hass-node-red/issues/352)) ([edac0e3](https://github.com/zachowj/hass-node-red/commit/edac0e3d780d6fb9a1f851952e4ed62736b1797d))
+* **deps:** bump colorlog from 6.9.0 to 6.10.1 ([#360](https://github.com/zachowj/hass-node-red/issues/360)) ([0c981ed](https://github.com/zachowj/hass-node-red/commit/0c981ed30edbd04e29a012372761c06247de2014))
+* **deps:** update pip requirement from &lt;25.1,&gt;=21.0 to &gt;=21.0,&lt;25.3 ([#349](https://github.com/zachowj/hass-node-red/issues/349)) ([82c9213](https://github.com/zachowj/hass-node-red/commit/82c9213059208faa3177b34b627517cb1db1a26d))
+* **deps:** update pip requirement from &lt;25.3,&gt;=21.0 to &gt;=21.0,&lt;25.4 ([#363](https://github.com/zachowj/hass-node-red/issues/363)) ([54a0ab6](https://github.com/zachowj/hass-node-red/commit/54a0ab66be875bf84f8ddf087a4ed6f0aff5780c))
+
+
+### Continuous Integration
+
+* **pre-commit:** pre-commit autoupdate ([#357](https://github.com/zachowj/hass-node-red/issues/357)) ([1cbc447](https://github.com/zachowj/hass-node-red/commit/1cbc4474258ced2be312b58cc5156627480fddcc))
+* **pre-commit:** pre-commit autoupdate ([#359](https://github.com/zachowj/hass-node-red/issues/359)) ([c1b9662](https://github.com/zachowj/hass-node-red/commit/c1b966207e3bb5987c70c666071364da0dc85d84))
+* **pre-commit:** pre-commit autoupdate ([#362](https://github.com/zachowj/hass-node-red/issues/362)) ([9ce6155](https://github.com/zachowj/hass-node-red/commit/9ce615510a2637b9f662b0095e96457f96882d11))
+* **workflows:** add conditional check for beta channel in validation job ([b7e35fa](https://github.com/zachowj/hass-node-red/commit/b7e35facf670b2e6f91ec5c38b379d19e79143d9))
+* **workflows:** add phac_version parameter to test jobs and update installation logic ([05f4eea](https://github.com/zachowj/hass-node-red/commit/05f4eea039df505e93d3f63e8fbd7d10b6560803))
+* **workflows:** add workflow_call trigger to run_tests.yml ([983b07d](https://github.com/zachowj/hass-node-red/commit/983b07dc2d8eaea42c53d19874e672d96fd30994))
+* **workflows:** comment out specific matrix configuration for HA version 2024.5.0 ([8752f8f](https://github.com/zachowj/hass-node-red/commit/8752f8f99182543bad3347c416eb4a8d459fba01))
+* **workflows:** refactor pull and push workflows to include tests ([7dde0a5](https://github.com/zachowj/hass-node-red/commit/7dde0a5d9733588eb350d5be73f3a997af68297d))
+* **workflows:** simplify validation jobs and reintroduce beta validation ([95ae875](https://github.com/zachowj/hass-node-red/commit/95ae8759eebb87bfe33583b4c0cce94596e4d7ff))
+* **workflows:** update PHAC_VERSION installation logic for pytest-homeassistant-custom-component ([9603fe6](https://github.com/zachowj/hass-node-red/commit/9603fe69c6b2ca75a4b6e0613a4d4f1815b76751))
+
+
+### Miscellaneous Chores
+
+* **scripts:** update file permissions to executable for dev, lint, setup, test, and version scripts ([dbc3e60](https://github.com/zachowj/hass-node-red/commit/dbc3e60ebd16da0f288c906f0a72e579dc8b9778))
+
 ## [4.1.3](https://github.com/zachowj/hass-node-red/compare/v4.1.2...v4.1.3) (2025-09-28)
 
 
