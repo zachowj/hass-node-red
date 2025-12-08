@@ -1,5 +1,3 @@
-import pytest
-
 from custom_components.nodered.const import CONF_CONFIG, CONF_NUMBER
 import custom_components.nodered.number as number
 from custom_components.nodered.number import NodeRedNumber
@@ -15,16 +13,13 @@ class FakeConnection:
 
 def test_update_config_sets_number_specific_attributes(monkeypatch):
     """update_config should set number-specific attributes from config update message."""
+
     def mock_init(self, hass, config):
         self._config = {}
-    
-    monkeypatch.setattr(
-        number.NodeRedEntity, "__init__", mock_init
-    )
+
+    monkeypatch.setattr(number.NodeRedEntity, "__init__", mock_init)
     # Ensure parent update_config does not run
-    monkeypatch.setattr(
-        number.NodeRedEntity, "update_config", lambda self, msg: None
-    )
+    monkeypatch.setattr(number.NodeRedEntity, "update_config", lambda self, msg: None)
 
     connection = FakeConnection()
     config = {number.CONF_ID: "id-1"}
@@ -59,16 +54,13 @@ def test_update_config_sets_number_specific_attributes(monkeypatch):
 
 def test_update_config_handles_partial_config(monkeypatch):
     """update_config should handle partial config updates gracefully."""
+
     def mock_init(self, hass, config):
         self._config = {}
-    
-    monkeypatch.setattr(
-        number.NodeRedEntity, "__init__", mock_init
-    )
+
+    monkeypatch.setattr(number.NodeRedEntity, "__init__", mock_init)
     # Ensure parent update_config does not run
-    monkeypatch.setattr(
-        number.NodeRedEntity, "update_config", lambda self, msg: None
-    )
+    monkeypatch.setattr(number.NodeRedEntity, "update_config", lambda self, msg: None)
 
     connection = FakeConnection()
     config = {number.CONF_ID: "id-2"}
@@ -100,16 +92,13 @@ def test_update_config_handles_partial_config(monkeypatch):
 
 def test_update_config_handles_empty_config(monkeypatch):
     """update_config should handle empty config gracefully."""
+
     def mock_init(self, hass, config):
         self._config = {}
-    
-    monkeypatch.setattr(
-        number.NodeRedEntity, "__init__", mock_init
-    )
+
+    monkeypatch.setattr(number.NodeRedEntity, "__init__", mock_init)
     # Ensure parent update_config does not run
-    monkeypatch.setattr(
-        number.NodeRedEntity, "update_config", lambda self, msg: None
-    )
+    monkeypatch.setattr(number.NodeRedEntity, "update_config", lambda self, msg: None)
 
     connection = FakeConnection()
     config = {number.CONF_ID: "id-3"}
@@ -137,12 +126,11 @@ def test_update_config_handles_empty_config(monkeypatch):
 
 def test_update_discovery_config_sets_number_attributes(monkeypatch):
     """update_discovery_config should set number-specific attributes from discovery config."""
+
     def mock_init(self, hass, config):
         self._config = {}
-    
-    monkeypatch.setattr(
-        number.NodeRedEntity, "__init__", mock_init
-    )
+
+    monkeypatch.setattr(number.NodeRedEntity, "__init__", mock_init)
     # Ensure parent update_discovery_config does not run
     monkeypatch.setattr(
         number.NodeRedEntity, "update_discovery_config", lambda self, msg: None
