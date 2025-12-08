@@ -1,7 +1,7 @@
 {
   "name": "zachowj/hass-node-red",
-  "image": "mcr.microsoft.com/vscode/devcontainers/python:0-3.11-bullseye",
-  "postCreateCommand": "bash scripts/setup",
+  "image": "mcr.microsoft.com/devcontainers/python:3.13",
+  "postCreateCommand": "scripts/setup",
   "forwardPorts": [8123],
   "portsAttributes": {
     "8123": {
@@ -12,28 +12,35 @@
   "customizations": {
     "vscode": {
       "extensions": [
-        "GitHub.copilot",
-        "ms-python.python",
-        "github.vscode-pull-request-github",
-        "ryanluker.vscode-coverage-gutters",
         "charliermarsh.ruff",
         "esbenp.prettier-vscode",
-        "ms-python.python"
+        "github.vscode-pull-request-github",
+        "gitHub.copilot",
+        "ms-python.python",
+        "ryanluker.vscode-coverage-gutters"
       ],
       "settings": {
-        "files.eol": "\n",
         "editor.tabSize": 4,
-        "python.pythonPath": "/usr/bin/python3",
-        "python.analysis.autoSearchPaths": false,
-        "python.linting.pylintEnabled": true,
-        "python.linting.enabled": true,
-        "python.testing.pytestArgs": ["--no-cov"],
+        "files.eol": "\n",
+        "files.trimTrailingWhitespace": true,
         "editor.formatOnPaste": false,
         "editor.formatOnSave": true,
         "editor.formatOnType": true,
-        "files.trimTrailingWhitespace": true
+        "python.analysis.autoSearchPaths": false,
+        "python.linting.enabled": true,
+        "python.linting.pylintEnabled": true,
+        "python.pythonPath": "/usr/local/bin/python",
+        "python.testing.pytestArgs": ["--no-cov"],
+        "[python]": {
+          "editor.defaultFormatter": "charliermarsh.ruff"
+        }
       }
     }
   },
-  "remoteUser": "vscode"
+  "remoteUser": "vscode",
+  "features": {
+    "ghcr.io/devcontainers-extra/features/apt-packages:1": {
+      "packages": "ffmpeg,libturbojpeg0,libpcap-dev"
+    }
+  }
 }

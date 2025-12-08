@@ -6,8 +6,8 @@ cd "$(dirname "$0")/.."
 
 chmod 755 scripts/*
 if ! command -v uv >/dev/null 2>&1; then
-	echo "uv is required (https://github.com/astral-sh/uv)" >&2
-	exit 1
+	echo "Installing uv (https://github.com/astral-sh/uv)" >&2
+	python3 -m pip install --upgrade uv
 fi
 
 uv pip install --requirement requirements.txt --requirement requirements_test.txt
