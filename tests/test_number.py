@@ -50,11 +50,11 @@ def test_update_config_sets_number_specific_attributes(monkeypatch):
 
     node.update_config(msg)
 
-    assert getattr(node, "_attr_native_min_value") == 10
-    assert getattr(node, "_attr_native_max_value") == 200
-    assert getattr(node, "_attr_native_step") == 5
-    assert getattr(node, "_attr_mode") == number.NumberMode.SLIDER
-    assert getattr(node, "_attr_native_unit_of_measurement") == "°C"
+    assert node._attr_native_min_value == 10
+    assert node._attr_native_max_value == 200
+    assert node._attr_native_step == 5
+    assert node._attr_mode == number.NumberMode.SLIDER
+    assert node._attr_native_unit_of_measurement == "°C"
 
 
 def test_update_config_handles_partial_config(monkeypatch):
@@ -91,11 +91,11 @@ def test_update_config_handles_partial_config(monkeypatch):
     node.update_config(msg)
 
     # Only step should change
-    assert getattr(node, "_attr_native_min_value") == 0
-    assert getattr(node, "_attr_native_max_value") == 100
-    assert getattr(node, "_attr_native_step") == 10
-    assert getattr(node, "_attr_mode") == number.NumberMode.AUTO
-    assert getattr(node, "_attr_native_unit_of_measurement") is None
+    assert node._attr_native_min_value == 0
+    assert node._attr_native_max_value == 100
+    assert node._attr_native_step == 10
+    assert node._attr_mode == number.NumberMode.AUTO
+    assert node._attr_native_unit_of_measurement is None
 
 
 def test_update_config_handles_empty_config(monkeypatch):
@@ -128,11 +128,11 @@ def test_update_config_handles_empty_config(monkeypatch):
     node.update_config(msg)
 
     # Values should remain unchanged
-    assert getattr(node, "_attr_native_min_value") == 5
-    assert getattr(node, "_attr_native_max_value") == 50
-    assert getattr(node, "_attr_native_step") == 2
-    assert getattr(node, "_attr_mode") == number.NumberMode.BOX
-    assert getattr(node, "_attr_native_unit_of_measurement") == "km"
+    assert node._attr_native_min_value == 5
+    assert node._attr_native_max_value == 50
+    assert node._attr_native_step == 2
+    assert node._attr_mode == number.NumberMode.BOX
+    assert node._attr_native_unit_of_measurement == "km"
 
 
 def test_update_discovery_config_sets_number_attributes(monkeypatch):
@@ -167,12 +167,12 @@ def test_update_discovery_config_sets_number_attributes(monkeypatch):
     node._config = discovery[CONF_CONFIG]
     node.update_discovery_config(discovery)
 
-    assert getattr(node, "_attr_icon") == "mdi:test-icon"
-    assert getattr(node, "_attr_native_min_value") == 20
-    assert getattr(node, "_attr_native_max_value") == 300
-    assert getattr(node, "_attr_native_step") == 15
-    assert getattr(node, "_attr_mode") == number.NumberMode.SLIDER
-    assert getattr(node, "_attr_native_unit_of_measurement") == "mph"
+    assert node._attr_icon == "mdi:test-icon"
+    assert node._attr_native_min_value == 20
+    assert node._attr_native_max_value == 300
+    assert node._attr_native_step == 15
+    assert node._attr_mode == number.NumberMode.SLIDER
+    assert node._attr_native_unit_of_measurement == "mph"
 
 
 def test_class_attributes():

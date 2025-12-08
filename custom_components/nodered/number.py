@@ -117,16 +117,16 @@ class NodeRedNumber(NodeRedEntity, RestoreNumber):
         super().update_config(msg)
         config = msg.get(CONF_CONFIG, {})
 
-        if config.get(CONF_MIN_VALUE) is not None:
-            self._attr_native_min_value = config.get(CONF_MIN_VALUE)
-        if config.get(CONF_MAX_VALUE) is not None:
-            self._attr_native_max_value = config.get(CONF_MAX_VALUE)
-        if config.get(CONF_STEP_VALUE) is not None:
-            self._attr_native_step = config.get(CONF_STEP_VALUE)
-        if config.get(CONF_MODE) is not None:
-            self._attr_mode = config.get(CONF_MODE)
-        if config.get(CONF_UNIT_OF_MEASUREMENT) is not None:
-            self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
+        if (min_value := config.get(CONF_MIN_VALUE)) is not None:
+            self._attr_native_min_value = min_value
+        if (max_value := config.get(CONF_MAX_VALUE)) is not None:
+            self._attr_native_max_value = max_value
+        if (step_value := config.get(CONF_STEP_VALUE)) is not None:
+            self._attr_native_step = step_value
+        if (mode := config.get(CONF_MODE)) is not None:
+            self._attr_mode = mode
+        if (unit := config.get(CONF_UNIT_OF_MEASUREMENT)) is not None:
+            self._attr_native_unit_of_measurement = unit
 
     def update_discovery_config(self, msg):
         """Update the entity config."""
