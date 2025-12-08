@@ -5,7 +5,12 @@ set -e
 cd "$(dirname "$0")/.."
 
 chmod 755 scripts/*
-python3 -m pip install --requirement requirements.txt --requirement requirements_test.txt
+if ! command -v uv >/dev/null 2>&1; then
+	echo "uv is required (https://github.com/astral-sh/uv)" >&2
+	exit 1
+fi
+
+uv pip install --requirement requirements.txt --requirement requirements_test.txt
 pre-commit install
 pre-commit install-hooks
 
