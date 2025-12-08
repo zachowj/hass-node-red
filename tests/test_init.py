@@ -1,12 +1,10 @@
 """Test nodered setup process."""
 
+import pytest
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.nodered import (
-    async_reload_entry,
-    async_setup_entry,
-    async_unload_entry,
-)
 from custom_components.nodered.const import DOMAIN, DOMAIN_DATA
 
 
@@ -14,22 +12,35 @@ from custom_components.nodered.const import DOMAIN, DOMAIN_DATA
 # for a given test. We can also leverage fixtures and mocks that are available in
 # Home Assistant using the pytest_homeassistant_custom_component plugin.
 # Assertions allow you to verify that the return value of whatever is on the left
-# side of the assertion matches with the right side.
-async def test_setup_unload_and_reload_entry(hass):
-    """Test entry setup and unload."""
-    # Create a mock entry so we don't have to go through config flow
+async def test_setup_unload_and_reload_entry(hass: HomeAssistant) -> None:
+    """Test entry setup, reload, and unload using HA lifecycle."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={})
     config_entry.add_to_hass(hass)
 
-    # Set up the entry and assert that the values set during setup are where we expect
-    # them to be.
-    assert await async_setup_entry(hass, config_entry)
-    assert DOMAIN_DATA in hass.data
+    # Simulate Home Assistant setup lifecycle
+    setup_result = await hass.config_entries.async_setup(config_entry.entry_id)
+    if not setup_result:
+        pytest.fail("Config entry setup failed.")
 
-    # Reload the entry and assert that the data from above is still there
-    assert await async_reload_entry(hass, config_entry) is None
-    assert DOMAIN_DATA in hass.data
+    if config_entry.state != ConfigEntryState.LOADED:
+        pytest.fail(f"Config entry not loaded: {config_entry.state}")
+    if DOMAIN_DATA not in hass.data:
+        pytest.fail("Domain data missing after setup.")
 
-    # Unload the entry and verify that the data has been removed
-    assert await async_unload_entry(hass, config_entry)
-    assert DOMAIN_DATA not in hass.data
+    # Simulate reload
+    result = await hass.config_entries.async_reload(config_entry.entry_id)
+    if result is not True:
+        pytest.fail(f"Reload entry did not return True: {result}")
+    if config_entry.state != ConfigEntryState.LOADED:
+        pytest.fail(f"Config entry not loaded after reload: {config_entry.state}")
+    if DOMAIN_DATA not in hass.data:
+        pytest.fail("Domain data missing after reload.")
+
+    # Simulate unload
+    result = await hass.config_entries.async_unload(config_entry.entry_id)
+    if not result:
+        pytest.fail("Failed to unload Node-RED entry.")
+    if config_entry.state != ConfigEntryState.NOT_LOADED:
+        pytest.fail(f"Config entry not unloaded: {config_entry.state}")
+    if DOMAIN_DATA in hass.data:
+        pytest.fail("Domain data still present after unload.")

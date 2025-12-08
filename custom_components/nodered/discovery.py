@@ -1,8 +1,9 @@
 """Support for Node-RED discovery."""
 
-import asyncio
 import logging
+from typing import Any
 
+from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -44,28 +45,29 @@ _LOGGER = logging.getLogger(__name__)
 
 ALREADY_DISCOVERED = "already_discovered"
 CHANGE_ENTITY_TYPE = "change_entity_type"
-PLATFORM_SETUP_LOCK = "platform_setup_lock"
 PLATFORMS_LOADED = "platforms_loaded"
 DISCOVERY_DISPATCHED = "discovery_dispatched"
 
 
-async def start_discovery(hass: HomeAssistant, hass_config, config_entry=None) -> bool:
+async def start_discovery(hass: HomeAssistant, hass_config: dict) -> bool:
     """Initialize of Node-RED Discovery."""
 
-    async def async_device_message_received(msg, connection):
+    async def async_device_message_received(
+        msg: dict[str, Any], connection: ActiveConnection
+    ) -> None:
         """Process the received message."""
         component = msg[CONF_COMPONENT]
         server_id = msg[CONF_SERVER_ID]
         node_id = msg[CONF_NODE_ID]
 
         if component not in SUPPORTED_COMPONENTS:
-            _LOGGER.warning(f"Integration {component} is not supported")
+            _LOGGER.warning("Integration %s is not supported", component)
             return
 
         discovery_hash = f"{DOMAIN}-{server_id}-{node_id}"
-        data = hass.data[DOMAIN_DATA]
+        data = hass_config
 
-        _LOGGER.debug(f"Discovery message: {msg}")
+        _LOGGER.debug("Discovery message: %s", msg)
 
         if ALREADY_DISCOVERED not in data:
             data[ALREADY_DISCOVERED] = set()
@@ -74,28 +76,16 @@ async def start_discovery(hass: HomeAssistant, hass_config, config_entry=None) -
         already_discovered = discovery_hash in data[ALREADY_DISCOVERED]
 
         if already_discovered:
-            if CONF_REMOVE in msg:
-                log_text = "Removing"
-            else:
-                log_text = "Updating"
+            log_text = "Removing" if CONF_REMOVE in msg else "Updating"
 
-            _LOGGER.info(f"{log_text} {component} {server_id} {node_id}")
+            _LOGGER.info("%s %s %s %s", log_text, component, server_id, node_id)
 
             async_dispatcher_send(
                 hass, NODERED_DISCOVERY_UPDATED.format(discovery_hash), msg, connection
             )
         else:
             # Add component - ensure platform is set up first
-            _LOGGER.info(f"Creating {component} {server_id} {node_id}")
-
-            async with data.setdefault(PLATFORM_SETUP_LOCK, {}).setdefault(
-                component, asyncio.Lock()
-            ):
-                if component not in data.get(PLATFORMS_LOADED, set()):
-                    await hass.config_entries.async_forward_entry_setups(
-                        config_entry, [component]
-                    )
-                    data.setdefault(PLATFORMS_LOADED, set()).add(component)
+            _LOGGER.info("Creating %s %s %s", component, server_id, node_id)
 
             data[ALREADY_DISCOVERED].add(discovery_hash)
 
@@ -110,6 +100,6 @@ async def start_discovery(hass: HomeAssistant, hass_config, config_entry=None) -
     )
 
 
-def stop_discovery(hass: HomeAssistant):
+def stop_discovery(hass: HomeAssistant) -> None:
     """Remove discovery dispatcher."""
     hass.data[DOMAIN_DATA][DISCOVERY_DISPATCHED]()

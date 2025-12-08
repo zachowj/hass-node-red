@@ -7,8 +7,9 @@ https://github.com/zachowj/hass-node-red
 
 import asyncio
 import logging
-from typing import Any, Optional
+from typing import Any
 
+from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -52,10 +53,11 @@ from .discovery import (
     CHANGE_ENTITY_TYPE,
     NODERED_DISCOVERY,
     PLATFORMS_LOADED,
+    SUPPORTED_COMPONENTS,
     start_discovery,
     stop_discovery,
 )
-from .version import __version__ as VERSION
+from .version import __version__
 from .websocket import register_websocket_handlers
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,21 +65,24 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up this integration using UI."""
+    domain_data = hass.data.setdefault(DOMAIN_DATA, {})
 
-    if hass.data.get(DOMAIN_DATA) is None:
-        hass.data.setdefault(DOMAIN_DATA, {})
+    if not domain_data:
         _LOGGER.info(STARTUP_MESSAGE)
 
+    await hass.config_entries.async_forward_entry_setups(entry, SUPPORTED_COMPONENTS)
+    domain_data[PLATFORMS_LOADED] = set(SUPPORTED_COMPONENTS)
+
     register_websocket_handlers(hass)
-    await start_discovery(hass, hass.data[DOMAIN_DATA], entry)
-    hass.bus.async_fire(DOMAIN, {CONF_TYPE: "loaded", CONF_VERSION: VERSION})
+    await start_discovery(hass, domain_data)
+    hass.bus.async_fire(DOMAIN, {CONF_TYPE: "loaded", CONF_VERSION: __version__})
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Handle removal of an entry."""
     unloaded = all(
         await asyncio.gather(
@@ -104,7 +109,7 @@ class NodeRedEntity(Entity):
     remove_signal_entity_update = None
     _bidirectional = False
 
-    def __init__(self, hass, config):
+    def __init__(self, hass: HomeAssistant, config: dict[str, Any]) -> None:
         """Initialize the entity."""
         self.hass = hass
         self._device_info = config.get(CONF_DEVICE_INFO)
@@ -117,7 +122,7 @@ class NodeRedEntity(Entity):
         self.update_entity_state_attributes(config)
 
     @property
-    def device_info(self) -> Optional[dict[str, Any]]:
+    def device_info(self) -> dict[str, Any] | None:
         """Return device specific attributes."""
         info = None
         if self._device_info is not None and "id" in self._device_info:
@@ -129,36 +134,38 @@ class NodeRedEntity(Entity):
         return info
 
     @callback
-    def handle_config_update(self, msg):
+    def handle_config_update(self, msg: dict[str, Any]) -> None:
         """Handle config update."""
         self.update_config(msg)
         self.async_write_ha_state()
 
     @callback
-    def handle_entity_update(self, msg):
+    def handle_entity_update(self, msg: dict[str, Any]) -> None:
         """Update entity state."""
-        _LOGGER.debug(f"Entity Update: {msg}")
+        _LOGGER.debug("Entity Update: %s", msg)
         self.update_entity_state_attributes(msg)
         self.async_write_ha_state()
 
-    def update_entity_state_attributes(self, msg):
+    def update_entity_state_attributes(self, msg: dict[str, Any]) -> None:
         """Update entity state attributes."""
         self._attr_extra_state_attributes = msg.get(CONF_ATTRIBUTES, {})
 
     @callback
-    def handle_lost_connection(self):
+    def handle_lost_connection(self) -> None:
         """Set availability to False when disconnected."""
         self._attr_available = False
         self.async_write_ha_state()
 
     @callback
-    def handle_discovery_update(self, msg, connection):
+    def handle_discovery_update(
+        self, msg: dict[str, Any], connection: ActiveConnection
+    ) -> None:
         """Update entity config."""
         if CONF_REMOVE in msg:
             if msg[CONF_REMOVE] == CHANGE_ENTITY_TYPE:
                 # recreate entity if component type changed
                 @callback
-                def recreate_entity():
+                def recreate_entity() -> None:
                     """Create entity with new type."""
                     del msg[CONF_REMOVE]
                     async_dispatcher_send(
@@ -172,7 +179,7 @@ class NodeRedEntity(Entity):
             else:
                 # Clean up discovery tracking for permanent removal
                 @callback
-                def cleanup_discovery():
+                def cleanup_discovery() -> None:
                     """Remove from discovery tracking."""
                     if DOMAIN_DATA in self.hass.data:
                         self.hass.data[DOMAIN_DATA].get(ALREADY_DISCOVERED, {}).pop(
@@ -196,7 +203,7 @@ class NodeRedEntity(Entity):
                 )
             self.async_write_ha_state()
 
-    def entity_category_mapper(self, category):
+    def entity_category_mapper(self, category: str) -> None | EntityCategory:
         """Map Node-RED category to Home Assistant entity category."""
         if category == "config":
             return EntityCategory.CONFIG
@@ -204,7 +211,7 @@ class NodeRedEntity(Entity):
             return EntityCategory.DIAGNOSTIC
         return None
 
-    def update_discovery_config(self, msg):
+    def update_discovery_config(self, msg: dict[str, Any]) -> None:
         """Update entity config."""
         self._config = msg[CONF_CONFIG]
         self._attr_icon = self._config.get(CONF_ICON)
@@ -216,7 +223,7 @@ class NodeRedEntity(Entity):
         self._attr_entity_picture = self._config.get(CONF_ENTITY_PICTURE)
         self._attr_unit_of_measurement = self._config.get(CONF_UNIT_OF_MEASUREMENT)
 
-    def update_config(self, msg):
+    def update_config(self, msg: dict[str, Any]) -> None:
         """Update entity config."""
         config = msg.get(CONF_CONFIG, {})
 
@@ -229,7 +236,7 @@ class NodeRedEntity(Entity):
         if config.get(CONF_OPTIONS):
             self._attr_options = config.get(CONF_OPTIONS)
 
-    def update_discovery_device_info(self, msg):
+    def update_discovery_device_info(self, msg: dict[str, Any]) -> None:
         """Update entity device info."""
         entity_registry = async_get(self.hass)
         entity_id = entity_registry.async_get_entity_id(
@@ -260,7 +267,6 @@ class NodeRedEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-
         self._remove_signal_entity_update = async_dispatcher_connect(
             self.hass,
             NODERED_ENTITY.format(self._server_id, self._node_id),
@@ -292,18 +298,19 @@ class NodeRedEntity(Entity):
             self._remove_signal_config_update()
 
 
-async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload config entry."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+    hass: HomeAssistant, device_entry: DeviceEntry
 ) -> bool:
     """Remove a entry from the device registry."""
     entity_registry = async_get(hass)
     entries = async_entries_for_device(entity_registry, device_entry.id)
-    # Remove entities from device before removing device so the entities are not removed from HA
+    # Remove entities from device before removing device
+    # so the entities are not removed from HA
     if entries:
         for entry in entries:
             entity_registry.async_update_entity(entry.entity_id, device_id=None)
