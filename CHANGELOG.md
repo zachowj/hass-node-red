@@ -16,6 +16,28 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## [4.1.5](https://github.com/zachowj/hass-node-red/compare/v4.1.4...v4.1.5) (2025-12-08)
+
+
+### Bug Fixes
+
+* fix hass.config_entries.async_forward_entry_setups warning ([6dab7d4](https://github.com/zachowj/hass-node-red/commit/6dab7d4f25935682f75fe5c1fe458e5f8883e113)), closes [#368](https://github.com/zachowj/hass-node-red/issues/368)
+
+
+### Code Refactoring
+
+* replace pip with uv for package management and update README instructions ([22c2e5e](https://github.com/zachowj/hass-node-red/commit/22c2e5ec1f44fa6b868c31d47ab98dde144103c3))
+
+
+### Build System
+
+* update devcontainer configuration and setup script for improved environment setup ([350d179](https://github.com/zachowj/hass-node-red/commit/350d1792d16b2d8ad06366f12557254e93a3fd38))
+
+
+### Continuous Integration
+
+* update pip install commands to use --system flag for consistency ([1991fa2](https://github.com/zachowj/hass-node-red/commit/1991fa2e883a545123a78e23b1eb45e67ffeb4f7))
+
 ## [4.1.4](https://github.com/zachowj/hass-node-red/compare/v4.1.3...v4.1.4) (2025-12-07)
 
 
