@@ -52,7 +52,7 @@ jobs:
       - name: Setup uv
         uses: astral-sh/setup-uv@v4
       - name: Install base test deps
-        run: uv pip install -r requirements_test.txt
+        run: uv pip install --system -r requirements_test.txt
       - name: Install Home Assistant (${{ matrix.ha_version }})
         env:
           HA_CHANNEL: ${{ matrix.ha_channel }}
@@ -63,13 +63,13 @@ jobs:
           echo "Channel: $HA_CHANNEL  Version: $HA_VERSION"
           if [ "$HA_CHANNEL" = "pinned" ]; then
             REF="$HA_VERSION"
-            uv pip install --constraint https://raw.githubusercontent.com/home-assistant/core/${REF}/homeassistant/package_constraints.txt homeassistant==${HA_VERSION}
+            uv pip install --system --constraint https://raw.githubusercontent.com/home-assistant/core/${REF}/homeassistant/package_constraints.txt homeassistant==${HA_VERSION}
             
             if [ "$PHAC_VERSION" != "latest" ]; then
-              uv pip install --force-reinstall "pytest-homeassistant-custom-component==${PHAC_VERSION}"
+              uv pip install --system --force-reinstall "pytest-homeassistant-custom-component==${PHAC_VERSION}"
             fi
           elif [ "$HA_CHANNEL" = "latest" ]; then
-            uv pip install homeassistant
+            uv pip install --system homeassistant
           else
             echo "Unknown HA_CHANNEL: $HA_CHANNEL" >&2
             exit 1
@@ -109,7 +109,7 @@ jobs:
       - name: Setup uv
         uses: astral-sh/setup-uv@v4
       - name: Install base test deps
-        run: uv pip install -r requirements_test.txt
+        run: uv pip install --system -r requirements_test.txt
       - name: Install Home Assistant (${{ matrix.ha_version }})
         env:
           HA_CHANNEL: ${{ matrix.ha_channel }}
@@ -117,7 +117,7 @@ jobs:
         run: |
           set -e
           echo "Channel: $HA_CHANNEL  Version: $HA_VERSION"
-          uv pip install --pre homeassistant
+          uv pip install --system --pre homeassistant
           python -c "import importlib.metadata as m; print('Installed HA version:', m.version('homeassistant'))"
       - name: Run tests
         run: |
