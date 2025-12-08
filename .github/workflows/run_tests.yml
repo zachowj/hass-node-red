@@ -50,7 +50,7 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - name: Setup uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@v7
       - name: Install base test deps
         run: uv pip install --system -r requirements_test.txt
       - name: Install Home Assistant (${{ matrix.ha_version }})
@@ -107,7 +107,7 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - name: Setup uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@v7
       - name: Install base test deps
         run: uv pip install --system -r requirements_test.txt
       - name: Install Home Assistant (${{ matrix.ha_version }})
