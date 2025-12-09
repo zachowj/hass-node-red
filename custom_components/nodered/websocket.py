@@ -4,7 +4,6 @@ import json
 import logging
 from typing import Any
 
-import voluptuous as vol
 from homeassistant.components import device_automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.device_automation.exceptions import (
@@ -14,11 +13,7 @@ from homeassistant.components.device_automation.exceptions import (
 from homeassistant.components.device_automation.trigger import TRIGGER_SCHEMA
 from homeassistant.components.webhook import (
     SUPPORTED_METHODS,
-)
-from homeassistant.components.webhook import (
     async_register as webhook_async_register,
-)
-from homeassistant.components.webhook import (
     async_unregister as webhook_async_unregister,
 )
 from homeassistant.components.websocket_api import (
@@ -42,15 +37,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
-)
-from homeassistant.helpers import (
     device_registry as dr,
-)
-from homeassistant.helpers import (
     trigger,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import async_entries_for_device, async_get
+import voluptuous as vol
 
 from custom_components.nodered.sentence import (
     websocket_sentence,
@@ -83,6 +75,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def register_websocket_handlers(hass: HomeAssistant):
     """Register the websocket handlers."""
+
     async_register_command(hass, websocket_device_action)
     async_register_command(hass, websocket_device_remove)
     async_register_command(hass, websocket_device_trigger)
@@ -107,6 +100,7 @@ async def websocket_device_action(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Sensor command."""
+
     context = connection.context(msg)
     platform = await device_automation.async_get_device_automation_platform(
         hass, msg["action"][CONF_DOMAIN], DeviceAutomationType.ACTION
@@ -198,6 +192,7 @@ def websocket_entity(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Sensor command."""
+
     async_dispatcher_send(
         hass, NODERED_ENTITY.format(msg[CONF_SERVER_ID], msg[CONF_NODE_ID]), msg
     )
@@ -217,6 +212,7 @@ def websocket_config_update(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Sensor command."""
+
     async_dispatcher_send(
         hass, NODERED_CONFIG_UPDATE.format(msg[CONF_SERVER_ID], msg[CONF_NODE_ID]), msg
     )
@@ -229,6 +225,7 @@ def websocket_version(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Version command."""
+
     connection.send_message(result_message(msg[CONF_ID], VERSION))
 
 
@@ -351,7 +348,7 @@ async def websocket_device_trigger(
 
     except vol.MultipleInvalid as err:
         _LOGGER.error(
-            f"Error initializing device trigger '{node_id}': {err!s}",
+            f"Error initializing device trigger '{node_id}': {str(err)}",
         )
         connection.send_message(
             error_message(msg[CONF_ID], "invalid_trigger", str(err))
@@ -359,7 +356,7 @@ async def websocket_device_trigger(
         return
     except Exception as err:
         _LOGGER.error(
-            f"Error initializing device trigger '{node_id}': {err!s}",
+            f"Error initializing device trigger '{node_id}': {str(err)}",
         )
         connection.send_message(error_message(msg[CONF_ID], "unknown_error", str(err)))
         return

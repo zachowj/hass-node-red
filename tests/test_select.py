@@ -1,7 +1,7 @@
 import pytest
 
-from custom_components.nodered import select
 from custom_components.nodered.const import CONF_SELECT, NODERED_DISCOVERY_NEW
+import custom_components.nodered.select as select
 from custom_components.nodered.select import NodeRedSelect
 
 
@@ -60,7 +60,7 @@ def test_update_entity_state_attributes_sets_current_option(monkeypatch):
     msg = {select.CONF_STATE: "option-42"}
     node.update_entity_state_attributes(msg)
 
-    assert node._attr_current_option == "option-42"
+    assert getattr(node, "_attr_current_option") == "option-42"
 
 
 def test_update_discovery_config_sets_icon_and_options(monkeypatch):
@@ -86,8 +86,8 @@ def test_update_discovery_config_sets_icon_and_options(monkeypatch):
 
     node.update_discovery_config(discovery)
 
-    assert node._attr_icon == "mdi:test-icon"
-    assert node._attr_options == ["a", "b", "c"]
+    assert getattr(node, "_attr_icon") == "mdi:test-icon"
+    assert getattr(node, "_attr_options") == ["a", "b", "c"]
 
 
 # Additional tests to improve coverage
@@ -154,9 +154,9 @@ def test_update_discovery_config_without_options_or_icon(monkeypatch):
     node.update_discovery_config(discovery)
 
     # Icon should fall back to the SELECT_ICON from const.py
-    assert node._attr_icon == select.SELECT_ICON
+    assert getattr(node, "_attr_icon") == select.SELECT_ICON
     # Options should remain unchanged when not specified
-    assert node._attr_options == ["initial", "options"]
+    assert getattr(node, "_attr_options") == ["initial", "options"]
 
 
 def test_class_attributes():
