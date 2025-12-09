@@ -21,7 +21,13 @@ from homeassistant.const import (
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import NodeRedEntity
-from .const import CONF_NUMBER, EVENT_VALUE_CHANGE, NODERED_DISCOVERY_NEW, NUMBER_ICON
+from .const import (
+    CONF_CONFIG,
+    CONF_NUMBER,
+    EVENT_VALUE_CHANGE,
+    NODERED_DISCOVERY_NEW,
+    NUMBER_ICON,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -105,6 +111,22 @@ class NodeRedNumber(NodeRedEntity, RestoreNumber):
         """Update the entity state attributes."""
         super().update_entity_state_attributes(msg)
         self._attr_native_value = msg.get(CONF_STATE)
+
+    def update_config(self, msg):
+        """Update entity config."""
+        super().update_config(msg)
+        config = msg.get(CONF_CONFIG, {})
+
+        if (min_value := config.get(CONF_MIN_VALUE)) is not None:
+            self._attr_native_min_value = min_value
+        if (max_value := config.get(CONF_MAX_VALUE)) is not None:
+            self._attr_native_max_value = max_value
+        if (step_value := config.get(CONF_STEP_VALUE)) is not None:
+            self._attr_native_step = step_value
+        if (mode := config.get(CONF_MODE)) is not None:
+            self._attr_mode = mode
+        if (unit := config.get(CONF_UNIT_OF_MEASUREMENT)) is not None:
+            self._attr_native_unit_of_measurement = unit
 
     def update_discovery_config(self, msg):
         """Update the entity config."""
