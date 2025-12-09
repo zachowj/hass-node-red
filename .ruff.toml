@@ -23,3 +23,9 @@ keep-runtime-typing = true
 
 [lint.mccabe]
 max-complexity = 25
+
+[lint.per-file-ignores]
+"tests/**/*" = [
+    "SLF001", # Access to protected member of a class
+    "S101", # Use of assert detected (security issue)
+]

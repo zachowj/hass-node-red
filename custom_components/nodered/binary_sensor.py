@@ -1,10 +1,15 @@
 """Binary sensor platform for nodered."""
 
 from numbers import Number
+from typing import Any
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import CONF_STATE, STATE_HOME, STATE_ON, STATE_OPEN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from custom_components.nodered.config_flow import NodeRedConfigEntry
 
 from . import NodeRedEntity
 from .const import CONF_BINARY_SENSOR, NODERED_DISCOVERY_NEW
@@ -17,10 +22,14 @@ except ImportError:
     from homeassistant.const import STATE_UNLOCKED
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: NodeRedConfigEntry,
+    async_add_devices: AddEntitiesCallback,
+) -> None:
     """Set up sensor platform."""
 
-    async def async_discover(config, connection):
+    async def async_discover(config: NodeRedConfigEntry) -> None:
         await _async_setup_entity(hass, config, async_add_devices)
 
     config_entry.async_on_unload(
@@ -32,7 +41,11 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     )
 
 
-async def _async_setup_entity(hass, config, async_add_devices):
+async def _async_setup_entity(
+    hass: HomeAssistant,
+    config: NodeRedConfigEntry,
+    async_add_devices: AddEntitiesCallback,
+) -> None:
     """Set up the Node-RED binary-sensor."""
     async_add_devices([NodeRedBinarySensor(hass, config)])
 
@@ -52,13 +65,13 @@ class NodeRedBinarySensor(NodeRedEntity, BinarySensorEntity):
     )
     _component = CONF_BINARY_SENSOR
 
-    def __init__(self, hass, config):
+    def __init__(self, hass: HomeAssistant, config: NodeRedConfigEntry) -> None:
         """Initialize the binary sensor."""
         super().__init__(hass, config)
         self._attr_state = config.get(CONF_STATE)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         value = self._attr_state
 
@@ -75,7 +88,7 @@ class NodeRedBinarySensor(NodeRedEntity, BinarySensorEntity):
 
         return False
 
-    def update_entity_state_attributes(self, msg):
+    def update_entity_state_attributes(self, msg: dict[str, Any]) -> None:
         """Update entity state attributes."""
         super().update_entity_state_attributes(msg)
         self._attr_state = msg.get(CONF_STATE)

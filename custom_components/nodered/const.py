@@ -1,6 +1,8 @@
 """Constants for Node-RED."""
 
-from .version import __version__ as VERSION
+from .version import __version__
+
+VERSION = __version__
 
 # Base component constants
 DOMAIN = "nodered"

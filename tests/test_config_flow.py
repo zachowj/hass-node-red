@@ -1,10 +1,14 @@
 """Test nodered config flow."""
 
+from collections.abc import Generator
+from typing import Any
 from unittest.mock import patch
 
-from homeassistant import config_entries
-from homeassistant.data_entry_flow import FlowResultType
 import pytest
+from homeassistant import config_entries
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.nodered.const import DOMAIN
 
@@ -13,7 +17,7 @@ from custom_components.nodered.const import DOMAIN
 # since we only want to test the config flow. We test the
 # actual functionality of the integration in other test modules.
 @pytest.fixture(autouse=True)
-def bypass_setup_fixture():
+def bypass_setup_fixture() -> Generator[None]:
     """Prevent setup."""
     with (
         patch(
@@ -31,8 +35,11 @@ def bypass_setup_fixture():
 
 
 # Here we simulate a successful config flow from the backend.
-async def test_successful_config_flow(hass, enable_custom_integrations):
+async def test_successful_config_flow(
+    hass: HomeAssistant, enable_custom_integrations: Any
+) -> None:
     """Test a successful config flow."""
+    _ = enable_custom_integrations
     # Initialize a config flow
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -55,36 +62,37 @@ async def test_successful_config_flow(hass, enable_custom_integrations):
     assert result["result"]
 
 
-# async def test_already_configured(hass, enable_custom_integrations):
-#     """Test we handle already configured."""
-#     # Create a mock entry so we can check against it
-#     entry = config_entries.ConfigEntry(
-#         version=1,
-#         domain=DOMAIN,
-#         title=CONF_NAME,
-#         data={},
-#         source="test",
-#         entry_id="test",
-#         unique_id="unique_test_id",
-#         options={},
-#     )
+async def test_already_configured(
+    hass: HomeAssistant, enable_custom_integrations: Any
+) -> None:
+    """Test we handle already configured."""
+    _ = enable_custom_integrations
+    # Create a mock entry so we can check against it
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Node-RED",
+        data={},
+        unique_id="unique_test_id",
+    )
+    entry.add_to_hass(hass)
 
-#     hass.config_entries.async_entries = (
-#         lambda domain, include_ignore=None: [entry] if domain == DOMAIN else []
-#     )
+    # Initialize a config flow
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
 
-#     # Initialize a config flow
-#     result = await hass.config_entries.flow.async_init(
-#         DOMAIN, context={"source": config_entries.SOURCE_USER}
-#     )
-
-#     # Check that the config flow shows abort
-#     assert result["type"] == FlowResultType.ABORT
-#     assert result["reason"] == "single_instance_allowed"
+    # Check that the config flow shows abort
+    if result["type"] != FlowResultType.ABORT:
+        pytest.fail(f"Flow did not abort: {result['type']}")
+    if result["reason"] != "single_instance_allowed":
+        pytest.fail(f"Unexpected abort reason: {result['reason']}")
 
 
-async def test_abort_if_in_data(hass, enable_custom_integrations):
+async def test_abort_if_in_data(
+    hass: HomeAssistant, enable_custom_integrations: Any
+) -> None:
     """Test we abort if component is already loaded."""
+    _ = enable_custom_integrations
     # Set the domain in hass.data
     hass.data[DOMAIN] = {"loaded": True}
 

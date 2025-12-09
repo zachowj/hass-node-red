@@ -5,7 +5,7 @@ from datetime import timedelta
 from custom_components.nodered.utils import NodeRedJSONEncoder
 
 
-def test_json_encoder(hass):
+def test_json_encoder() -> None:
     """Test the NodeRedJSONEncoder."""
     ha_json_enc = NodeRedJSONEncoder()
 

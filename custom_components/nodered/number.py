@@ -1,6 +1,7 @@
 """Sensor platform for nodered."""
 
 import logging
+from typing import Any
 
 from homeassistant.components.number import RestoreNumber
 from homeassistant.components.number.const import (
@@ -10,6 +11,7 @@ from homeassistant.components.number.const import (
     NumberMode,
 )
 from homeassistant.components.websocket_api import event_message
+from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.const import (
     CONF_ICON,
     CONF_ID,
@@ -18,7 +20,11 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from custom_components.nodered.config_flow import NodeRedConfigEntry
 
 from . import NodeRedEntity
 from .const import CONF_NUMBER, EVENT_VALUE_CHANGE, NODERED_DISCOVERY_NEW, NUMBER_ICON
@@ -34,10 +40,14 @@ CONF_STATE = "state"
 CONF_VALUE = "value"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: NodeRedConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the number platform."""
 
-    async def async_discover(config, connection):
+    async def async_discover(config: any, connection: ActiveConnection) -> None:
         await _async_setup_entity(hass, config, async_add_entities, connection)
 
     config_entry.async_on_unload(
@@ -49,9 +59,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
 
-async def _async_setup_entity(hass, config, async_add_entities, connection):
+async def _async_setup_entity(
+    hass: HomeAssistant,
+    config: NodeRedConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+    connection: ActiveConnection,
+) -> None:
     """Set up the Node-RED number."""
-
     async_add_entities([NodeRedNumber(hass, config, connection)])
 
 
@@ -66,7 +80,12 @@ class NodeRedNumber(NodeRedEntity, RestoreNumber):
     _bidirectional = True
     _component = CONF_NUMBER
 
-    def __init__(self, hass, config, connection):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: NodeRedConfigEntry,
+        connection: ActiveConnection,
+    ) -> None:
         """Initialize the number."""
         super().__init__(hass, config)
         self._message_id = config[CONF_ID]
@@ -95,18 +114,19 @@ class NodeRedNumber(NodeRedEntity, RestoreNumber):
     async def async_added_to_hass(self) -> None:
         """Load the last known state when added to hass."""
         await super().async_added_to_hass()
-        if (last_state := await self.async_get_last_state()) and (
-            last_number_data := await self.async_get_last_number_data()
+        if (
+            (last_state := await self.async_get_last_state())
+            and (last_number_data := await self.async_get_last_number_data())
+            and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
         ):
-            if last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
-                self._attr_native_value = last_number_data.native_value
+            self._attr_native_value = last_number_data.native_value
 
-    def update_entity_state_attributes(self, msg):
+    def update_entity_state_attributes(self, msg: dict[str, Any]) -> None:
         """Update the entity state attributes."""
         super().update_entity_state_attributes(msg)
         self._attr_native_value = msg.get(CONF_STATE)
 
-    def update_discovery_config(self, msg):
+    def update_discovery_config(self, msg: dict[str, Any]) -> None:
         """Update the entity config."""
         super().update_discovery_config(msg)
 

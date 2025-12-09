@@ -1,8 +1,11 @@
+"""Sentence platform for nodered."""
+
 import asyncio
-from enum import Enum
 import logging
+from enum import Enum
 from typing import Any
 
+import voluptuous as vol
 from hassil.expression import Sentence
 from hassil.recognize import RecognizeResult
 from homeassistant.components.websocket_api import (
@@ -17,7 +20,6 @@ from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.const import CONF_ID, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-import voluptuous as vol
 
 from .const import CONF_SERVER_ID
 
@@ -28,6 +30,8 @@ response_lock = asyncio.Lock()
 
 
 class ResponseType(Enum):
+    """Enumeration for sentence response types used in Node-RED triggers."""
+
     FIXED = "fixed"
     DYNAMIC = "dynamic"
 
@@ -46,7 +50,7 @@ class ResponseType(Enum):
     }
 )
 @async_response
-async def websocket_sentence(
+async def websocket_sentence(  # noqa: PLR0915
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Create sentence trigger."""
@@ -64,14 +68,15 @@ async def websocket_sentence(
     ) -> str:
         """
         Handle Sentence trigger.
-        RecognizeResult was added in 2023.8.0
-        device_id was added in 2024.4.0
-        """
 
-        # RecognizeResult in 2024.12 is not serializable, so we need to convert it to a serializable format
+        RecognizeResult was added in 2023.8.0
+        device_id was added in 2024.4.0.
+        """
+        # RecognizeResult in 2024.12 is not serializable,
+        # so we need to convert it to a serializable format
         serialized = convert_recognize_result_to_dict(result)
 
-        _LOGGER.debug(f"Sentence trigger: {sentence}")
+        _LOGGER.debug("Sentence trigger: %s", sentence)
         connection.send_message(
             event_message(
                 message_id,
@@ -96,15 +101,19 @@ async def websocket_sentence(
                     response_futures[message_id], response_timeout
                 )
                 _LOGGER.debug(
-                    f"Sentence response {message_id} received with response: {result}"
+                    "Sentence response %s received with response: %s",
+                    message_id,
+                    result,
                 )
-                return result
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 _LOGGER.debug(
-                    f"Timeout reached for sentence response {message_id}. Continuing..."
+                    "Timeout reached for sentence response %s. Continuing...",
+                    message_id,
                 )
                 # Remove the event from the dictionary after timeout
                 del response_futures[message_id]
+            else:
+                return result
 
         return response
 
@@ -113,47 +122,54 @@ async def websocket_sentence(
 
         async def _remove_future() -> None:
             async with response_lock:
-                if message_id in response_futures:
-                    del response_futures[message_id]
+                response_futures.pop(message_id, None)
 
         hass.async_create_task(_remove_future())
         _remove_trigger()
-        _LOGGER.info(f"Sentence trigger removed: {sentences}")
+        _LOGGER.info("Sentence trigger removed: %s", sentences)
 
     try:
-        from homeassistant.components.conversation import get_agent_manager
-        from homeassistant.components.conversation.trigger import TriggerDetails
+        from homeassistant.components.conversation import get_agent_manager  # noqa: I001, PLC0415
+        from homeassistant.components.conversation.trigger import TriggerDetails  # noqa: PLC0415
 
         manager = get_agent_manager(hass)
         if manager is None:
-            raise ValueError("Conversation integration not loaded")
+            raise ValueError("Conversation integration not loaded")  # noqa: EM101, TRY003, TRY301
 
         _remove_trigger = manager.register_trigger(
             TriggerDetails(sentences, handle_trigger)
         )
     except ImportError:
         # Fallback for Home Assistant versions before 2025.10.0
-        from homeassistant.components.conversation.default_agent import (
+        from homeassistant.components.conversation.default_agent import (  # noqa: PLC0415
             DATA_DEFAULT_ENTITY,
             DefaultAgent,
         )
 
         default_agent = hass.data[DATA_DEFAULT_ENTITY]
-        assert isinstance(default_agent, DefaultAgent)
+        if not isinstance(default_agent, DefaultAgent):
+            raise TypeError("default_agent is not an instance of DefaultAgent")  # noqa: B904, EM101, TRY003
 
         _remove_trigger = default_agent.register_trigger(sentences, handle_trigger)
     except ValueError as err:
         connection.send_message(error_message(message_id, "value_error", str(err)))
         return
-    except Exception as err:
-        connection.send_message(error_message(message_id, "unknown_error", str(err)))
+    except TypeError as err:
+        connection.send_message(error_message(message_id, "type_error", str(err)))
+        return
+    except RuntimeError as err:
+        connection.send_message(error_message(message_id, "runtime_error", str(err)))
         return
 
     if response_type == ResponseType.FIXED:
-        _LOGGER.info(f"Sentence trigger created: {sentences}")
+        _LOGGER.info("Sentence trigger created: %s", sentences)
     else:
         _LOGGER.info(
-            f"Sentence trigger created: {sentences} with dynamic response #{message_id} and timeout of {response_timeout} seconds"
+            "Sentence trigger created: %s with dynamic response #%s and "
+            "timeout of %s seconds",
+            sentences,
+            message_id,
+            response_timeout,
         )
     connection.subscriptions[msg[CONF_ID]] = remove_trigger
     connection.send_message(result_message(message_id))
@@ -169,7 +185,7 @@ async def websocket_sentence(
 )
 @async_response
 async def websocket_sentence_response(
-    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+    connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Send response to sentence trigger."""
     message_id = msg[CONF_ID]
@@ -183,7 +199,7 @@ async def websocket_sentence_response(
             response_futures[response_id].set_result(response)
             # Remove the event from the dictionary after dispatching
             del response_futures[response_id]
-            _LOGGER.info(f"Sentence response received: {response}")
+            _LOGGER.info("Sentence response received: %s", response)
             connection.send_message(result_message(message_id))
         else:
             message = f"Sentence response not found for id: {response_id}"
@@ -194,35 +210,32 @@ async def websocket_sentence_response(
 
 
 def convert_recognize_result_to_dict(result: Any) -> dict:
-    """
-    Serializes a RecognizeResult object into a JSON-serializable dictionary.
-    """
+    """Serialize a RecognizeResult object into a JSON-serializable dictionary."""
 
-    def serialize(obj):
+    def serialize(obj: Any) -> Any:
         if isinstance(obj, Sentence):
             # Custom serialization for Sentence
             return {
                 "text": obj.text,
                 "pattern": (
                     obj.pattern.pattern
-                    if hasattr(obj, "pattern") and getattr(obj, "pattern") is not None
+                    if hasattr(obj, "pattern") and obj.pattern is not None
                     else None
                 ),
             }
-        elif hasattr(obj, "__dict__"):
+        if hasattr(obj, "__dict__"):
             # For objects with attributes, serialize attributes
             return {key: serialize(value) for key, value in vars(obj).items()}
-        elif isinstance(obj, list):
+        if isinstance(obj, list):
             # Recursively handle lists
             return [serialize(item) for item in obj]
-        elif isinstance(obj, dict):
+        if isinstance(obj, dict):
             # Recursively handle dictionaries
             return {key: serialize(value) for key, value in obj.items()}
-        elif isinstance(obj, (int, float, str, type(None))):
+        if isinstance(obj, (int, float, str, type(None))):
             # Primitive types are already serializable
             return obj
-        else:
-            # Fallback for non-serializable types
-            return str(obj)
+        # Fallback for non-serializable types
+        return str(obj)
 
     return serialize(result)

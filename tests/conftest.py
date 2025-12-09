@@ -15,6 +15,7 @@
 #
 # See here for more info: https://docs.pytest.org/en/latest/fixture.html (note that
 # pytest includes fixtures OOB which you can use as defined on this page)
+from collections.abc import Iterator
 from unittest.mock import patch
 
 import pytest
@@ -25,16 +26,16 @@ pytest_plugins = "pytest_homeassistant_custom_component"
 # This fixture enables loading custom integrations in all tests.
 # Remove to enable selective use of this fixture
 @pytest.fixture(autouse=True)
-def auto_enable_custom_integrations(enable_custom_integrations):
+def auto_enable_custom_integrations(enable_custom_integrations: any) -> None:
     """Enable custom integrations."""
-    yield
+    _ = enable_custom_integrations
 
 
-# This fixture is used to prevent HomeAssistant from attempting to create and dismiss persistent
-# notifications. These calls would fail without this fixture since the persistent_notification
-# integration is never loaded during a test.
+# This fixture is used to prevent HomeAssistant from attempting to create and
+# dismiss persistent notifications. These calls would fail without this fixture
+# since the persistent_notification integration is never loaded during a test.
 @pytest.fixture(name="skip_notifications", autouse=True)
-def skip_notifications_fixture():
+def skip_notifications_fixture() -> Iterator[None]:
     """Skip notification calls."""
     with (
         patch("homeassistant.components.persistent_notification.async_create"),

@@ -1,8 +1,10 @@
 """Test nodered setup process."""
 
+from typing import Any
+
+import pytest
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.nodered.const import DOMAIN, DOMAIN_DATA
@@ -12,8 +14,11 @@ from custom_components.nodered.const import DOMAIN, DOMAIN_DATA
 # for a given test. We can also leverage fixtures and mocks that are available in
 # Home Assistant using the pytest_homeassistant_custom_component plugin.
 # Assertions allow you to verify that the return value of whatever is on the left
-async def test_setup_unload_and_reload_entry(hass: HomeAssistant) -> None:
+async def test_setup_unload_and_reload_entry(
+    hass: HomeAssistant, enable_custom_integrations: Any
+) -> None:
     """Test entry setup, reload, and unload using HA lifecycle."""
+    _ = enable_custom_integrations
     config_entry = MockConfigEntry(domain=DOMAIN, data={})
     config_entry.add_to_hass(hass)
 

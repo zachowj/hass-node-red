@@ -1,24 +1,39 @@
-import pytest
+"""Tests for Node-RED select entity."""
 
+import inspect
+import logging
+from collections.abc import Callable
+from typing import Any
+
+import pytest
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from custom_components.nodered import select
 from custom_components.nodered.const import CONF_SELECT, NODERED_DISCOVERY_NEW
-import custom_components.nodered.select as select
 from custom_components.nodered.select import NodeRedSelect
 
 
 class FakeConnection:
-    def __init__(self):
+    """Fake connection for testing."""
+
+    def __init__(self) -> None:
+        """Initialize fake connection."""
         self.sent = None
 
-    def send_message(self, msg):
+    def send_message(self, msg: dict[str, Any]) -> None:
+        """Store sent message."""
         self.sent = msg
 
 
 @pytest.mark.asyncio
-async def test_async_select_option_sends_message(monkeypatch):
+async def test_async_select_option_sends_message(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """async_select_option should send an event message with the selected option."""
     # Monkeypatch NodeRedEntity.__init__ to avoid parent init behavior
     monkeypatch.setattr(
-        select.NodeRedEntity, "__init__", lambda self, hass, config: None
+        select.NodeRedEntity, "__init__", lambda _self, _hass, _config: None
     )
     # Monkeypatch event_message to return the payload so we can assert easily
     monkeypatch.setattr(
@@ -41,16 +56,18 @@ async def test_async_select_option_sends_message(monkeypatch):
     assert connection.sent.get(select.CONF_VALUE) == "chosen-option"
 
 
-def test_update_entity_state_attributes_sets_current_option(monkeypatch):
-    """update_entity_state_attributes should set _attr_current_option from message state."""
+def test_update_entity_state_attributes_sets_current_option(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """update_entity_state_attributes should set _attr_current_option."""
     monkeypatch.setattr(
-        select.NodeRedEntity, "__init__", lambda self, hass, config: None
+        select.NodeRedEntity, "__init__", lambda _self, _hass, _config: None
     )
     # Ensure parent update_entity_state_attributes does not run
     monkeypatch.setattr(
         select.NodeRedEntity,
         "update_entity_state_attributes",
-        lambda self, msg: None,
+        lambda _self, _msg: None,
     )
 
     connection = FakeConnection()
@@ -60,17 +77,19 @@ def test_update_entity_state_attributes_sets_current_option(monkeypatch):
     msg = {select.CONF_STATE: "option-42"}
     node.update_entity_state_attributes(msg)
 
-    assert getattr(node, "_attr_current_option") == "option-42"
+    assert node._attr_current_option == "option-42"
 
 
-def test_update_discovery_config_sets_icon_and_options(monkeypatch):
+def test_update_discovery_config_sets_icon_and_options(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """update_discovery_config should set icon and options from discovery config."""
     monkeypatch.setattr(
-        select.NodeRedEntity, "__init__", lambda self, hass, config: None
+        select.NodeRedEntity, "__init__", lambda _self, _hass, _config: None
     )
     # Ensure parent update_discovery_config does not run
     monkeypatch.setattr(
-        select.NodeRedEntity, "update_discovery_config", lambda self, msg: None
+        select.NodeRedEntity, "update_discovery_config", lambda _self, _msg: None
     )
 
     connection = FakeConnection()
@@ -86,58 +105,20 @@ def test_update_discovery_config_sets_icon_and_options(monkeypatch):
 
     node.update_discovery_config(discovery)
 
-    assert getattr(node, "_attr_icon") == "mdi:test-icon"
-    assert getattr(node, "_attr_options") == ["a", "b", "c"]
+    assert node._attr_icon == "mdi:test-icon"
+    assert node._attr_options == ["a", "b", "c"]
 
 
-# Additional tests to improve coverage
-
-
-# @pytest.mark.asyncio
-# async def test_async_setup_entity(hass, monkeypatch):
-#     """Test async_setup_entity function."""
-#     add_entities_called = False
-#     entity_created = False
-
-#     # Mock functions/classes
-#     async def mock_add_entities(entities_list):
-#         nonlocal add_entities_called
-#         add_entities_called = True
-#         assert len(entities_list) == 1
-#         assert isinstance(entities_list[0], NodeRedSelect)
-#         nonlocal entity_created
-#         entity_created = True
-
-#     monkeypatch.setattr(
-#         select.NodeRedEntity, "__init__", lambda self, hass, config: None
-#     )
-
-#     # Mock NodeRedSelect.__init__ to avoid any initialization issues
-#     monkeypatch.setattr(
-#         NodeRedSelect, "__init__", lambda self, hass, config, connection=None: None
-#     )
-
-#     # Test execution
-#     await select._async_setup_entity(
-#         hass, {select.CONF_ID: "test-id"}, mock_add_entities, FakeConnection()
-#     )
-
-#     # Ensure any callbacks have a chance to run
-#     await hass.async_block_till_done()
-
-#     # Assertions
-#     assert add_entities_called
-#     assert entity_created
-
-
-def test_update_discovery_config_without_options_or_icon(monkeypatch):
+def test_update_discovery_config_without_options_or_icon(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """update_discovery_config should handle missing icon and options gracefully."""
     monkeypatch.setattr(
-        select.NodeRedEntity, "__init__", lambda self, hass, config: None
+        select.NodeRedEntity, "__init__", lambda _self, _hass, _config: None
     )
     # Ensure parent update_discovery_config does not run
     monkeypatch.setattr(
-        select.NodeRedEntity, "update_discovery_config", lambda self, msg: None
+        select.NodeRedEntity, "update_discovery_config", lambda _self, _msg: None
     )
 
     connection = FakeConnection()
@@ -154,70 +135,87 @@ def test_update_discovery_config_without_options_or_icon(monkeypatch):
     node.update_discovery_config(discovery)
 
     # Icon should fall back to the SELECT_ICON from const.py
-    assert getattr(node, "_attr_icon") == select.SELECT_ICON
+    assert node._attr_icon == select.SELECT_ICON
     # Options should remain unchanged when not specified
-    assert getattr(node, "_attr_options") == ["initial", "options"]
+    assert node._attr_options == ["initial", "options"]
 
 
-def test_class_attributes():
+def test_class_attributes() -> None:
     """Test that the class has correct constant attributes."""
     # These are defined directly on the class
     assert NodeRedSelect._bidirectional is True
     assert NodeRedSelect._component == select.CONF_SELECT
 
 
-# @pytest.mark.asyncio
-# async def test_async_setup_entry_registers_discovery_listener(hass, monkeypatch):
-#     """Test that async_setup_entry registers the proper discovery listener."""
+@pytest.mark.asyncio
+async def test_async_setup_entry_registers_discovery_listener(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test that async_setup_entry registers the proper discovery listener."""
+    # Track if dispatcher_connect was called with right parameters
+    connect_called = False
+    connect_signal = None
+    connect_target = None
+    unload_callback = None
 
-#     # Track if dispatcher_connect was called with right parameters
-#     connect_called = False
-#     connect_signal = None
-#     connect_target = None
+    def mock_dispatcher_connect(
+        _hass: HomeAssistant, signal: str, target: Any
+    ) -> Callable[[], None]:
+        nonlocal connect_called, connect_signal, connect_target
+        connect_called = True
+        connect_signal = signal
+        connect_target = target
+        return lambda: None  # Return a removal function
 
-#     async def mock_dispatcher_connect(hass, signal, target):
-#         nonlocal connect_called, connect_signal, connect_target
-#         connect_called = True
-#         connect_signal = signal
-#         connect_target = target
-#         return lambda: None  # Return a removal function
+    # Mock config entry with async_on_unload method
+    class MockConfigEntry:
+        """Mock config entry."""
 
-#     # Replace the Home Assistant dispatcher_connect function that's imported in the module
-#     monkeypatch.setattr(
-#         "homeassistant.helpers.dispatcher.async_dispatcher_connect",
-#         mock_dispatcher_connect,
-#     )
+        def async_on_unload(self, callback: Callable[[], None]) -> None:
+            """Store the unload callback."""
+            nonlocal unload_callback
+            unload_callback = callback
 
-#     # Call the setup
-#     await select.async_setup_entry(hass, {}, None)
+    # Replace the dispatcher_connect function in the select module
+    monkeypatch.setattr(
+        select,
+        "async_dispatcher_connect",
+        mock_dispatcher_connect,
+    )
 
-#     # Verify the dispatcher was connected
-#     assert connect_called
-#     assert connect_signal == f"{select.NODERED_DISCOVERY_NEW}.{select.CONF_SELECT}"
-#     assert callable(connect_target)
+    # Call the setup
+    await select.async_setup_entry(hass, MockConfigEntry(), None)
+
+    # Verify the dispatcher was connected
+    if not connect_called:
+        pytest.fail("Dispatcher connect was not called")
+    expected_signal = select.NODERED_DISCOVERY_NEW.format(select.CONF_SELECT)
+    if connect_signal != expected_signal:
+        pytest.fail(f"Wrong signal: {connect_signal}, expected: {expected_signal}")
+    if not callable(connect_target):
+        pytest.fail("Target is not callable")
+    if unload_callback is None:
+        pytest.fail("Unload callback was not registered")
+    assert callable(connect_target)
 
 
-async def _async_setup_entity(hass, config, async_add_entities, connection):
+async def _async_setup_entity(
+    hass: Any, config: dict[str, Any], async_add_entities: Any, connection: Any
+) -> None:
     """Set up a NodeRedSelect entity from discovery."""
     entity = NodeRedSelect(hass, config, connection)
     try:
         await async_add_entities([entity])
     except Exception:
         # If add_entities raises, log the error for debugging
-        import logging
-
         logging.getLogger(__name__).exception("Failed to add entities")
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(hass: Any, _entry: Any, async_add_entities: Any) -> bool:
     """Register discovery listener for Node-RED select entities."""
-    import inspect
-
-    from homeassistant.helpers.dispatcher import async_dispatcher_connect
-
     signal = f"{NODERED_DISCOVERY_NEW}.{CONF_SELECT}"
 
-    async def _discovered(config, connection):
+    async def _discovered(config: dict[str, Any], connection: Any) -> None:
         await _async_setup_entity(hass, config, async_add_entities, connection)
 
     result = async_dispatcher_connect(hass, signal, _discovered)
