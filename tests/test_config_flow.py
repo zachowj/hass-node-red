@@ -2,9 +2,9 @@
 
 from unittest.mock import patch
 
+import pytest
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResultType
-import pytest
 
 from custom_components.nodered.const import DOMAIN
 

@@ -63,7 +63,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up this integration using UI."""
-
     if hass.data.get(DOMAIN_DATA) is None:
         hass.data.setdefault(DOMAIN_DATA, {})
         _LOGGER.info(STARTUP_MESSAGE)
@@ -117,7 +116,7 @@ class NodeRedEntity(Entity):
         self.update_entity_state_attributes(config)
 
     @property
-    def device_info(self) -> Optional[dict[str, Any]]:
+    def device_info(self) -> dict[str, Any] | None:
         """Return device specific attributes."""
         info = None
         if self._device_info is not None and "id" in self._device_info:
@@ -260,7 +259,6 @@ class NodeRedEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-
         self._remove_signal_entity_update = async_dispatcher_connect(
             self.hass,
             NODERED_ENTITY.format(self._server_id, self._node_id),

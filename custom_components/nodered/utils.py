@@ -10,7 +10,8 @@ class NodeRedJSONEncoder(JSONEncoder):
     """JSONEncoder that supports timedelta objects and falls back to the Home Assistant Encoder."""
 
     def default(self, o: Any) -> Any:
-        """Convert timedelta objects.
+        """
+        Convert timedelta objects.
 
         Hand other objects to the Home Assistant JSONEncoder.
         """

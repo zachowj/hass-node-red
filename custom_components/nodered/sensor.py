@@ -1,8 +1,7 @@
 """Sensor platform for nodered."""
 
-from datetime import datetime
 import logging
-from typing import Optional, Union
+from datetime import datetime
 
 from dateutil import parser
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
@@ -58,7 +57,7 @@ class NodeRedSensor(NodeRedEntity, SensorEntity):
         self._attr_state_class = self._config.get(CONF_STATE_CLASS)
 
     @property
-    def last_reset(self) -> Optional[datetime]:
+    def last_reset(self) -> datetime | None:
         """Return the last reset."""
         reset = self._config.get(CONF_LAST_RESET)
         if reset is not None:
@@ -71,7 +70,7 @@ class NodeRedSensor(NodeRedEntity, SensorEntity):
 
         return None
 
-    def convert_state(self, state) -> Union[datetime, float, int, str, bool]:
+    def convert_state(self, state) -> datetime | float | int | str | bool:
         """Convert state if needed."""
         if state is not None and self.device_class in [
             SensorDeviceClass.TIMESTAMP,

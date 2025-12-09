@@ -1,5 +1,6 @@
+# ruff: noqa: ANN001, ANN201, ANN202, ANN204, ARG001, ARG005, D100, D101, D102, D107, E501, PLR2004
+from custom_components.nodered import number
 from custom_components.nodered.const import CONF_CONFIG, CONF_NUMBER
-import custom_components.nodered.number as number
 from custom_components.nodered.number import NodeRedNumber
 
 

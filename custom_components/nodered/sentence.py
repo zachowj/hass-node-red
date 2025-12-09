@@ -1,8 +1,9 @@
 import asyncio
-from enum import Enum
 import logging
+from enum import Enum
 from typing import Any
 
+import voluptuous as vol
 from hassil.expression import Sentence
 from hassil.recognize import RecognizeResult
 from homeassistant.components.websocket_api import (
@@ -17,7 +18,6 @@ from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.const import CONF_ID, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-import voluptuous as vol
 
 from .const import CONF_SERVER_ID
 
@@ -67,7 +67,6 @@ async def websocket_sentence(
         RecognizeResult was added in 2023.8.0
         device_id was added in 2024.4.0
         """
-
         # RecognizeResult in 2024.12 is not serializable, so we need to convert it to a serializable format
         serialized = convert_recognize_result_to_dict(result)
 
@@ -99,7 +98,7 @@ async def websocket_sentence(
                     f"Sentence response {message_id} received with response: {result}"
                 )
                 return result
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 _LOGGER.debug(
                     f"Timeout reached for sentence response {message_id}. Continuing..."
                 )
@@ -113,8 +112,7 @@ async def websocket_sentence(
 
         async def _remove_future() -> None:
             async with response_lock:
-                if message_id in response_futures:
-                    del response_futures[message_id]
+                response_futures.pop(message_id, None)
 
         hass.async_create_task(_remove_future())
         _remove_trigger()
@@ -205,24 +203,23 @@ def convert_recognize_result_to_dict(result: Any) -> dict:
                 "text": obj.text,
                 "pattern": (
                     obj.pattern.pattern
-                    if hasattr(obj, "pattern") and getattr(obj, "pattern") is not None
+                    if hasattr(obj, "pattern") and obj.pattern is not None
                     else None
                 ),
             }
-        elif hasattr(obj, "__dict__"):
+        if hasattr(obj, "__dict__"):
             # For objects with attributes, serialize attributes
             return {key: serialize(value) for key, value in vars(obj).items()}
-        elif isinstance(obj, list):
+        if isinstance(obj, list):
             # Recursively handle lists
             return [serialize(item) for item in obj]
-        elif isinstance(obj, dict):
+        if isinstance(obj, dict):
             # Recursively handle dictionaries
             return {key: serialize(value) for key, value in obj.items()}
-        elif isinstance(obj, (int, float, str, type(None))):
+        if isinstance(obj, (int, float, str, type(None))):
             # Primitive types are already serializable
             return obj
-        else:
-            # Fallback for non-serializable types
-            return str(obj)
+        # Fallback for non-serializable types
+        return str(obj)
 
     return serialize(result)

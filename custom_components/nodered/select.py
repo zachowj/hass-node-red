@@ -37,7 +37,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 async def _async_setup_entity(hass, config, async_add_entities, connection):
     """Set up the Node-RED text."""
-
     async_add_entities([NodeRedSelect(hass, config, connection)])
 
 

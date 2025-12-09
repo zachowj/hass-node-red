@@ -2,6 +2,8 @@
 
 import logging
 
+import homeassistant.helpers.config_validation as cv
+import voluptuous as vol
 from homeassistant.components.websocket_api import event_message
 from homeassistant.const import (
     CONF_ENTITY_ID,
@@ -12,10 +14,8 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
 )
 from homeassistant.helpers import entity_platform
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import ToggleEntity
-import voluptuous as vol
 
 from . import NodeRedEntity
 from .const import (
@@ -67,7 +67,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 async def _async_setup_entity(hass, config, async_add_entities, connection):
     """Set up the Node-RED Switch."""
-
     async_add_entities([NodeRedSwitch(hass, config, connection)])
 
 
