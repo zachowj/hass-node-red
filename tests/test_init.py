@@ -1,8 +1,8 @@
 """Test nodered setup process."""
 
-import pytest
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.nodered.const import DOMAIN, DOMAIN_DATA
