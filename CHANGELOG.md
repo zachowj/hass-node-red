@@ -16,6 +16,24 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## [4.1.6](https://github.com/zachowj/hass-node-red/compare/v4.1.5...v4.1.6) (2025-12-09)
+
+
+### Styles
+
+* update code to comply with new Ruff rules ([4563bac](https://github.com/zachowj/hass-node-red/commit/4563bacb09062d52389fe3436dab9add16fbd906))
+
+
+### Build System
+
+* **deps:** bump astral-sh/setup-uv from 4 to 7 ([#373](https://github.com/zachowj/hass-node-red/issues/373)) ([644eedb](https://github.com/zachowj/hass-node-red/commit/644eedb2e42fda7a91373ba1cdbde942b25b41db))
+
+
+### Miscellaneous Chores
+
+* remove VSCode launch and settings configuration files ([4563bac](https://github.com/zachowj/hass-node-red/commit/4563bacb09062d52389fe3436dab9add16fbd906))
+* update pre-commit configuration and add ruff settings ([666854c](https://github.com/zachowj/hass-node-red/commit/666854c54f26925ab595f76609cb3d3da35a29c4))
+
 ## [4.1.5](https://github.com/zachowj/hass-node-red/compare/v4.1.4...v4.1.5) (2025-12-08)
 
 
