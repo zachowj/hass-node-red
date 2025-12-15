@@ -2,3 +2,4 @@ colorlog==6.10.1
 homeassistant
 pre-commit
 hassil
+aiodns>=3.6.1
