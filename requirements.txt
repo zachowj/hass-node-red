@@ -2,3 +2,5 @@ colorlog==6.10.1
 homeassistant
 pre-commit
 hassil
+# pin pycares due to breaking changes in 5.0 which aiodns is not ready for
+pycares<5.0
