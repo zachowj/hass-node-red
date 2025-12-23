@@ -45,7 +45,7 @@ The Node-RED Companion Integration bridges Node-RED and Home Assistant, allowing
 <summary>Manual instructions</summary>
 
   1. Navigate to HACS.  
-  2. Search for "Hass Node Red".  
+  2. Search for "hass-node-red".  
   3. Click on the result.
   
 </details>
