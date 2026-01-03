@@ -1,78 +1,54 @@
 """Tests for Node-RED select entity."""
 
+from collections.abc import Callable
 import inspect
 import logging
-from collections.abc import Callable
 from typing import Any
 
 import pytest
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from custom_components.nodered import select
 from custom_components.nodered.const import CONF_SELECT, NODERED_DISCOVERY_NEW
 from custom_components.nodered.select import NodeRedSelect
-
-
-class FakeConnection:
-    """Fake connection for testing."""
-
-    def __init__(self) -> None:
-        """Initialize fake connection."""
-        self.sent = None
-
-    def send_message(self, msg: dict[str, Any]) -> None:
-        """Store sent message."""
-        self.sent = msg
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from tests.helpers import FakeConnection
 
 
 @pytest.mark.asyncio
-async def test_async_select_option_sends_message(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+async def test_async_select_option_sends_message(hass: HomeAssistant) -> None:
     """async_select_option should send an event message with the selected option."""
-    # Monkeypatch NodeRedEntity.__init__ to avoid parent init behavior
-    monkeypatch.setattr(
-        select.NodeRedEntity, "__init__", lambda _self, _hass, _config: None
-    )
-    # Monkeypatch event_message to return the payload so we can assert easily
-    monkeypatch.setattr(
-        select,
-        "event_message",
-        lambda message_id, payload: {"message_id": message_id, **payload},
-    )
-
     connection = FakeConnection()
-    config = {select.CONF_ID: "test-msg-id"}
-    node = NodeRedSelect(None, config, connection)
+    config = {
+        select.CONF_ID: "test-msg-id",
+        "server_id": "s1",
+        "node_id": "n1",
+        select.CONF_CONFIG: {},
+    }
+    node = NodeRedSelect(hass, config, connection)
 
     await node.async_select_option("chosen-option")
 
     assert connection.sent is not None
-    # Expect the payload contains the message id and the value/type keys
-    assert connection.sent.get("message_id") == "test-msg-id"
-    assert connection.sent.get(select.CONF_TYPE) == select.EVENT_VALUE_CHANGE
-    # CONF_VALUE was imported into the select module
-    assert connection.sent.get(select.CONF_VALUE) == "chosen-option"
+    assert connection.sent["type"] == "event"
+    # payload keys are under the 'event' object
+    payload = connection.sent["event"]
+    assert payload[select.CONF_TYPE] == select.EVENT_VALUE_CHANGE
+    assert payload[select.CONF_VALUE] == "chosen-option"
 
 
 def test_update_entity_state_attributes_sets_current_option(
-    monkeypatch: pytest.MonkeyPatch,
+    hass: HomeAssistant,
 ) -> None:
     """update_entity_state_attributes should set _attr_current_option."""
-    monkeypatch.setattr(
-        select.NodeRedEntity, "__init__", lambda _self, _hass, _config: None
-    )
-    # Ensure parent update_entity_state_attributes does not run
-    monkeypatch.setattr(
-        select.NodeRedEntity,
-        "update_entity_state_attributes",
-        lambda _self, _msg: None,
-    )
-
     connection = FakeConnection()
-    config = {select.CONF_ID: "id-1"}
-    node = NodeRedSelect(None, config, connection)
+    config = {
+        select.CONF_ID: "id-1",
+        "server_id": "s1",
+        "node_id": "n1",
+        select.CONF_CONFIG: {},
+    }
+    node = NodeRedSelect(hass, config, connection)
 
     msg = {select.CONF_STATE: "option-42"}
     node.update_entity_state_attributes(msg)
@@ -80,21 +56,16 @@ def test_update_entity_state_attributes_sets_current_option(
     assert node._attr_current_option == "option-42"
 
 
-def test_update_discovery_config_sets_icon_and_options(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_update_discovery_config_sets_icon_and_options(hass: HomeAssistant) -> None:
     """update_discovery_config should set icon and options from discovery config."""
-    monkeypatch.setattr(
-        select.NodeRedEntity, "__init__", lambda _self, _hass, _config: None
-    )
-    # Ensure parent update_discovery_config does not run
-    monkeypatch.setattr(
-        select.NodeRedEntity, "update_discovery_config", lambda _self, _msg: None
-    )
-
     connection = FakeConnection()
-    config = {select.CONF_ID: "id-2"}
-    node = NodeRedSelect(None, config, connection)
+    config = {
+        select.CONF_ID: "id-2",
+        "server_id": "s1",
+        "node_id": "n1",
+        select.CONF_CONFIG: {},
+    }
+    node = NodeRedSelect(hass, config, connection)
 
     discovery = {
         select.CONF_CONFIG: {
@@ -109,21 +80,16 @@ def test_update_discovery_config_sets_icon_and_options(
     assert node._attr_options == ["a", "b", "c"]
 
 
-def test_update_discovery_config_without_options_or_icon(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_update_discovery_config_without_options_or_icon(hass: HomeAssistant) -> None:
     """update_discovery_config should handle missing icon and options gracefully."""
-    monkeypatch.setattr(
-        select.NodeRedEntity, "__init__", lambda _self, _hass, _config: None
-    )
-    # Ensure parent update_discovery_config does not run
-    monkeypatch.setattr(
-        select.NodeRedEntity, "update_discovery_config", lambda _self, _msg: None
-    )
-
     connection = FakeConnection()
-    config = {select.CONF_ID: "id-3"}
-    node = NodeRedSelect(None, config, connection)
+    config = {
+        select.CONF_ID: "id-3",
+        "server_id": "s1",
+        "node_id": "n1",
+        select.CONF_CONFIG: {},
+    }
+    node = NodeRedSelect(hass, config, connection)
 
     # Set initial values to verify they don't change
     node._attr_icon = "mdi:initial-icon"
@@ -144,7 +110,7 @@ def test_class_attributes() -> None:
     """Test that the class has correct constant attributes."""
     # These are defined directly on the class
     assert NodeRedSelect._bidirectional is True
-    assert NodeRedSelect._component == select.CONF_SELECT
+    assert NodeRedSelect.component == select.CONF_SELECT
 
 
 @pytest.mark.asyncio
@@ -184,18 +150,14 @@ async def test_async_setup_entry_registers_discovery_listener(
     )
 
     # Call the setup
-    await select.async_setup_entry(hass, MockConfigEntry(), None)
+    await select.async_setup_entry(hass, MockConfigEntry(), None)  # type: ignore[arg-type]
 
     # Verify the dispatcher was connected
-    if not connect_called:
-        pytest.fail("Dispatcher connect was not called")
+    assert connect_called
     expected_signal = select.NODERED_DISCOVERY_NEW.format(select.CONF_SELECT)
-    if connect_signal != expected_signal:
-        pytest.fail(f"Wrong signal: {connect_signal}, expected: {expected_signal}")
-    if not callable(connect_target):
-        pytest.fail("Target is not callable")
-    if unload_callback is None:
-        pytest.fail("Unload callback was not registered")
+    assert connect_signal == expected_signal
+    assert callable(connect_target)
+    assert unload_callback is not None
     assert callable(connect_target)
 
 

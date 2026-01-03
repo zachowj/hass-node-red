@@ -3,18 +3,17 @@
 from typing import Any
 
 from homeassistant.components.text import RestoreText, TextMode
-from homeassistant.components.websocket_api import event_message
 from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.components.websocket_api.messages import event_message
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ICON, CONF_ID, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from custom_components.nodered.config_flow import NodeRedConfigEntry
-from custom_components.nodered.number import CONF_VALUE
-
-from . import NodeRedEntity
 from .const import CONF_TEXT, EVENT_VALUE_CHANGE, NODERED_DISCOVERY_NEW, TEXT_ICON
+from .entity import NodeRedEntity
+from .number import CONF_VALUE
 
 CONF_MAX_LENGTH = "max_length"
 CONF_MIN_LENGTH = "min_length"
@@ -29,13 +28,13 @@ DEFAULT_MIN_LENGTH = 0
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: NodeRedConfigEntry,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the text platform."""
 
     async def async_discover(
-        config: NodeRedConfigEntry, connection: ActiveConnection
+        config: dict[str, Any], connection: ActiveConnection
     ) -> None:
         await _async_setup_entity(hass, config, async_add_entities, connection)
 
@@ -50,7 +49,7 @@ async def async_setup_entry(
 
 async def _async_setup_entity(
     hass: HomeAssistant,
-    config: NodeRedConfigEntry,
+    config: dict[str, Any],
     async_add_entities: AddEntitiesCallback,
     connection: ActiveConnection,
 ) -> None:
@@ -62,12 +61,12 @@ class NodeRedText(NodeRedEntity, RestoreText):
     """Node-RED text class."""
 
     _bidirectional = True
-    _component = CONF_TEXT
+    component = CONF_TEXT
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config: NodeRedConfigEntry,
+        config: dict[str, Any],
         connection: ActiveConnection,
     ) -> None:
         """Initialize the number."""
@@ -95,7 +94,10 @@ class NodeRedText(NodeRedEntity, RestoreText):
     def update_entity_state_attributes(self, msg: dict[str, Any]) -> None:
         """Update the entity state attributes."""
         super().update_entity_state_attributes(msg)
-        self._attr_native_value = msg.get(CONF_STATE)
+        # Ensure native value is a string for Text entity to avoid type
+        # errors in Home Assistant when measuring value length.
+        state = msg.get(CONF_STATE)
+        self._attr_native_value = str(state) if state is not None else None
 
     def update_discovery_config(self, msg: dict[str, Any]) -> None:
         """Update the entity config."""

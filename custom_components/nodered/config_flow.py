@@ -1,18 +1,8 @@
 """Adds config flow for Node-RED."""
 
-from typing import TypedDict
-
 from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry
 
 from .const import DOMAIN
-
-
-class NodeRedConfigType(TypedDict, total=False):
-    """Type definition for Node-RED config entry data."""
-
-
-type NodeRedConfigEntry = ConfigEntry[NodeRedConfigType]
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -37,7 +27,4 @@ class NodeRedFlowHandler(config_entries.ConfigFlow):
 
         if user_input is None:
             return self.async_show_form(step_id="user")
-        return self.async_create_entry(
-            title="Node-RED",
-            data=NodeRedConfigType(),
-        )
+        return self.async_create_entry(title="Node-RED", data={})

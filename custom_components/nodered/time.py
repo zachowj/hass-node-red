@@ -1,21 +1,20 @@
 """Sensor platform for nodered."""
 
-import logging
 from datetime import time
+import logging
 from typing import Any
 
 from dateutil import parser
+
 from homeassistant.components.time import TimeEntity
-from homeassistant.components.websocket_api import event_message
 from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.components.websocket_api.messages import event_message
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ICON, CONF_ID, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from custom_components.nodered.config_flow import NodeRedConfigEntry
-
-from . import NodeRedEntity
 from .const import (
     CONF_CONFIG,
     CONF_TIME,
@@ -23,6 +22,7 @@ from .const import (
     NODERED_DISCOVERY_NEW,
     TIME_ICON,
 )
+from .entity import NodeRedEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,13 +33,13 @@ CONF_VALUE = "value"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: NodeRedConfigEntry,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the time platform."""
 
     async def async_discover(
-        config: NodeRedConfigEntry, connection: ActiveConnection
+        config: dict[str, Any], connection: ActiveConnection
     ) -> None:
         await _async_setup_entity(hass, config, async_add_entities, connection)
 
@@ -54,8 +54,8 @@ async def async_setup_entry(
 
 async def _async_setup_entity(
     hass: HomeAssistant,
-    config: NodeRedConfigEntry,
-    async_add_entities: ActiveConnection,
+    config: dict[str, Any],
+    async_add_entities: AddEntitiesCallback,
     connection: ActiveConnection,
 ) -> None:
     """Set up the Node-RED time."""
@@ -78,12 +78,12 @@ class NodeRedTime(NodeRedEntity, TimeEntity):
 
     _attr_native_value = None
     _bidirectional = True
-    _component = CONF_TIME
+    component = CONF_TIME
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config: NodeRedConfigEntry,
+        config: dict[str, Any],
         connection: ActiveConnection,
     ) -> None:
         """Initialize the time."""
@@ -91,11 +91,13 @@ class NodeRedTime(NodeRedEntity, TimeEntity):
         self._message_id = config[CONF_ID]
         self._connection = connection
 
-    async def async_set_value(self, value: str) -> None:
+    async def async_set_value(self, value: time) -> None:
         """Set new value."""
+        # Convert the datetime.time to an ISO-formatted string before sending.
         self._connection.send_message(
             event_message(
-                self._message_id, {CONF_TYPE: EVENT_VALUE_CHANGE, CONF_VALUE: value}
+                self._message_id,
+                {CONF_TYPE: EVENT_VALUE_CHANGE, CONF_VALUE: value.isoformat()},
             )
         )
 

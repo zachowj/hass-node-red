@@ -2,18 +2,16 @@
 
 from typing import Any
 
+from custom_components.nodered.number import CONF_VALUE
 from homeassistant.components.select import SelectEntity
-from homeassistant.components.websocket_api import event_message
 from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.components.websocket_api.messages import event_message
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ICON, CONF_ID, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from custom_components.nodered.config_flow import NodeRedConfigEntry
-from custom_components.nodered.number import CONF_VALUE
-
-from . import NodeRedEntity
 from .const import (
     CONF_CONFIG,
     CONF_OPTIONS,
@@ -22,19 +20,20 @@ from .const import (
     NODERED_DISCOVERY_NEW,
     SELECT_ICON,
 )
+from .entity import NodeRedEntity
 
 CONF_STATE = "state"
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: NodeRedConfigEntry,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the text platform."""
 
     async def async_discover(
-        config: NodeRedConfigEntry, connection: ActiveConnection
+        config: dict[str, Any], connection: ActiveConnection
     ) -> None:
         await _async_setup_entity(hass, config, async_add_entities, connection)
 
@@ -49,7 +48,7 @@ async def async_setup_entry(
 
 async def _async_setup_entity(
     hass: HomeAssistant,
-    config: NodeRedConfigEntry,
+    config: dict[str, Any],
     async_add_entities: AddEntitiesCallback,
     connection: ActiveConnection,
 ) -> None:
@@ -61,12 +60,12 @@ class NodeRedSelect(NodeRedEntity, SelectEntity):
     """Node-RED text class."""
 
     _bidirectional = True
-    _component = CONF_SELECT
+    component = CONF_SELECT
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config: NodeRedConfigEntry,
+        config: dict[str, Any],
         connection: ActiveConnection,
     ) -> None:
         """Initialize the number."""

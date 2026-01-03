@@ -5,12 +5,12 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
-from homeassistant import config_entries
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.nodered.const import DOMAIN
+from homeassistant import config_entries
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 
 # This fixture bypasses the actual setup of the integration
@@ -46,8 +46,8 @@ async def test_successful_config_flow(
     )
 
     # Check that the config flow shows the user form as the first step
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result.get("type") == FlowResultType.FORM
+    assert result.get("step_id") == "user"
 
     # Test submitting the form
     result = await hass.config_entries.flow.async_configure(
@@ -56,10 +56,10 @@ async def test_successful_config_flow(
 
     # Check that the config flow is complete and a new entry is created with
     # the input data
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Node-RED"
-    assert result["data"] == {}
-    assert result["result"]
+    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("title") == "Node-RED"
+    assert result.get("data") == {}
+    assert result.get("result")
 
 
 async def test_already_configured(
@@ -82,10 +82,8 @@ async def test_already_configured(
     )
 
     # Check that the config flow shows abort
-    if result["type"] != FlowResultType.ABORT:
-        pytest.fail(f"Flow did not abort: {result['type']}")
-    if result["reason"] != "single_instance_allowed":
-        pytest.fail(f"Unexpected abort reason: {result['reason']}")
+    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("reason") == "single_instance_allowed"
 
 
 async def test_abort_if_in_data(
@@ -102,5 +100,5 @@ async def test_abort_if_in_data(
     )
 
     # Check that the config flow shows abort
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
+    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("reason") == "single_instance_allowed"

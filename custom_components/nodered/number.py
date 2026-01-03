@@ -10,8 +10,9 @@ from homeassistant.components.number.const import (
     DEFAULT_STEP,
     NumberMode,
 )
-from homeassistant.components.websocket_api import event_message
 from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.components.websocket_api.messages import event_message
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ICON,
     CONF_ID,
@@ -24,10 +25,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from custom_components.nodered.config_flow import NodeRedConfigEntry
-
-from . import NodeRedEntity
-from .const import CONF_NUMBER, EVENT_VALUE_CHANGE, NODERED_DISCOVERY_NEW, NUMBER_ICON
+from .const import (
+    CONF_CONFIG,
+    CONF_NUMBER,
+    EVENT_VALUE_CHANGE,
+    NODERED_DISCOVERY_NEW,
+    NUMBER_ICON,
+)
+from .entity import NodeRedEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,12 +47,14 @@ CONF_VALUE = "value"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: NodeRedConfigEntry,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the number platform."""
 
-    async def async_discover(config: any, connection: ActiveConnection) -> None:
+    async def async_discover(
+        config: dict[str, Any], connection: ActiveConnection
+    ) -> None:
         await _async_setup_entity(hass, config, async_add_entities, connection)
 
     config_entry.async_on_unload(
@@ -61,7 +68,7 @@ async def async_setup_entry(
 
 async def _async_setup_entity(
     hass: HomeAssistant,
-    config: NodeRedConfigEntry,
+    config: dict[str, Any],
     async_add_entities: AddEntitiesCallback,
     connection: ActiveConnection,
 ) -> None:
@@ -78,12 +85,12 @@ class NodeRedNumber(NodeRedEntity, RestoreNumber):
     _attr_native_value = 0
     _attr_mode = NumberMode.AUTO
     _bidirectional = True
-    _component = CONF_NUMBER
+    component = CONF_NUMBER
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config: NodeRedConfigEntry,
+        config: dict[str, Any],
         connection: ActiveConnection,
     ) -> None:
         """Initialize the number."""
@@ -125,6 +132,22 @@ class NodeRedNumber(NodeRedEntity, RestoreNumber):
         """Update the entity state attributes."""
         super().update_entity_state_attributes(msg)
         self._attr_native_value = msg.get(CONF_STATE)
+
+    def update_config(self, msg: dict[str, Any]) -> None:
+        """Update entity config."""
+        super().update_config(msg)
+        config = msg.get(CONF_CONFIG, {})
+
+        if (min_value := config.get(CONF_MIN_VALUE)) is not None:
+            self._attr_native_min_value = min_value
+        if (max_value := config.get(CONF_MAX_VALUE)) is not None:
+            self._attr_native_max_value = max_value
+        if (step_value := config.get(CONF_STEP_VALUE)) is not None:
+            self._attr_native_step = step_value
+        if (mode := config.get(CONF_MODE)) is not None:
+            self._attr_mode = mode
+        if (unit := config.get(CONF_UNIT_OF_MEASUREMENT)) is not None:
+            self._attr_native_unit_of_measurement = unit
 
     def update_discovery_config(self, msg: dict[str, Any]) -> None:
         """Update the entity config."""

@@ -16,17 +16,16 @@
 # See here for more info: https://docs.pytest.org/en/latest/fixture.html (note that
 # pytest includes fixtures OOB which you can use as defined on this page)
 from collections.abc import Iterator
+from typing import Any
 from unittest.mock import patch
 
 import pytest
-
-pytest_plugins = "pytest_homeassistant_custom_component"
 
 
 # This fixture enables loading custom integrations in all tests.
 # Remove to enable selective use of this fixture
 @pytest.fixture(autouse=True)
-def auto_enable_custom_integrations(enable_custom_integrations: any) -> None:
+def auto_enable_custom_integrations(enable_custom_integrations: Any) -> None:
     """Enable custom integrations."""
     _ = enable_custom_integrations
 

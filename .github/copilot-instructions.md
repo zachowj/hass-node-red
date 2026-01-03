@@ -30,9 +30,25 @@
 
   - Execute tests with `scripts/test` (wraps `pytest` with coverage).
   - For specific tests: `pytest tests/<file>.py -k <test>`.
+  - When writing tests, follow Home Assistant testing best practices and use the
+    `pytest-homeassistant-custom-component` package to leverage HA fixtures and helpers.
+  - **Avoid inline imports in tests.** Prefer module-level imports at the top of test files; inline imports inside test functions can hide issues from linters, introduce unintended side effects, and make tests harder to read. If a lazy import is required, add a short comment explaining why.
+  - **Keep imports at top level in production code.** Prefer module-level imports at the top of Python files for runtime code to avoid obscuring dependency relationships and surprising side-effects; use type-checking blocks (`if TYPE_CHECKING:`) for imports needed only for typing where necessary.
+
+  ## Typing & Type Hints 🔧
+
+  - **Use type hints for public APIs and tests.** Annotate function/method parameters and return types to improve readability and enable static checks.
+  - **Annotate `__init__` as returning `None`.** Example: `def __init__(self, x: int) -> None:`.
+  - **Prefer built-in generics (Python 3.9+).** Use `list[str]`, `dict[str, Any]` instead of `List[str]` from `typing` when possible.
+  - **Use `collections.abc` for callables and ABCs.** For example: `from collections.abc import Callable`.
+  - **In tests, annotate fixtures and helper objects.** Example: `def test_example(hass: HomeAssistant) -> None:` and annotate helper classes used in tests to avoid linter warnings.
+  - **Use `Any` for heavy/deferred imports.** When importing types would introduce runtime overhead or circular deps, prefer `Any` and add a short comment.
+  - **Consider `from __future__ import annotations` for forward refs.** This keeps runtime overhead low and simplifies typing of nested classes.
+
+  These practices help keep the test suite and integration code clearer, reduce false positives from linters, and make type-based refactors easier.
 
 - **Linting and Formatting:**
-  - Run `scripts/lint` to apply `flake8`, `isort`, and `black` checks.
+  - Run `scripts/lint` to run the new pre-commit checks (see `.pre-commit-config.yaml` for details).
 
 ## Project-Specific Conventions
 
@@ -67,3 +83,7 @@
 - Follow existing patterns in `NodeRedEntity` for new entity types.
 - Ensure dispatcher registrations return removal callbacks for cleanup.
 - Maintain compatibility with Home Assistant versions by using conditional imports (e.g., `sentence.py`).
+- When creating a new entity subclass, set the `component` class attribute to the Home Assistant
+  component constant (for example `CONF_SENSOR`, `CONF_SWITCH`). The repository enforces at runtime
+  that subclasses define `component` and will raise a `TypeError` if it is missing — this helps
+  catch errors early during development.

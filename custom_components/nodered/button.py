@@ -4,17 +4,16 @@ import logging
 from typing import Any
 
 from homeassistant.components.button import ButtonEntity
-from homeassistant.components.websocket_api import event_message
 from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.components.websocket_api.messages import event_message
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from custom_components.nodered.config_flow import NodeRedConfigEntry
-
-from . import NodeRedEntity
 from .const import CONF_BUTTON, NODERED_DISCOVERY_NEW
+from .entity import NodeRedEntity
 
 _LOGGER = logging.getLogger(__name__)
 EVENT_TRIGGER_NODE = "automation_triggered"
@@ -22,7 +21,7 @@ EVENT_TRIGGER_NODE = "automation_triggered"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: NodeRedConfigEntry,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up button platform."""
@@ -55,7 +54,7 @@ class NodeRedButton(NodeRedEntity, ButtonEntity):
     """Node-RED button class."""
 
     _bidirectional = True
-    _component = CONF_BUTTON
+    component = CONF_BUTTON
 
     def __init__(
         self, hass: HomeAssistant, config: dict[str, Any], connection: ActiveConnection

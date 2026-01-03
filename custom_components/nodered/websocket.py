@@ -4,9 +4,10 @@ import contextlib
 import json
 import logging
 from typing import Any
-from urllib.request import Request
 
+from aiohttp.web import Request, Response
 import voluptuous as vol
+
 from homeassistant.components import device_automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.device_automation.exceptions import (
@@ -16,23 +17,21 @@ from homeassistant.components.device_automation.exceptions import (
 from homeassistant.components.device_automation.trigger import TRIGGER_SCHEMA
 from homeassistant.components.webhook import (
     SUPPORTED_METHODS,
-)
-from homeassistant.components.webhook import (
     async_register as webhook_async_register,
-)
-from homeassistant.components.webhook import (
     async_unregister as webhook_async_unregister,
 )
-from homeassistant.components.websocket_api import (
-    async_register_command,
+from homeassistant.components.websocket_api import async_register_command
+from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.components.websocket_api.decorators import (
     async_response,
-    error_message,
-    event_message,
     require_admin,
-    result_message,
     websocket_command,
 )
-from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.components.websocket_api.messages import (
+    error_message,
+    event_message,
+    result_message,
+)
 from homeassistant.const import (
     CONF_DOMAIN,
     CONF_ID,
@@ -44,20 +43,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
-)
-from homeassistant.helpers import (
     device_registry as dr,
-)
-from homeassistant.helpers import (
     trigger,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import async_entries_for_device, async_get
-
-from custom_components.nodered.sentence import (
-    websocket_sentence,
-    websocket_sentence_response,
-)
 
 from .const import (
     CONF_ATTRIBUTES,
@@ -75,6 +65,7 @@ from .const import (
     NODERED_ENTITY,
     VERSION,
 )
+from .sentence import websocket_sentence, websocket_sentence_response
 from .utils import NodeRedJSONEncoder
 
 CONF_ALLOWED_METHODS = "allowed_methods"
@@ -108,7 +99,7 @@ def register_websocket_handlers(hass: HomeAssistant) -> None:
 async def websocket_device_action(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Sensor command."""
+    """Execute a device action."""
     context = connection.context(msg)
     platform = await device_automation.async_get_device_automation_platform(
         hass, msg["action"][CONF_DOMAIN], DeviceAutomationType.ACTION
@@ -117,8 +108,17 @@ async def websocket_device_action(
     try:
         if "entity_id" in msg["action"]:
             entity_registry = async_get(hass)
-            entity_id = entity_registry.async_get(msg["action"]["entity_id"]).entity_id
-            msg["action"]["entity_id"] = entity_id
+            entity_entry = entity_registry.async_get(msg["action"]["entity_id"])
+            if entity_entry is None:
+                connection.send_message(
+                    error_message(
+                        msg[CONF_ID],
+                        "entity_not_found",
+                        f"Entity '{msg['action']['entity_id']}' not found",
+                    )
+                )
+                return
+            msg["action"]["entity_id"] = entity_entry.entity_id
 
         await platform.async_call_action_from_config(hass, msg["action"], {}, context)
         connection.send_message(result_message(msg[CONF_ID]))
@@ -230,7 +230,9 @@ def websocket_config_update(
 
 @require_admin
 @websocket_command({vol.Required(CONF_TYPE): "nodered/version"})
-def websocket_version(connection: ActiveConnection, msg: dict[str, Any]) -> None:
+def websocket_version(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
     """Version command."""
     connection.send_message(result_message(msg[CONF_ID], VERSION))
 
@@ -258,7 +260,9 @@ async def websocket_webhook(
     allowed_methods = msg.get(CONF_ALLOWED_METHODS)
 
     @callback
-    async def handle_webhook(webhook_id: str, request: Request) -> None:
+    async def handle_webhook(
+        hass: HomeAssistant, webhook_id: str, request: Request
+    ) -> Response | None:
         """Handle webhook callback."""
         body = await request.text()
         try:
@@ -273,7 +277,7 @@ async def websocket_webhook(
         }
 
         _LOGGER.debug("Webhook received %s..: %s", webhook_id[:15], data)
-        connection.send_message(event_message(msg[CONF_ID], {"data": data}))
+        connection.send_message(event_message(msg[CONF_ID], {"data": payload}))
 
     def remove_webhook() -> None:
         """Remove webhook command."""
@@ -330,7 +334,8 @@ async def websocket_device_trigger(
 
     def unsubscribe() -> None:
         """Remove device trigger."""
-        remove_trigger()
+        if remove_trigger is not None:
+            remove_trigger()
         _LOGGER.info("Device trigger removed: %s", node_id)
 
     try:

@@ -49,7 +49,7 @@ PLATFORMS_LOADED = "platforms_loaded"
 DISCOVERY_DISPATCHED = "discovery_dispatched"
 
 
-async def start_discovery(hass: HomeAssistant, hass_config: dict) -> bool:
+async def start_discovery(hass: HomeAssistant, hass_config: dict) -> None:
     """Initialize of Node-RED Discovery."""
 
     async def async_device_message_received(

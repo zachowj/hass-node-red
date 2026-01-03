@@ -1,22 +1,25 @@
 """Sentence platform for nodered."""
 
 import asyncio
-import logging
 from enum import Enum
+import logging
 from typing import Any
 
-import voluptuous as vol
 from hassil.expression import Sentence
 from hassil.recognize import RecognizeResult
-from homeassistant.components.websocket_api import (
+import voluptuous as vol
+
+from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.components.websocket_api.decorators import (
     async_response,
-    error_message,
-    event_message,
     require_admin,
-    result_message,
     websocket_command,
 )
-from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.components.websocket_api.messages import (
+    error_message,
+    event_message,
+    result_message,
+)
 from homeassistant.const import CONF_ID, CONF_TYPE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -50,7 +53,7 @@ class ResponseType(Enum):
     }
 )
 @async_response
-async def websocket_sentence(  # noqa: PLR0915
+async def websocket_sentence(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Create sentence trigger."""
@@ -65,9 +68,8 @@ async def websocket_sentence(  # noqa: PLR0915
         sentence: str,
         result: RecognizeResult | None = None,
         device_id: str | None = None,
-    ) -> str:
-        """
-        Handle Sentence trigger.
+    ) -> Any:
+        """Handle Sentence trigger.
 
         RecognizeResult was added in 2023.8.0
         device_id was added in 2024.4.0.
@@ -129,28 +131,32 @@ async def websocket_sentence(  # noqa: PLR0915
         _LOGGER.info("Sentence trigger removed: %s", sentences)
 
     try:
-        from homeassistant.components.conversation import get_agent_manager  # noqa: I001, PLC0415
-        from homeassistant.components.conversation.trigger import TriggerDetails  # noqa: PLC0415
+        from homeassistant.components.conversation.agent_manager import (  # noqa: PLC0415
+            get_agent_manager,
+        )
+        from homeassistant.components.conversation.trigger import (  # noqa: PLC0415
+            TriggerDetails,
+        )
 
         manager = get_agent_manager(hass)
         if manager is None:
-            raise ValueError("Conversation integration not loaded")  # noqa: EM101, TRY003, TRY301
+            raise ValueError("Conversation integration not loaded")  # noqa: TRY301
 
         _remove_trigger = manager.register_trigger(
-            TriggerDetails(sentences, handle_trigger)
+            TriggerDetails(sentences, handle_trigger)  # type: ignore[arg-type]
         )
     except ImportError:
         # Fallback for Home Assistant versions before 2025.10.0
         from homeassistant.components.conversation.default_agent import (  # noqa: PLC0415
-            DATA_DEFAULT_ENTITY,
+            DATA_DEFAULT_ENTITY,  # type: ignore[import]
             DefaultAgent,
         )
 
         default_agent = hass.data[DATA_DEFAULT_ENTITY]
         if not isinstance(default_agent, DefaultAgent):
-            raise TypeError("default_agent is not an instance of DefaultAgent")  # noqa: B904, EM101, TRY003
+            raise TypeError("default_agent is not an instance of DefaultAgent")  # noqa: B904
 
-        _remove_trigger = default_agent.register_trigger(sentences, handle_trigger)
+        _remove_trigger = default_agent.register_trigger(sentences, handle_trigger)  # type: ignore[arg-type]
     except ValueError as err:
         connection.send_message(error_message(message_id, "value_error", str(err)))
         return
@@ -185,7 +191,7 @@ async def websocket_sentence(  # noqa: PLR0915
 )
 @async_response
 async def websocket_sentence_response(
-    connection: ActiveConnection, msg: dict[str, Any]
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Send response to sentence trigger."""
     message_id = msg[CONF_ID]
