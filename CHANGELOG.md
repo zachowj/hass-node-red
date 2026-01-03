@@ -16,6 +16,53 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## [4.2.0](https://github.com/zachowj/hass-node-red/compare/v4.1.5...v4.2.0) (2026-01-03)
+
+
+### Features
+
+* **number:** allow dynamic updates of min, max, step, mode, and unit ([7539127](https://github.com/zachowj/hass-node-red/commit/7539127a9232a42481d56b4d15d532ed37bf7a42))
+* **sensor:** accept numeric and ISO timestamp values for date and timestamp ([7539127](https://github.com/zachowj/hass-node-red/commit/7539127a9232a42481d56b4d15d532ed37bf7a42))
+
+
+### Bug Fixes
+
+* **text:** handle numeric values without throwing errors ([7539127](https://github.com/zachowj/hass-node-red/commit/7539127a9232a42481d56b4d15d532ed37bf7a42))
+
+
+### Documentation
+
+* Correct search term to 'hass-node-red' in README ([8a05951](https://github.com/zachowj/hass-node-red/commit/8a05951171d74ef6756dd179e3a7d70e6115cc27)), closes [#382](https://github.com/zachowj/hass-node-red/issues/382)
+* Revise Node-RED installation steps in README ([#377](https://github.com/zachowj/hass-node-red/issues/377)) ([e89e76b](https://github.com/zachowj/hass-node-red/commit/e89e76bf1b3a60b53af8bdc3b877e50c687397ca))
+
+
+### Styles
+
+* fix ruff linting issues ([7539127](https://github.com/zachowj/hass-node-red/commit/7539127a9232a42481d56b4d15d532ed37bf7a42)), closes [#383](https://github.com/zachowj/hass-node-red/issues/383)
+* update code to comply with new Ruff rules ([4563bac](https://github.com/zachowj/hass-node-red/commit/4563bacb09062d52389fe3436dab9add16fbd906))
+
+
+### Code Refactoring
+
+* extract NodeRedEntity into separate module ([7539127](https://github.com/zachowj/hass-node-red/commit/7539127a9232a42481d56b4d15d532ed37bf7a42))
+
+
+### Build System
+
+* **deps:** bump astral-sh/setup-uv from 4 to 7 ([#373](https://github.com/zachowj/hass-node-red/issues/373)) ([644eedb](https://github.com/zachowj/hass-node-red/commit/644eedb2e42fda7a91373ba1cdbde942b25b41db))
+
+
+### Continuous Integration
+
+* **pre-commit:** pre-commit autoupdate ([#379](https://github.com/zachowj/hass-node-red/issues/379)) ([4653cd7](https://github.com/zachowj/hass-node-red/commit/4653cd703289754d7821d6bac493a7729b21ef0d))
+* **pre-commit:** pre-commit autoupdate ([#381](https://github.com/zachowj/hass-node-red/issues/381)) ([8e570b9](https://github.com/zachowj/hass-node-red/commit/8e570b9d22657816ed1ac53eb9c333bbbd2af0ab))
+
+
+### Miscellaneous Chores
+
+* remove VSCode launch and settings configuration files ([4563bac](https://github.com/zachowj/hass-node-red/commit/4563bacb09062d52389fe3436dab9add16fbd906))
+* update pre-commit configuration and add ruff settings ([666854c](https://github.com/zachowj/hass-node-red/commit/666854c54f26925ab595f76609cb3d3da35a29c4))
+
 ## [4.1.5](https://github.com/zachowj/hass-node-red/compare/v4.1.4...v4.1.5) (2025-12-08)
 
 
