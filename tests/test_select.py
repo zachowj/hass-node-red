@@ -1,11 +1,11 @@
 """Tests for Node-RED select entity."""
 
-from collections.abc import Callable
-from typing import Any
-
 import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant_custom_component.typing import WebSocketGenerator
 
 from custom_components.nodered import select
+from custom_components.nodered.const import DOMAIN
 from custom_components.nodered.select import NodeRedSelect
 from homeassistant.core import HomeAssistant
 from tests.helpers import FakeConnection
@@ -111,47 +111,40 @@ def test_class_attributes() -> None:
 
 @pytest.mark.asyncio
 async def test_async_setup_entry_registers_discovery_listener(
-    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test that async_setup_entry registers the proper discovery listener."""
-    # Track if dispatcher_connect was called with right parameters
-    connect_called = False
-    connect_signal = None
-    connect_target = None
-    unload_callback = None
+    """Test that async_setup_entry enables select entity discovery."""
 
-    def mock_dispatcher_connect(
-        _hass: HomeAssistant, signal: str, target: Any
-    ) -> Callable[[], None]:
-        nonlocal connect_called, connect_signal, connect_target
-        connect_called = True
-        connect_signal = signal
-        connect_target = target
-        return lambda: None  # Return a removal function
+    # Setup the integration
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    # Mock config entry with async_on_unload method
-    class MockConfigEntry:
-        """Mock config entry."""
+    client = await hass_ws_client(hass)
 
-        def async_on_unload(self, callback: Callable[[], None]) -> None:
-            """Store the unload callback."""
-            nonlocal unload_callback
-            unload_callback = callback
-
-    # Replace the dispatcher_connect function in the select module
-    monkeypatch.setattr(
-        select,
-        "async_dispatcher_connect",
-        mock_dispatcher_connect,
+    # Send discovery message for a select entity
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "nodered/discovery",
+            "component": "select",
+            "server_id": "test-server",
+            "node_id": "test-select-node",
+            "state": "option1",
+            "config": {
+                "name": "Test Select",
+                "options": ["option1", "option2", "option3"],
+            },
+        }
     )
+    resp = await client.receive_json()
+    assert resp["success"]
 
-    # Call the setup
-    await select.async_setup_entry(hass, MockConfigEntry(), None)  # type: ignore[arg-type]
+    await hass.async_block_till_done()
 
-    # Verify the dispatcher was connected
-    assert connect_called
-    expected_signal = select.NODERED_DISCOVERY_NEW.format(select.CONF_SELECT)
-    assert connect_signal == expected_signal
-    assert callable(connect_target)
-    assert unload_callback is not None
-    assert callable(connect_target)
+    # Verify entity was created through discovery
+    entity_id = "select.test_select"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "option1"

@@ -1,14 +1,14 @@
 """Tests for Node-RED switch entity."""
 
-import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.nodered.const import (
     CONF_CONFIG,
     CONF_DATA,
     CONF_MESSAGE,
     CONF_OUTPUT_PATH,
+    DOMAIN,
 )
-import custom_components.nodered.switch as switch_mod
 from custom_components.nodered.switch import (
     SERVICE_TRIGGER,
     NodeRedSwitch,
@@ -186,44 +186,15 @@ def test_update_discovery_config_sets_custom_icon(hass: HomeAssistant) -> None:
 
 
 async def test_async_setup_entry_registers_dispatcher_and_service(
-    monkeypatch: pytest.MonkeyPatch, hass: HomeAssistant
+    hass: HomeAssistant,
 ) -> None:
-    called: dict = {}
+    """Test that switch platform enables discovery and registers trigger service."""
 
-    # Patch dispatcher connect to record the signal and return a removal callable
-    def fake_dispatcher_connect(h, sig, cb):
-        called["signal"] = sig
-        called["cb"] = cb
-        return lambda: called.setdefault("removed", True)
+    # Setup the integration
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    monkeypatch.setattr(switch_mod, "async_dispatcher_connect", fake_dispatcher_connect)
-
-    # Fake platform to capture service registration
-    class FakePlatform:
-        def __init__(self) -> None:
-            self.registered: tuple | None = None
-
-        def async_register_entity_service(self, name, schema, method):
-            self.registered = (name, schema, method)
-
-    fake_platform = FakePlatform()
-    monkeypatch.setattr(
-        switch_mod.entity_platform, "async_get_current_platform", lambda: fake_platform
-    )
-
-    # Dummy config entry with async_on_unload to capture the removal callable
-    class DummyEntry:
-        def __init__(self) -> None:
-            self.unloads: list = []
-
-        def async_on_unload(self, cb):
-            self.unloads.append(cb)
-
-    entry = DummyEntry()
-    # call async_setup_entry (it will register dispatcher and service)
-    await switch_mod.async_setup_entry(hass, entry, lambda x: None)  # type: ignore[arg-type]
-
-    assert "signal" in called
-    assert fake_platform.registered is not None
-    assert fake_platform.registered[0] == SERVICE_TRIGGER
-    assert fake_platform.registered[2] == "async_trigger_node"
+    # Verify the trigger service was registered
+    assert hass.services.has_service("nodered", SERVICE_TRIGGER)

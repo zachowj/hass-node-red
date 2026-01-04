@@ -59,6 +59,15 @@
 
 ## Project-Specific Conventions
 
+- **Import Organization:**
+
+  - **Always place imports at the top of the file.** Never use inline imports within functions or methods unless absolutely necessary (e.g., avoiding circular imports or conditional feature availability).
+  - Group imports in standard order: standard library, third-party packages, local imports.
+  - In tests, all imports should be at module level at the top of the file. Inline imports inside test functions hide dependencies from linters and make code harder to understand.
+  - Use `from __future__ import annotations` for forward references when needed.
+  - Use type-checking blocks for type-only imports: `if TYPE_CHECKING:` to avoid runtime overhead.
+  - If an inline import is genuinely required, add a clear comment explaining why (e.g., `# Import here to avoid circular dependency with X`).
+
 - **Entity Discovery:**
 
   - Use consistent discovery signatures (`config`, `connection`) in `async_setup_entry`.
