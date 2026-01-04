@@ -16,6 +16,14 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## [4.2.2](https://github.com/zachowj/hass-node-red/compare/v4.2.1...v4.2.2) (2026-01-04)
+
+
+### Tests
+
+* refactor tests for select and switch entities to improve clarity and structure ([4074c4d](https://github.com/zachowj/hass-node-red/commit/4074c4d62e6286f6cb639cfe58950c53d0f66ed4))
+* refactor tests to improve clarity and structure ([a055bc0](https://github.com/zachowj/hass-node-red/commit/a055bc081c2f7975958643ac86927991e0495c25))
+
 ## [4.2.1](https://github.com/zachowj/hass-node-red/compare/v4.2.0...v4.2.1) (2026-01-04)
 
 
