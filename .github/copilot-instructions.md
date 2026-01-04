@@ -32,6 +32,13 @@
   - For specific tests: `pytest tests/<file>.py -k <test>`.
   - When writing tests, follow Home Assistant testing best practices and use the
     `pytest-homeassistant-custom-component` package to leverage HA fixtures and helpers.
+  - **Write idiomatic integration tests.** When testing integration features:
+    - Use `MockConfigEntry` and `async_setup()` to set up the integration realistically
+    - Leverage built-in fixtures like `hass_ws_client` for websocket testing
+    - Test through public APIs (websocket commands, services) rather than calling internal functions directly
+    - Avoid excessive mocking or manual `hass.data` manipulation; test actual code paths
+    - Use `await hass.async_block_till_done()` to ensure async operations complete
+    - Example: Instead of monkeypatching and calling cleanup functions directly, set up the integration, perform actions through the API, then unload and verify cleanup happened
   - **Avoid inline imports in tests.** Prefer module-level imports at the top of test files; inline imports inside test functions can hide issues from linters, introduce unintended side effects, and make tests harder to read. If a lazy import is required, add a short comment explaining why.
   - **Keep imports at top level in production code.** Prefer module-level imports at the top of Python files for runtime code to avoid obscuring dependency relationships and surprising side-effects; use type-checking blocks (`if TYPE_CHECKING:`) for imports needed only for typing where necessary.
 

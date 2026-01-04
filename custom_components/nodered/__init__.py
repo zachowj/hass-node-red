@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity_registry import async_entries_for_device, async_get
 
-from .const import CONF_VERSION, DOMAIN, DOMAIN_DATA, STARTUP_MESSAGE
+from .const import CONF_VERSION, DOMAIN, DOMAIN_DATA, STARTUP_MESSAGE, WEBHOOKS
 from .discovery import (
     PLATFORMS_LOADED,
     SUPPORTED_COMPONENTS,
@@ -21,7 +21,7 @@ from .discovery import (
     stop_discovery,
 )
 from .version import __version__
-from .websocket import register_websocket_handlers
+from .websocket import register_websocket_handlers, unregister_all_webhooks
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,6 +32,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if not domain_data:
         _LOGGER.info(STARTUP_MESSAGE)
+
+    # Initialize webhook tracking
+    domain_data.setdefault(WEBHOOKS, set())
 
     await hass.config_entries.async_forward_entry_setups(entry, SUPPORTED_COMPONENTS)
     domain_data[PLATFORMS_LOADED] = set(SUPPORTED_COMPONENTS)
@@ -47,6 +50,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Handle removal of an entry."""
+    # Unregister all webhooks before unloading platforms
+    unregister_all_webhooks(hass)
+
     unloaded = all(
         await asyncio.gather(
             *[

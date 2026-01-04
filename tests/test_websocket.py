@@ -281,7 +281,9 @@ async def test_websocket_webhook_register_handle_and_remove(
     # Ensure the websocket connection received the event message with the payload
     event = await client.receive_json()
     assert event["type"] == "event"
-    assert event["event"]["data"] == {"a": 1}
+    assert event["event"]["data"]["payload"] == {"a": 1}
+    assert event["event"]["data"]["headers"] == {"h": "v"}
+    assert event["event"]["data"]["params"] == {"p": "v"}
 
     # Remove the webhook and verify it is removed from hass.data
     websocket.webhook_async_unregister(hass, msg["webhook_id"])

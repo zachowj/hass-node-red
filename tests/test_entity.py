@@ -51,6 +51,8 @@ class DummyEntity(NodeRedEntity):
         # Ensure entity_id exists to avoid hass state removal errors
         if self.entity_id is None:
             self.entity_id = f"sensor.nodered_{self._node_id}"
+        # Prevent async_remove from being triggered during garbage collection
+        self.platform = None  # type: ignore[assignment]
 
 
 def test_handle_discovery_update_recreate_entity(
@@ -295,6 +297,9 @@ def test_init_with_full_device_info(hass: HomeAssistant) -> None:
     assert ent._attr_device_info.get("sw_version") == "2.0"
 
 
+@pytest.mark.filterwarnings(
+    "ignore:coroutine 'Entity.async_remove' was never awaited:RuntimeWarning"
+)
 def test_init_with_partial_device_info(hass: HomeAssistant) -> None:
     """Test initialization with partial device info."""
     config = {

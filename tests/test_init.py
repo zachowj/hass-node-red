@@ -18,7 +18,7 @@ from custom_components.nodered import (
     async_setup_entry,
     async_unload_entry,
 )
-from custom_components.nodered.const import CONF_VERSION, DOMAIN
+from custom_components.nodered.const import CONF_VERSION, DOMAIN, WEBHOOKS
 from custom_components.nodered.entity import NodeRedEntity, generate_device_identifiers
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -321,3 +321,45 @@ async def test_async_remove_config_entry_device_multiple_entities(
     assert updated1 is not None and updated1.device_id is None
     assert updated2 is not None and updated2.device_id is None
     assert updated3 is not None and updated3.device_id is None
+
+
+@pytest.mark.asyncio
+async def test_webhooks_cleaned_up_on_unload(
+    hass: HomeAssistant, hass_ws_client: Any, enable_custom_integrations: Any
+) -> None:
+    """Test that webhooks are cleaned up when integration is unloaded."""
+    _ = enable_custom_integrations
+
+    # Setup the integration
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Create a websocket client
+    client = await hass_ws_client(hass)
+
+    # Register a webhook through the API
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "nodered/webhook",
+            "server_id": "test-server",
+            "name": "test-webhook",
+            "webhook_id": "test-webhook-id",
+        }
+    )
+    resp = await client.receive_json()
+    assert resp["success"]
+
+    # Verify webhook was tracked
+    assert "test-webhook-id" in hass.data[DOMAIN_DATA][WEBHOOKS]
+
+    # Unload the integration
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Verify webhooks were cleaned up and domain data was removed
+    assert DOMAIN_DATA not in hass.data or WEBHOOKS not in hass.data.get(
+        DOMAIN_DATA, {}
+    )

@@ -60,10 +60,12 @@ from .const import (
     CONF_SERVER_ID,
     CONF_SUB_TYPE,
     DOMAIN,
+    DOMAIN_DATA,
     NODERED_CONFIG_UPDATE,
     NODERED_DISCOVERY,
     NODERED_ENTITY,
     VERSION,
+    WEBHOOKS,
 )
 from .sentence import websocket_sentence, websocket_sentence_response
 from .utils import NodeRedJSONEncoder
@@ -72,6 +74,23 @@ CONF_ALLOWED_METHODS = "allowed_methods"
 CONF_LOCAL_ONLY = "local_only"
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def unregister_all_webhooks(hass: HomeAssistant) -> None:
+    """Unregister all tracked webhooks."""
+    if DOMAIN_DATA not in hass.data:
+        return
+
+    domain_data = hass.data[DOMAIN_DATA]
+    webhook_ids = domain_data.get(WEBHOOKS, set()).copy()
+
+    for webhook_id in webhook_ids:
+        with contextlib.suppress(ValueError):
+            webhook_async_unregister(hass, webhook_id)
+            _LOGGER.info("Webhook unregistered during cleanup: %s..", webhook_id[:15])
+
+    # Clear the tracking set
+    domain_data[WEBHOOKS] = set()
 
 
 def register_websocket_handlers(hass: HomeAssistant) -> None:
@@ -277,12 +296,16 @@ async def websocket_webhook(
         }
 
         _LOGGER.debug("Webhook received %s..: %s", webhook_id[:15], data)
-        connection.send_message(event_message(msg[CONF_ID], {"data": payload}))
+        connection.send_message(event_message(msg[CONF_ID], {"data": data}))
 
     def remove_webhook() -> None:
         """Remove webhook command."""
         with contextlib.suppress(ValueError):
             webhook_async_unregister(hass, webhook_id)
+
+        # Remove from tracking
+        if DOMAIN_DATA in hass.data:
+            hass.data[DOMAIN_DATA].get(WEBHOOKS, set()).discard(webhook_id)
 
         _LOGGER.info("Webhook removed: %s..", webhook_id[:15])
         connection.send_message(result_message(msg[CONF_ID]))
@@ -299,6 +322,10 @@ async def websocket_webhook(
     except ValueError as err:
         connection.send_message(error_message(msg[CONF_ID], "value_error", str(err)))
         return
+
+    # Track webhook for cleanup during unload
+    if DOMAIN_DATA in hass.data:
+        hass.data[DOMAIN_DATA].setdefault(WEBHOOKS, set()).add(webhook_id)
 
     _LOGGER.info("Webhook created: %s..", webhook_id[:15])
     connection.subscriptions[msg[CONF_ID]] = remove_webhook
