@@ -1,7 +1,6 @@
 """Test nodered config flow."""
 
 from collections.abc import Generator
-from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -35,11 +34,9 @@ def bypass_setup_fixture() -> Generator[None]:
 
 
 # Here we simulate a successful config flow from the backend.
-async def test_successful_config_flow(
-    hass: HomeAssistant, enable_custom_integrations: Any
-) -> None:
+async def test_successful_config_flow(hass: HomeAssistant) -> None:
     """Test a successful config flow."""
-    _ = enable_custom_integrations
+
     # Initialize a config flow
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -62,11 +59,9 @@ async def test_successful_config_flow(
     assert result.get("result")
 
 
-async def test_already_configured(
-    hass: HomeAssistant, enable_custom_integrations: Any
-) -> None:
+async def test_already_configured(hass: HomeAssistant) -> None:
     """Test we handle already configured."""
-    _ = enable_custom_integrations
+
     # Create a mock entry so we can check against it
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -86,11 +81,9 @@ async def test_already_configured(
     assert result.get("reason") == "single_instance_allowed"
 
 
-async def test_abort_if_in_data(
-    hass: HomeAssistant, enable_custom_integrations: Any
-) -> None:
+async def test_abort_if_in_data(hass: HomeAssistant) -> None:
     """Test we abort if component is already loaded."""
-    _ = enable_custom_integrations
+
     # Set the domain in hass.data
     hass.data[DOMAIN] = {"loaded": True}
 

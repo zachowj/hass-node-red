@@ -1,17 +1,13 @@
 """Tests for Node-RED select entity."""
 
 from collections.abc import Callable
-import inspect
-import logging
 from typing import Any
 
 import pytest
 
 from custom_components.nodered import select
-from custom_components.nodered.const import CONF_SELECT, NODERED_DISCOVERY_NEW
 from custom_components.nodered.select import NodeRedSelect
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from tests.helpers import FakeConnection
 
 
@@ -159,28 +155,3 @@ async def test_async_setup_entry_registers_discovery_listener(
     assert callable(connect_target)
     assert unload_callback is not None
     assert callable(connect_target)
-
-
-async def _async_setup_entity(
-    hass: Any, config: dict[str, Any], async_add_entities: Any, connection: Any
-) -> None:
-    """Set up a NodeRedSelect entity from discovery."""
-    entity = NodeRedSelect(hass, config, connection)
-    try:
-        await async_add_entities([entity])
-    except Exception:
-        # If add_entities raises, log the error for debugging
-        logging.getLogger(__name__).exception("Failed to add entities")
-
-
-async def async_setup_entry(hass: Any, _entry: Any, async_add_entities: Any) -> bool:
-    """Register discovery listener for Node-RED select entities."""
-    signal = f"{NODERED_DISCOVERY_NEW}.{CONF_SELECT}"
-
-    async def _discovered(config: dict[str, Any], connection: Any) -> None:
-        await _async_setup_entity(hass, config, async_add_entities, connection)
-
-    result = async_dispatcher_connect(hass, signal, _discovered)
-    if inspect.isawaitable(result):
-        await result
-    return True

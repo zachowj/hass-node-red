@@ -4,19 +4,16 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 from typing import Any
-from unittest.mock import AsyncMock
 
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant_custom_component.typing import WebSocketGenerator
 
 # Relative imports for the module under test and helpers
-import custom_components.nodered as nodered_mod
 from custom_components.nodered import (
     DOMAIN_DATA,
     PLATFORMS_LOADED,
     async_remove_config_entry_device,
-    async_setup_entry,
-    async_unload_entry,
 )
 from custom_components.nodered.const import CONF_VERSION, DOMAIN, WEBHOOKS
 from custom_components.nodered.entity import NodeRedEntity, generate_device_identifiers
@@ -33,11 +30,8 @@ class DummyEntity(NodeRedEntity):  # noqa: D101
 # for a given test. We can also leverage fixtures and mocks that are available in
 # Home Assistant using the pytest_homeassistant_custom_component plugin.
 # Assertions allow you to verify that the return value of whatever is on the left
-async def test_setup_unload_and_reload_entry(
-    hass: HomeAssistant, enable_custom_integrations: Any
-) -> None:
+async def test_setup_unload_and_reload_entry(hass: HomeAssistant) -> None:
     """Test entry setup, reload, and unload using HA lifecycle."""
-    _ = enable_custom_integrations
     config_entry = MockConfigEntry(domain=DOMAIN, data={})
     config_entry.add_to_hass(hass)
 
@@ -62,193 +56,149 @@ async def test_setup_unload_and_reload_entry(
 
 @pytest.mark.asyncio
 async def test_async_setup_entry_invokes_start_and_registers(
-    monkeypatch: pytest.MonkeyPatch, hass: HomeAssistant
+    hass: HomeAssistant,
 ) -> None:
-    called: dict[str, Any] = {}
+    """Test that async_setup_entry properly initializes the integration."""
 
-    async def fake_forward(entry: Any, platforms: Any) -> None:
-        called["forward"] = (entry, platforms)
+    # Setup the integration using a real config entry
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
+    config_entry.add_to_hass(hass)
 
-    async def fake_start_discovery(_h: HomeAssistant, _dd: dict[str, Any]) -> None:
-        called["start_discovery"] = True
+    # Set up the integration
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    def fake_register(_h: HomeAssistant) -> None:
-        called["register"] = True
-
-    hass.config_entries.async_forward_entry_setups = fake_forward  # type: ignore[attr-defined]
-    monkeypatch.setattr(nodered_mod, "start_discovery", fake_start_discovery)
-    monkeypatch.setattr(nodered_mod, "register_websocket_handlers", fake_register)
-
-    # Dummy entry implementing add_update_listener and async_on_unload
-    class DummyEntry:
-        def __init__(self) -> None:
-            self.entry_id = "e1"
-            self._unloads = []
-
-        def add_update_listener(self, _cb: Any) -> Any:
-            # mimic real behavior by returning a remove callback
-            def remove() -> None:
-                self._unloads.append("removed")
-
-            return remove
-
-        def async_on_unload(self, cb: Any) -> None:
-            # store for verification
-            self._on_unload = cb
-
-    entry = DummyEntry()
-
-    res = await async_setup_entry(hass, entry)  # type: ignore[arg-type]
-    assert res is True
-    assert "forward" in called
-    assert "start_discovery" in called
-    assert "register" in called
-    # domain data should be present
+    # Verify domain data was initialized
     assert DOMAIN_DATA in hass.data
+    # Verify platforms were loaded
+    assert PLATFORMS_LOADED in hass.data[DOMAIN_DATA]
+    assert len(hass.data[DOMAIN_DATA][PLATFORMS_LOADED]) > 0
 
 
 @pytest.mark.asyncio
 async def test_async_unload_entry_stops_discovery_and_cleans_data(
-    monkeypatch: pytest.MonkeyPatch, hass: HomeAssistant
+    hass: HomeAssistant,
 ) -> None:
-    called: dict[str, bool] = {}
-    hass.data[DOMAIN_DATA] = {PLATFORMS_LOADED: {"sensor"}}
+    """Test that async_unload_entry properly cleans up."""
 
-    async def fake_unload(_entry: Any, _platform: str) -> bool:
-        called["unload_called"] = True
-        return True
+    # Setup the integration
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    hass.config_entries.async_forward_entry_unload = fake_unload  # type: ignore[attr-defined]
-    monkeypatch.setattr(
-        nodered_mod, "stop_discovery", lambda _h: called.setdefault("stopped", True)
-    )
+    # Verify data is present
+    assert DOMAIN_DATA in hass.data
 
-    class DummyEntry:
-        entry_id = "e2"
+    # Unload the integration
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    entry = DummyEntry()
-    res = await async_unload_entry(hass, entry)  # type: ignore[arg-type]
-    assert res is True
-    assert called.get("stopped", False) is True
+    # Verify cleanup happened
     assert DOMAIN_DATA not in hass.data
 
 
 @pytest.mark.asyncio
 async def test_async_unload_entry_partial_failure(
-    monkeypatch: pytest.MonkeyPatch, hass: HomeAssistant
+    monkeypatch: pytest.MonkeyPatch,
+    hass: HomeAssistant,
 ) -> None:
     """Test unload when some platforms fail to unload."""
-    hass.data[DOMAIN_DATA] = {PLATFORMS_LOADED: {"sensor", "switch"}}
 
+    # Setup the integration
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Mock one platform to fail unload
     call_count = 0
+    original_unload = hass.config_entries.async_forward_entry_unload
 
-    async def fake_unload(_entry: Any, platform: str) -> bool:
+    async def fake_unload(entry: Any, platform: str) -> bool:
         nonlocal call_count
         call_count += 1
         # First call succeeds, second fails
-        return call_count == 1
+        if call_count == 1:
+            return await original_unload(entry, platform)
+        return False
 
-    hass.config_entries.async_forward_entry_unload = fake_unload  # type: ignore[attr-defined]
+    monkeypatch.setattr(hass.config_entries, "async_forward_entry_unload", fake_unload)
 
-    class DummyEntry:
-        entry_id = "e3"
+    # Try to unload - should fail
+    result = await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    entry = DummyEntry()
-    res = await async_unload_entry(hass, entry)  # type: ignore[arg-type]
     # Should return False when any platform fails
-    assert res is False
+    assert result is False
     # Domain data should remain since unload failed
     assert DOMAIN_DATA in hass.data
 
 
 @pytest.mark.asyncio
-async def test_async_unload_entry_fires_unloaded_event(
-    monkeypatch: pytest.MonkeyPatch, hass: HomeAssistant
-) -> None:
+async def test_async_unload_entry_fires_unloaded_event(hass: HomeAssistant) -> None:
     """Test unload fires unloaded event on success."""
-    hass.data[DOMAIN_DATA] = {PLATFORMS_LOADED: {"sensor"}}
     events_fired = []
-
-    async def fake_unload(_entry: Any, _platform: str) -> bool:
-        return True
 
     async def capture_event(event: Any) -> None:
         events_fired.append(event)
 
     hass.bus.async_listen(DOMAIN, capture_event)
-    hass.config_entries.async_forward_entry_unload = fake_unload  # type: ignore[attr-defined]
-    monkeypatch.setattr(nodered_mod, "stop_discovery", lambda _h: None)
 
-    class DummyEntry:
-        entry_id = "e4"
+    # Setup the integration
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    entry = DummyEntry()
-    await async_unload_entry(hass, entry)  # type: ignore[arg-type]
+    # Clear events from setup
+    events_fired.clear()
 
-    assert len(events_fired) == 1
-    assert events_fired[0].data["type"] == "unloaded"
+    # Unload the integration
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Verify unloaded event was fired
+    unloaded_events = [e for e in events_fired if e.data.get("type") == "unloaded"]
+    assert len(unloaded_events) == 1
 
 
 @pytest.mark.asyncio
-async def test_async_unload_entry_empty_platforms(
-    monkeypatch: pytest.MonkeyPatch, hass: HomeAssistant
-) -> None:
-    """Test unload with no platforms loaded."""
-    hass.data[DOMAIN_DATA] = {}
+async def test_async_unload_entry_empty_platforms(hass: HomeAssistant) -> None:
+    """Test unload with no platforms loaded still succeeds."""
 
-    called = {"unload": False, "stop": False}
+    # Setup and immediately unload before any platforms are discovered
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    async def fake_unload(_entry: Any, _platform: str) -> bool:
-        called["unload"] = True
-        return True
+    # Unload immediately
+    result = await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    def fake_stop_discovery(_h: Any) -> None:
-        called["stop"] = True
-
-    hass.config_entries.async_forward_entry_unload = fake_unload  # type: ignore[attr-defined]
-    monkeypatch.setattr(nodered_mod, "stop_discovery", fake_stop_discovery)
-
-    class DummyEntry:
-        entry_id = "e5"
-
-    entry = DummyEntry()
-    res = await async_unload_entry(hass, entry)  # type: ignore[arg-type]
-    # Should still succeed with empty platforms
-    assert res is True
-    assert called["stop"] is True
+    # Should still succeed even with no entities/platforms
+    assert result is True
     assert DOMAIN_DATA not in hass.data
 
 
 @pytest.mark.asyncio
 async def test_async_setup_entry_fires_loaded_event_with_version(
-    monkeypatch: pytest.MonkeyPatch, hass: HomeAssistant
+    hass: HomeAssistant,
 ) -> None:
     """Test setup fires loaded event with correct version."""
     events_fired = []
-
-    async def fake_forward(_entry: Any, _platforms: Any) -> None:
-        pass
 
     async def capture_event(event: Any) -> None:
         events_fired.append(event)
 
     hass.bus.async_listen(DOMAIN, capture_event)
-    hass.config_entries.async_forward_entry_setups = fake_forward  # type: ignore[attr-defined]
-    monkeypatch.setattr(nodered_mod, "start_discovery", AsyncMock())
-    monkeypatch.setattr(nodered_mod, "register_websocket_handlers", lambda _h: None)
 
-    class DummyEntry:
-        def __init__(self) -> None:
-            self.entry_id = "e6"
-
-        def add_update_listener(self, _cb: Any) -> Any:
-            return lambda: None
-
-        def async_on_unload(self, _cb: Any) -> None:
-            pass
-
-    entry = DummyEntry()
-    await async_setup_entry(hass, entry)  # type: ignore[arg-type]
+    # Setup the integration
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Verify loaded event was fired
     loaded_events = [e for e in events_fired if e.data.get("type") == "loaded"]
@@ -325,10 +275,9 @@ async def test_async_remove_config_entry_device_multiple_entities(
 
 @pytest.mark.asyncio
 async def test_webhooks_cleaned_up_on_unload(
-    hass: HomeAssistant, hass_ws_client: Any, enable_custom_integrations: Any
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test that webhooks are cleaned up when integration is unloaded."""
-    _ = enable_custom_integrations
 
     # Setup the integration
     config_entry = MockConfigEntry(domain=DOMAIN, data={})

@@ -58,13 +58,10 @@ def test_convert_recognize_result_to_dict_various(
 @pytest.mark.asyncio
 async def test_websocket_sentence_manager_none_returns_value_error(
     hass: HomeAssistant,
-    enable_custom_integrations: Any,
     hass_ws_client: WebSocketGenerator,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """When get_agent_manager returns None, websocket_sentence should send value_error."""
-    # Ensure custom integrations are enabled for this test
-    _ = enable_custom_integrations
 
     # Simulate manager missing by creating fake conversation submodules
     agent_manager_mod = types.ModuleType(
