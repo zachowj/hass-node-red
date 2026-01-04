@@ -16,6 +16,14 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## [4.2.1](https://github.com/zachowj/hass-node-red/compare/v4.2.0...v4.2.1) (2026-01-04)
+
+
+### Bug Fixes
+
+* **webhook:** correct payload data in webhook response ([f5bbcb7](https://github.com/zachowj/hass-node-red/commit/f5bbcb7afbdaec6503eec281abb47bd324c05f17))
+* **webhook:** unregister webhooks when integration is unloaded ([f5bbcb7](https://github.com/zachowj/hass-node-red/commit/f5bbcb7afbdaec6503eec281abb47bd324c05f17))
+
 ## [4.2.0](https://github.com/zachowj/hass-node-red/compare/v4.1.5...v4.2.0) (2026-01-03)
 
 
