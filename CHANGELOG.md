@@ -16,6 +16,21 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## [4.2.2](https://github.com/zachowj/hass-node-red/compare/v4.2.1...v4.2.2) (2026-01-05)
+
+
+### Bug Fixes
+
+* **device_trigger:** add Context type hint to forward_trigger function ([558308c](https://github.com/zachowj/hass-node-red/commit/558308c697082ed60e5e85cb1821bb8f19fc2130))
+* **text:** enforce maximum state length for text entities ([629a9e9](https://github.com/zachowj/hass-node-red/commit/629a9e93a4e58a0f90328a8fed2dee8d6afa77cf))
+
+
+### Tests
+
+* refactor tests for select and switch entities to improve clarity and structure ([4074c4d](https://github.com/zachowj/hass-node-red/commit/4074c4d62e6286f6cb639cfe58950c53d0f66ed4))
+* refactor tests to improve clarity and structure ([a055bc0](https://github.com/zachowj/hass-node-red/commit/a055bc081c2f7975958643ac86927991e0495c25))
+* replace direct FakeConnection instantiation with fixture usage ([042b7f7](https://github.com/zachowj/hass-node-red/commit/042b7f78906e80227ff7d3202fc7cd26df94ed68))
+
 ## [4.2.1](https://github.com/zachowj/hass-node-red/compare/v4.2.0...v4.2.1) (2026-01-04)
 
 
