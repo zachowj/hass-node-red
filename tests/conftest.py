@@ -16,10 +16,13 @@
 # See here for more info: https://docs.pytest.org/en/latest/fixture.html (note that
 # pytest includes fixtures OOB which you can use as defined on this page)
 from collections.abc import Iterator
+import contextlib
 from typing import Any
 from unittest.mock import patch
 
 import pytest
+
+from tests.helpers import FakeConnection
 
 
 # This fixture enables loading custom integrations in all tests.
@@ -41,3 +44,27 @@ def skip_notifications_fixture() -> Iterator[None]:
         patch("homeassistant.components.persistent_notification.async_dismiss"),
     ):
         yield
+
+
+# Pytest fixture that provides a FakeConnection for tests.
+
+# Returns a FakeConnection instance that simulates a real connection so tests
+# can exercise connection-dependent logic without relying on external resources.
+# Use by declaring the fixture name (``fake_connection``) as a test parameter.
+
+
+# Returns:
+#     FakeConnection: A mock/simulated connection object. The fixture yields a
+#     `FakeConnection` instance and ensures it is cleaned up (reset/closed) after
+#     the test completes.
+@pytest.fixture
+def fake_connection() -> Iterator[FakeConnection]:
+    conn = FakeConnection()
+    try:
+        yield conn
+    finally:
+        # Ensure tests do not leak connection state between tests
+        with contextlib.suppress(Exception):
+            conn.reset()
+        with contextlib.suppress(Exception):
+            conn.close()

@@ -20,10 +20,10 @@ DISCOVERY_STEP_VALUE = 15
 
 
 def test_update_config_sets_number_specific_attributes(
-    hass: HomeAssistant,
+    hass: HomeAssistant, fake_connection: FakeConnection
 ) -> None:
     """update_config sets number-specific attributes from a config message."""
-    connection = FakeConnection()
+    connection = fake_connection
     config = {
         number.CONF_ID: "id-1",
         "server_id": "s1",
@@ -59,9 +59,11 @@ def test_update_config_sets_number_specific_attributes(
     assert node._attr_native_unit_of_measurement == "°C"
 
 
-def test_update_config_handles_partial_config(hass: HomeAssistant) -> None:
+def test_update_config_handles_partial_config(
+    hass: HomeAssistant, fake_connection: FakeConnection
+) -> None:
     """update_config should handle partial config updates gracefully."""
-    connection = FakeConnection()
+    connection = fake_connection
     config = {
         number.CONF_ID: "id-2",
         "server_id": "s1",
@@ -96,9 +98,11 @@ def test_update_config_handles_partial_config(hass: HomeAssistant) -> None:
     assert node._attr_native_unit_of_measurement is None
 
 
-def test_update_config_handles_empty_config(hass: HomeAssistant) -> None:
+def test_update_config_handles_empty_config(
+    hass: HomeAssistant, fake_connection: FakeConnection
+) -> None:
     """update_config should handle empty config gracefully."""
-    connection = FakeConnection()
+    connection = fake_connection
     config = {
         number.CONF_ID: "id-3",
         "server_id": "s1",
@@ -127,9 +131,11 @@ def test_update_config_handles_empty_config(hass: HomeAssistant) -> None:
     assert node._attr_native_unit_of_measurement == "km"
 
 
-def test_update_discovery_config_sets_number_attributes(hass: HomeAssistant) -> None:
+def test_update_discovery_config_sets_number_attributes(
+    hass: HomeAssistant, fake_connection: FakeConnection
+) -> None:
     """update_discovery_config sets number-specific attributes from discovery config."""
-    connection = FakeConnection()
+    connection = fake_connection
     config = {
         number.CONF_ID: "id-4",
         "server_id": "s4",

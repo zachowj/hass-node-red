@@ -13,12 +13,11 @@ from custom_components.nodered.const import DOMAIN, VERSION
 from homeassistant.components.device_automation.exceptions import DeviceNotFound
 from homeassistant.components.websocket_api.messages import (
     error_message,
-    event_message,
     result_message,
 )
-from homeassistant.core import Context, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from tests.helpers import FakeConnection, create_device_with_entity
+from tests.helpers import create_device_with_entity
 
 
 @pytest.mark.asyncio
@@ -433,62 +432,3 @@ async def test_websocket_device_trigger_success_and_errors(
     resp3 = await client.receive_json()
     assert resp3["success"] is False
     assert resp3["error"]["code"] == "runtime_error"
-
-
-def test_fake_connection_send_wrappers() -> None:
-    conn = FakeConnection()
-    conn.send_message({"a": 1})
-    assert conn.sent == {"a": 1}
-
-    conn.send_result(5, {"ok": True})
-    assert conn.sent == result_message(5, {"ok": True})
-
-    conn.send_event(7, {"ev": 1})
-    assert conn.sent == event_message(7, {"ev": 1})
-
-    conn.send_error(8, "code", "msg")
-    assert conn.sent == error_message(8, "code", "msg")
-
-
-def test_async_handle_close_clears_subscriptions_and_calls_unsubs() -> None:
-    conn = FakeConnection()
-    called: dict[str, bool] = {"a": False, "b": False}
-
-    def unsub_a() -> None:
-        called["a"] = True
-
-    def unsub_b() -> None:
-        called["b"] = True
-        msg = "boom"
-        raise RuntimeError(msg)
-
-    conn.subscriptions["a"] = unsub_a
-    conn.subscriptions["b"] = unsub_b
-
-    # Should call both and clear the subscriptions without raising
-    conn.async_handle_close()
-
-    assert called["a"] is True
-    assert called["b"] is True
-    assert conn.subscriptions == {}
-
-
-def test_context_and_description_and_features() -> None:
-    conn = FakeConnection()
-    ctx = conn.context({"id": 1})
-    assert isinstance(ctx, Context)
-
-    # description without request
-    assert isinstance(conn.get_description(), str)
-    # description with request
-    assert "req" in conn.get_description("req")
-
-    # set supported features controls coalescing
-    conn.set_supported_features({"coalesce": True})
-    assert conn.can_coalesce is True
-
-
-def test_async_handle_exception_records_exception() -> None:
-    conn = FakeConnection()
-    conn.async_handle_exception({"id": 1}, RuntimeError("fail"))
-    assert conn.sent == {"_exception": "fail"}

@@ -58,6 +58,7 @@ class DummyEntity(NodeRedEntity):
 def test_handle_discovery_update_recreate_entity(
     hass: HomeAssistant,
     monkeypatch: pytest.MonkeyPatch,
+    fake_connection: FakeConnection,
 ) -> None:
     ent = DummyEntity(hass, {"server_id": "s", "node_id": "n1", "config": {}})
     # give the entity an id so hass.state removal won't error during teardown
@@ -79,7 +80,7 @@ def test_handle_discovery_update_recreate_entity(
     )
 
     msg = {CONF_REMOVE: CHANGE_ENTITY_TYPE, CONF_COMPONENT: "switch", CONF_ID: "mid"}
-    ent.handle_discovery_update(msg, FakeConnection())
+    ent.handle_discovery_update(msg, fake_connection)
 
     # async_on_remove should have been called with a recreate callback
     assert "cb" in captured
@@ -121,7 +122,7 @@ def test_handle_discovery_update_cleanup_discovery(hass: HomeAssistant) -> None:
 
 
 def test_handle_discovery_update_bidirectional_sets_connection_subscription(
-    hass: HomeAssistant,
+    hass: HomeAssistant, fake_connection: FakeConnection
 ) -> None:
     ent = DummyEntity(hass, {"server_id": "s", "node_id": "n3", "config": {}})
     # avoid hass teardown issues
@@ -130,13 +131,11 @@ def test_handle_discovery_update_bidirectional_sets_connection_subscription(
     ent._remove_signal_config_update = None
     ent.entity_id = f"sensor.nodered_{ent._node_id}"
     ent._bidirectional = True
-    # Use the test FakeConnection for a realistic ActiveConnection
-    conn = FakeConnection()
     msg = {CONF_CONFIG: {}, CONF_ID: "msg-1"}
-    ent.handle_discovery_update(msg, conn)
+    ent.handle_discovery_update(msg, fake_connection)
     assert ent._attr_available is True
     assert getattr(ent, "_message_id", None) == "msg-1"
-    assert conn.subscriptions.get("msg-1") == ent.handle_lost_connection
+    assert fake_connection.subscriptions.get("msg-1") == ent.handle_lost_connection
 
 
 def test_update_discovery_config_sets_attributes(hass: HomeAssistant) -> None:

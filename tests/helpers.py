@@ -1,10 +1,16 @@
 """Helpers for testing Node-RED Home Assistant integration.
 
 Provides fake connection classes and utilities for test cases.
+
+Note:
+    `FakeConnection.sent` is a convenience alias for the most recent
+    entry in `sent_history` (the last sent message). Prefer using
+    `sent_history` when asserting ordering or multiple sent messages.
 """
 
 from collections.abc import Callable, Hashable
 import contextlib
+import copy
 from typing import Any
 
 from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -26,7 +32,8 @@ class FakeConnection(ActiveConnection):
     """A Fake ActiveConnection-compatible connection for tests."""
 
     def __init__(self) -> None:
-        self.sent: Any = None
+        # history of sent messages (deepcopied) for easier assertions
+        self.sent_history: list[Any] = []
         # subscriptions map message ids to removal callbacks
         self.subscriptions: dict[Hashable, Callable[[], Any]] = {}
         # mimic an admin user required by the websocket decorators
@@ -35,16 +42,29 @@ class FakeConnection(ActiveConnection):
         self.can_coalesce = False
         self.supported_features: dict[str, float] = {}
 
+    @property
+    def sent(self) -> Any | None:
+        """Return the most recent sent message or None.
+
+        This is a read-only convenience that reflects `sent_history`.
+        """
+        return self.sent_history[-1] if self.sent_history else None
+
     def send_message(self, msg: dict[str, Any]) -> None:
-        """Store the message that would be sent over the websocket."""
-        self.sent = msg
+        """Store the message that would be sent over the websocket.
+
+        The message is deep-copied before storing to avoid tests being affected by
+        subsequent mutations of the object passed in.
+        """
+        msg_copy = copy.deepcopy(msg)
+        self.sent_history.append(msg_copy)
 
     def send_result(self, msg_id: int, result: Any | None = None) -> None:
-        """Send a websocket result message."""
+        """Send a websocket result message (wrapper around `send_message`)."""
         self.send_message(result_message(msg_id, result))
 
     def send_event(self, msg_id: int, event: Any | None = None) -> None:
-        """Send a websocket event message."""
+        """Send a websocket event message (wrapper around `send_message`)."""
         self.send_message(event_message(msg_id, event))
 
     def send_error(
@@ -56,7 +76,7 @@ class FakeConnection(ActiveConnection):
         translation_domain: str | None = None,
         translation_placeholders: dict[str, Any] | None = None,
     ) -> None:
-        """Send a websocket error message."""
+        """Send a websocket error message (wrapper around `send_message`)."""
         self.send_message(
             error_message(
                 msg_id,
@@ -76,7 +96,9 @@ class FakeConnection(ActiveConnection):
     def async_handle_exception(self, msg: dict[str, Any], err: Exception) -> None:
         """Record an exception so tests can inspect it."""
         _ = msg
-        self.sent = {"_exception": str(err)}
+        exc = {"_exception": str(err)}
+        # store a deepcopy to preserve immutability guarantees
+        self.sent_history.append(copy.deepcopy(exc))
 
     def async_handle_close(self) -> None:
         """Clean up subscriptions similar to a real connection closing."""
@@ -84,6 +106,22 @@ class FakeConnection(ActiveConnection):
             with contextlib.suppress(Exception):
                 unsub()
         self.subscriptions.clear()
+
+    # Convenience helpers
+    def reset(self) -> None:
+        """Reset the connection state (clears history and subscriptions)."""
+        self.sent_history.clear()
+        self.subscriptions.clear()
+
+    def close(self) -> None:
+        """Synchronous alias for closing the connection and cleaning up subscriptions."""
+        self.async_handle_close()
+
+    def register_subscription(
+        self, msg_id: Hashable, unsubscribe: Callable[[], Any]
+    ) -> None:
+        """Register a subscription removal callback for a given message id."""
+        self.subscriptions[msg_id] = unsubscribe
 
     def set_supported_features(self, features: dict[str, float]) -> None:
         """Set supported features and update coalescing flag."""

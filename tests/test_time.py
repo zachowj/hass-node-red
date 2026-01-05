@@ -76,16 +76,17 @@ def test_convert_string_to_time_invalid_logs_exception(
     assert "Unable to parse time" in caplog.text
 
 
-def test_node_red_time_update_state_and_discovery(hass: HomeAssistant) -> None:
+def test_node_red_time_update_state_and_discovery(
+    hass: HomeAssistant, fake_connection: FakeConnection
+) -> None:
     """Updating entity state and discovery config sets attributes correctly."""
-    conn = FakeConnection()
     config: dict[str, Any] = {
         CONF_ID: "mid-1",
         CONF_SERVER_ID: "s1",
         CONF_NODE_ID: "n1",
         CONF_CONFIG: {},
     }
-    nrt = NodeRedTime(hass, config, conn)
+    nrt = NodeRedTime(hass, config, fake_connection)
 
     # Initially no native value
     assert nrt._attr_native_value is None
@@ -112,9 +113,10 @@ def test_node_red_time_update_state_and_discovery(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.asyncio
-async def test_async_set_value_sends_event_message(hass: HomeAssistant) -> None:
+async def test_async_set_value_sends_event_message(
+    hass: HomeAssistant, fake_connection: FakeConnection
+) -> None:
     """async_set_value should send an event_message with ISO time payload."""
-    conn = FakeConnection()
     # Use an integer iden because Home Assistant's event_message expects an int iden
     config: dict[str, Any] = {
         CONF_ID: 2,
@@ -122,7 +124,7 @@ async def test_async_set_value_sends_event_message(hass: HomeAssistant) -> None:
         CONF_NODE_ID: "n1",
         CONF_CONFIG: {},
     }
-    nrt = NodeRedTime(hass, config, conn)
+    nrt = NodeRedTime(hass, config, fake_connection)
 
     await nrt.async_set_value(dt_time(5, 6, 7))
 
@@ -130,8 +132,9 @@ async def test_async_set_value_sends_event_message(hass: HomeAssistant) -> None:
         2,
         {CONF_TYPE: EVENT_VALUE_CHANGE, CONF_VALUE: dt_time(5, 6, 7).isoformat()},
     )
-    # event_message returns a dict-like structure; compare sent message to expected
-    assert conn.sent == expected
+    # event_message returns a dict-like structure; compare last sent message via `sent`
+    assert fake_connection.sent is not None, "No message sent"
+    assert fake_connection.sent == expected
 
 
 def test_class_attributes() -> None:

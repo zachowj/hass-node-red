@@ -20,9 +20,11 @@ CUSTOM_NATIVE_MIN = 5
 CUSTOM_NATIVE_MAX = 50
 
 
-def test_update_entity_state_coerces_to_string(hass: HomeAssistant) -> None:
+def test_update_entity_state_coerces_to_string(
+    hass: HomeAssistant, fake_connection: FakeConnection
+) -> None:
     """Text entity should coerce incoming state to a string."""
-    connection: FakeConnection = FakeConnection()
+    connection: FakeConnection = fake_connection
     config: dict[str, Any] = {
         text.CONF_ID: "id-1",
         "server_id": "s1",
@@ -45,9 +47,11 @@ def test_update_entity_state_coerces_to_string(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.asyncio
-async def test_async_set_value_sends_event_message(hass: HomeAssistant) -> None:
+async def test_async_set_value_sends_event_message(
+    hass: HomeAssistant, fake_connection: FakeConnection
+) -> None:
     """async_set_value should send correct websocket event message."""
-    connection: FakeConnection = FakeConnection()
+    connection: FakeConnection = fake_connection
     config: dict[str, Any] = {
         text.CONF_ID: "id-send",
         "server_id": "s1",
@@ -74,10 +78,10 @@ async def test_async_set_value_sends_event_message(hass: HomeAssistant) -> None:
 
 @pytest.mark.asyncio
 async def test_async_added_to_hass_restores_native_values_when_available(
-    hass: HomeAssistant,
+    hass: HomeAssistant, fake_connection: FakeConnection
 ) -> None:
     """async_added_to_hass should restore native values when last data exists."""
-    connection: FakeConnection = FakeConnection()
+    connection: FakeConnection = fake_connection
     config: dict[str, Any] = {
         text.CONF_ID: "id-restore",
         "server_id": "s1",
@@ -102,9 +106,11 @@ async def test_async_added_to_hass_restores_native_values_when_available(
 
 
 @pytest.mark.asyncio
-async def test_async_added_to_hass_handles_none_gracefully(hass: HomeAssistant) -> None:
+async def test_async_added_to_hass_handles_none_gracefully(
+    hass: HomeAssistant, fake_connection: FakeConnection
+) -> None:
     """async_added_to_hass should handle no last data without raising."""
-    connection: FakeConnection = FakeConnection()
+    connection: FakeConnection = fake_connection
     config: dict[str, Any] = {
         text.CONF_ID: "id-no-restore",
         "server_id": "s1",
@@ -121,9 +127,11 @@ async def test_async_added_to_hass_handles_none_gracefully(hass: HomeAssistant) 
     await node.async_added_to_hass()
 
 
-def test_update_discovery_config_applies_defaults() -> None:
+def test_update_discovery_config_applies_defaults(
+    fake_connection: FakeConnection,
+) -> None:
     """update_discovery_config should set default discovery values when not provided."""
-    connection: FakeConnection = FakeConnection()
+    connection: FakeConnection = fake_connection
     config: dict[str, Any] = {
         text.CONF_ID: "id-defaults",
         "server_id": "s1",
@@ -141,7 +149,9 @@ def test_update_discovery_config_applies_defaults() -> None:
     assert node._attr_mode.value == text.DEFAULT_MODE
 
 
-def test_update_discovery_config_applies_custom_values(hass: HomeAssistant) -> None:
+def test_update_discovery_config_applies_custom_values(
+    hass: HomeAssistant, fake_connection: FakeConnection
+) -> None:
     """update_discovery_config should read and apply configuration values."""
     custom_cfg: dict[str, Any] = {
         text.CONF_ID: "id-custom",
@@ -155,7 +165,7 @@ def test_update_discovery_config_applies_custom_values(hass: HomeAssistant) -> N
             text.CONF_MODE: "password",
         },
     }
-    connection: FakeConnection = FakeConnection()
+    connection: FakeConnection = fake_connection
     node: NodeRedText = NodeRedText(hass, custom_cfg, connection)
     node.update_discovery_config({CONF_CONFIG: custom_cfg["config"]})
 

@@ -207,9 +207,10 @@ async def test_websocket_sentence_dynamic_response_flow(
     assert result == "the answer"
 
 
-def test_websocket_sentence_response_not_found() -> None:
+def test_websocket_sentence_response_not_found(
+    fake_connection: FakeConnection,
+) -> None:
     """No matching response future: websocket_sentence_response should send error."""
-    conn = FakeConnection()
     msg = {"id": 201, "response_id": 9999, "response": "x"}
 
     func: Any = sentence_mod.websocket_sentence_response
@@ -217,9 +218,10 @@ def test_websocket_sentence_response_not_found() -> None:
         func = cast("Any", func.__wrapped__)  # type: ignore[attr-defined]
     # Call synchronously since function is async but quick
 
-    asyncio.get_event_loop().run_until_complete(func(None, conn, msg))  # type: ignore[misc]
+    asyncio.get_event_loop().run_until_complete(func(None, fake_connection, msg))  # type: ignore[misc]
 
-    assert conn.sent == error_message(
+    assert fake_connection.sent is not None, "No message sent"
+    assert fake_connection.sent == error_message(
         msg["id"],
         "sentence_response_not_found",
         f"Sentence response not found for id: {msg['response_id']}",

@@ -40,7 +40,7 @@
     - Use `await hass.async_block_till_done()` to ensure async operations complete
     - Example: Instead of monkeypatching and calling cleanup functions directly, set up the integration, perform actions through the API, then unload and verify cleanup happened
   - **Avoid inline imports in tests.** Prefer module-level imports at the top of test files; inline imports inside test functions can hide issues from linters, introduce unintended side effects, and make tests harder to read. If a lazy import is required, add a short comment explaining why.
-  - **Keep imports at top level in production code.** Prefer module-level imports at the top of Python files for runtime code to avoid obscuring dependency relationships and surprising side-effects; use type-checking blocks (`if TYPE_CHECKING:`) for imports needed only for typing where necessary.
+  - **Keep imports at top level in production code.** Prefer module-level imports at the top of Python files for runtime code to avoid obscuring dependency relationships and surprising side-effects; use type-checking blocks (`if TYPE_CHECKING:`) for imports needed only for typing where necessary. - **Prefer `FakeConnection.sent_history` for multi-message assertions.** When a test needs to assert multiple messages or message ordering, assert on `fake_connection.sent_history` (e.g., `sent_history[-2:]`), and use `fake_connection.reset()` in setup when needed. Also rely on the deep-copy guarantee so tests are safe from later mutations to the original message objects.
 
   ## Typing & Type Hints 🔧
 

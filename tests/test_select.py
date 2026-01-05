@@ -12,9 +12,11 @@ from tests.helpers import FakeConnection
 
 
 @pytest.mark.asyncio
-async def test_async_select_option_sends_message(hass: HomeAssistant) -> None:
+async def test_async_select_option_sends_message(
+    hass: HomeAssistant, fake_connection: FakeConnection
+) -> None:
     """async_select_option should send an event message with the selected option."""
-    connection = FakeConnection()
+    connection = fake_connection
     config = {
         select.CONF_ID: "test-msg-id",
         "server_id": "s1",
@@ -25,19 +27,21 @@ async def test_async_select_option_sends_message(hass: HomeAssistant) -> None:
 
     await node.async_select_option("chosen-option")
 
-    assert connection.sent is not None
-    assert connection.sent["type"] == "event"
+    # Verify last sent message via convenience property
+    assert connection.sent is not None, "No message sent"
+    last = connection.sent
+    assert last["type"] == "event"
     # payload keys are under the 'event' object
-    payload = connection.sent["event"]
+    payload = last.get("event")
     assert payload[select.CONF_TYPE] == select.EVENT_VALUE_CHANGE
     assert payload[select.CONF_VALUE] == "chosen-option"
 
 
 def test_update_entity_state_attributes_sets_current_option(
-    hass: HomeAssistant,
+    hass: HomeAssistant, fake_connection: FakeConnection
 ) -> None:
     """update_entity_state_attributes should set _attr_current_option."""
-    connection = FakeConnection()
+    connection = fake_connection
     config = {
         select.CONF_ID: "id-1",
         "server_id": "s1",
@@ -52,9 +56,11 @@ def test_update_entity_state_attributes_sets_current_option(
     assert node._attr_current_option == "option-42"
 
 
-def test_update_discovery_config_sets_icon_and_options(hass: HomeAssistant) -> None:
+def test_update_discovery_config_sets_icon_and_options(
+    hass: HomeAssistant, fake_connection: FakeConnection
+) -> None:
     """update_discovery_config should set icon and options from discovery config."""
-    connection = FakeConnection()
+    connection = fake_connection
     config = {
         select.CONF_ID: "id-2",
         "server_id": "s1",
@@ -76,9 +82,11 @@ def test_update_discovery_config_sets_icon_and_options(hass: HomeAssistant) -> N
     assert node._attr_options == ["a", "b", "c"]
 
 
-def test_update_discovery_config_without_options_or_icon(hass: HomeAssistant) -> None:
+def test_update_discovery_config_without_options_or_icon(
+    hass: HomeAssistant, fake_connection: FakeConnection
+) -> None:
     """update_discovery_config should handle missing icon and options gracefully."""
-    connection = FakeConnection()
+    connection = fake_connection
     config = {
         select.CONF_ID: "id-3",
         "server_id": "s1",
