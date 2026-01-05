@@ -11,6 +11,9 @@ WEBHOOKS = "webhooks"
 
 ISSUE_URL = "https://github.com/zachowj/hass-node-red/issues"
 
+# Home Assistant limits any state to 255 characters
+HA_MAX_STATE_LENGTH = 255
+
 # Configuration
 CONF_ATTRIBUTES = "attributes"
 CONF_BINARY_SENSOR = "binary_sensor"

@@ -1,5 +1,6 @@
 """Sensor platform for nodered."""
 
+import logging
 from typing import Any
 
 from homeassistant.components.text import RestoreText, TextMode
@@ -11,7 +12,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONF_TEXT, EVENT_VALUE_CHANGE, NODERED_DISCOVERY_NEW, TEXT_ICON
+from .const import (
+    CONF_TEXT,
+    EVENT_VALUE_CHANGE,
+    HA_MAX_STATE_LENGTH,
+    NODERED_DISCOVERY_NEW,
+    TEXT_ICON,
+)
 from .entity import NodeRedEntity
 from .number import CONF_VALUE
 
@@ -24,6 +31,8 @@ CONF_STATE = "state"
 DEFAULT_MODE = "text"
 DEFAULT_MAX_LENGTH = 100
 DEFAULT_MIN_LENGTH = 0
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -97,7 +106,31 @@ class NodeRedText(NodeRedEntity, RestoreText):
         # Ensure native value is a string for Text entity to avoid type
         # errors in Home Assistant when measuring value length.
         state = msg.get(CONF_STATE)
-        self._attr_native_value = str(state) if state is not None else None
+        value = str(state) if state is not None else None
+
+        if value is not None:
+            # Determine max length to enforce. Prefer the attribute if set,
+            # otherwise fall back to the configured value or default.
+            max_len = getattr(self, "_attr_native_max", None)
+            if max_len is None:
+                max_len = self._config.get(CONF_MAX_LENGTH, DEFAULT_MAX_LENGTH)
+
+            # Enforce Home Assistant's maximum state length
+            if isinstance(max_len, int) and max_len >= 0:
+                effective_max = min(max_len, HA_MAX_STATE_LENGTH)
+            else:
+                effective_max = HA_MAX_STATE_LENGTH
+
+            if len(value) > effective_max:
+                _LOGGER.warning(
+                    "Truncating text entity %s (node ID: %s) value to max length %s",
+                    self.entity_id,
+                    self._node_id,
+                    effective_max,
+                )
+                value = value[:effective_max]
+
+        self._attr_native_value = value
 
     def update_discovery_config(self, msg: dict[str, Any]) -> None:
         """Update the entity config."""
@@ -105,6 +138,10 @@ class NodeRedText(NodeRedEntity, RestoreText):
 
         self._attr_icon = self._config.get(CONF_ICON, TEXT_ICON)
         self._attr_native_min = self._config.get(CONF_MIN_LENGTH, DEFAULT_MIN_LENGTH)
-        self._attr_native_max = self._config.get(CONF_MAX_LENGTH, DEFAULT_MAX_LENGTH)
+        cfg_max = self._config.get(CONF_MAX_LENGTH, DEFAULT_MAX_LENGTH)
+        if isinstance(cfg_max, int) and cfg_max >= 0:
+            self._attr_native_max = min(cfg_max, HA_MAX_STATE_LENGTH)
+        else:
+            self._attr_native_max = DEFAULT_MAX_LENGTH
         self._attr_pattern = self._config.get(CONF_PATTERN, None)
         self._attr_mode = TextMode(self._config.get(CONF_MODE, DEFAULT_MODE))
