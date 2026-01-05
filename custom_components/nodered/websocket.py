@@ -40,7 +40,7 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_WEBHOOK_ID,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -348,7 +348,7 @@ async def websocket_device_trigger(
     node_id = msg[CONF_NODE_ID]
     trigger_data = msg[CONF_DEVICE_TRIGGER]
 
-    def forward_trigger(event: dict) -> None:
+    def forward_trigger(event: dict[str, Any], _context: Context | None = None) -> None:
         """Forward events to websocket."""
         message = event_message(
             msg[CONF_ID],

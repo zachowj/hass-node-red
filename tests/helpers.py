@@ -22,7 +22,7 @@ from homeassistant.components.websocket_api.messages import (
     event_message,
     result_message,
 )
-from homeassistant.core import Context
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity_registry import RegistryEntry
@@ -140,7 +140,7 @@ class FakeConnection(ActiveConnection):
 
 
 def create_device_with_entity(
-    hass: Any,
+    hass: HomeAssistant,
     device_id: str,
     entity_domain: str = "sensor",
     entity_unique_id: str | None = None,

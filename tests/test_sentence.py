@@ -68,7 +68,7 @@ async def test_websocket_sentence_manager_none_returns_value_error(
         "homeassistant.components.conversation.agent_manager"
     )
 
-    def get_agent_manager(_hass: Any) -> None:
+    def get_agent_manager(_hass: HomeAssistant) -> None:
         return None
 
     agent_manager_mod.get_agent_manager = get_agent_manager  # pyright: ignore[reportAttributeAccessIssue]
@@ -139,7 +139,7 @@ async def test_websocket_sentence_dynamic_response_flow(
         "homeassistant.components.conversation.agent_manager"
     )
 
-    def get_agent_manager(_hass: Any) -> Any:
+    def get_agent_manager(_hass: HomeAssistant) -> Any:
         return FakeManager()
 
     agent_manager_mod.get_agent_manager = get_agent_manager  # pyright: ignore[reportAttributeAccessIssue]

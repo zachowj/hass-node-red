@@ -51,7 +51,7 @@ async def test_async_set_value_sends_event_message(
 ) -> None:
     """async_set_value should send correct websocket event message."""
     config: dict[str, Any] = {
-        text.CONF_ID: "id-send",
+        text.CONF_ID: 12345,
         "server_id": "s1",
         "node_id": "n1",
         "config": {},
@@ -66,7 +66,7 @@ async def test_async_set_value_sends_event_message(
     fake_connection.send_message = fake_send_message
     await node.async_set_value("new-value")
 
-    message_id: Any = "id-send"
+    message_id = 12345  # Dummy message ID for testing
     expected: dict[str, Any] = event_message(
         message_id,
         {text.CONF_TYPE: text.EVENT_VALUE_CHANGE, CONF_VALUE: "new-value"},

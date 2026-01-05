@@ -30,11 +30,11 @@ async def test_websocket_device_action_calls_platform_and_sends_result(
 
     class Platform:
         async def async_call_action_from_config(
-            self, _hass: Any, action: Any, _variables: Any, _context: Any
+            self, _hass: HomeAssistant, action: Any, _variables: Any, _context: Any
         ) -> None:
             called["action"] = action
 
-    async def fake_get(_hass: Any, _domain: Any, _t: Any) -> Platform:
+    async def fake_get(_hass: HomeAssistant, _domain: Any, _t: Any) -> Platform:
         return Platform()
 
     # Patch the object imported in the websocket module directly
@@ -92,12 +92,12 @@ async def test_websocket_device_action_handles_device_not_found(
 ) -> None:
     class Platform:
         async def async_call_action_from_config(
-            self, _hass: Any, _action: Any, _variables: Any, _context: Any
+            self, _hass: HomeAssistant, _action: Any, _variables: Any, _context: Any
         ) -> None:
             msg = "no device"
             raise DeviceNotFound(msg)
 
-    async def fake_get2(_hass: Any, _domain: Any, _t: Any) -> Platform:
+    async def fake_get2(_hass: HomeAssistant, _domain: Any, _t: Any) -> Platform:
         return Platform()
 
     monkeypatch.setattr(
@@ -344,7 +344,7 @@ async def test_websocket_device_trigger_success_and_errors(
         return [config]
 
     async def fake_initialize(
-        _hass2: Any,
+        _hass2: HomeAssistant,
         _cfg: Any,
         _forward: Any,
         _domain: str,
@@ -378,7 +378,7 @@ async def test_websocket_device_trigger_success_and_errors(
     assert resp == result_message(msg["id"])
 
     # Validation error: MultipleInvalid
-    async def fake_validate_raise(_hass2: Any, _config: Any) -> list[Any]:
+    async def fake_validate_raise(_hass2: HomeAssistant, _config: Any) -> list[Any]:
         raise vol.MultipleInvalid([vol.Invalid("x")])
 
     monkeypatch.setattr(
@@ -399,11 +399,11 @@ async def test_websocket_device_trigger_success_and_errors(
     assert resp2["error"]["code"] == "invalid_trigger"
 
     # RuntimeError path
-    async def fake_validate_ok(_hass2: Any, config: Any) -> list[Any]:
+    async def fake_validate_ok(_hass2: HomeAssistant, config: Any) -> list[Any]:
         return [config]
 
     async def fake_initialize_raise(
-        _hass2: Any,
+        _hass2: HomeAssistant,
         _cfg: Any,
         _forward: Any,
         _domain: str,
