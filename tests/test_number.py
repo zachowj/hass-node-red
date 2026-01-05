@@ -23,14 +23,13 @@ def test_update_config_sets_number_specific_attributes(
     hass: HomeAssistant, fake_connection: FakeConnection
 ) -> None:
     """update_config sets number-specific attributes from a config message."""
-    connection = fake_connection
     config = {
         number.CONF_ID: "id-1",
         "server_id": "s1",
         "node_id": "n1",
         CONF_CONFIG: {},
     }
-    node = NodeRedNumber(hass, config, connection)
+    node = NodeRedNumber(hass, config, fake_connection)
 
     # Set initial values to verify they change
     node._attr_native_min_value = 0
@@ -63,14 +62,13 @@ def test_update_config_handles_partial_config(
     hass: HomeAssistant, fake_connection: FakeConnection
 ) -> None:
     """update_config should handle partial config updates gracefully."""
-    connection = fake_connection
     config = {
         number.CONF_ID: "id-2",
         "server_id": "s1",
         "node_id": "n2",
         CONF_CONFIG: {},
     }
-    node = NodeRedNumber(hass, config, connection)
+    node = NodeRedNumber(hass, config, fake_connection)
 
     # Set initial values to verify only specified attributes change
     init_min_value = 0
@@ -102,14 +100,13 @@ def test_update_config_handles_empty_config(
     hass: HomeAssistant, fake_connection: FakeConnection
 ) -> None:
     """update_config should handle empty config gracefully."""
-    connection = fake_connection
     config = {
         number.CONF_ID: "id-3",
         "server_id": "s1",
         "node_id": "n3",
         CONF_CONFIG: {},
     }
-    node = NodeRedNumber(hass, config, connection)
+    node = NodeRedNumber(hass, config, fake_connection)
 
     # Set initial values to verify they don't change
     node._attr_native_min_value = EMPTY_MIN_VALUE
@@ -135,14 +132,13 @@ def test_update_discovery_config_sets_number_attributes(
     hass: HomeAssistant, fake_connection: FakeConnection
 ) -> None:
     """update_discovery_config sets number-specific attributes from discovery config."""
-    connection = fake_connection
     config = {
         number.CONF_ID: "id-4",
         "server_id": "s4",
         "node_id": "n4",
         CONF_CONFIG: {},
     }
-    node = NodeRedNumber(hass, config, connection)
+    node = NodeRedNumber(hass, config, fake_connection)
 
     discovery = {
         CONF_CONFIG: {

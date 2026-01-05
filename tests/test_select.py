@@ -16,20 +16,19 @@ async def test_async_select_option_sends_message(
     hass: HomeAssistant, fake_connection: FakeConnection
 ) -> None:
     """async_select_option should send an event message with the selected option."""
-    connection = fake_connection
     config = {
         select.CONF_ID: "test-msg-id",
         "server_id": "s1",
         "node_id": "n1",
         select.CONF_CONFIG: {},
     }
-    node = NodeRedSelect(hass, config, connection)
+    node = NodeRedSelect(hass, config, fake_connection)
 
     await node.async_select_option("chosen-option")
 
     # Verify last sent message via convenience property
-    assert connection.sent is not None, "No message sent"
-    last = connection.sent
+    assert fake_connection.sent is not None, "No message sent"
+    last = fake_connection.sent
     assert last["type"] == "event"
     # payload keys are under the 'event' object
     payload = last.get("event")
@@ -41,14 +40,13 @@ def test_update_entity_state_attributes_sets_current_option(
     hass: HomeAssistant, fake_connection: FakeConnection
 ) -> None:
     """update_entity_state_attributes should set _attr_current_option."""
-    connection = fake_connection
     config = {
         select.CONF_ID: "id-1",
         "server_id": "s1",
         "node_id": "n1",
         select.CONF_CONFIG: {},
     }
-    node = NodeRedSelect(hass, config, connection)
+    node = NodeRedSelect(hass, config, fake_connection)
 
     msg = {select.CONF_STATE: "option-42"}
     node.update_entity_state_attributes(msg)
@@ -60,14 +58,13 @@ def test_update_discovery_config_sets_icon_and_options(
     hass: HomeAssistant, fake_connection: FakeConnection
 ) -> None:
     """update_discovery_config should set icon and options from discovery config."""
-    connection = fake_connection
     config = {
         select.CONF_ID: "id-2",
         "server_id": "s1",
         "node_id": "n1",
         select.CONF_CONFIG: {},
     }
-    node = NodeRedSelect(hass, config, connection)
+    node = NodeRedSelect(hass, config, fake_connection)
 
     discovery = {
         select.CONF_CONFIG: {
@@ -86,14 +83,13 @@ def test_update_discovery_config_without_options_or_icon(
     hass: HomeAssistant, fake_connection: FakeConnection
 ) -> None:
     """update_discovery_config should handle missing icon and options gracefully."""
-    connection = fake_connection
     config = {
         select.CONF_ID: "id-3",
         "server_id": "s1",
         "node_id": "n1",
         select.CONF_CONFIG: {},
     }
-    node = NodeRedSelect(hass, config, connection)
+    node = NodeRedSelect(hass, config, fake_connection)
 
     # Set initial values to verify they don't change
     node._attr_icon = "mdi:initial-icon"

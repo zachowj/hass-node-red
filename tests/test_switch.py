@@ -31,8 +31,6 @@ async def test_switch_notify_and_trigger(
         CONF_CONFIG: {},
     }
     node = NodeRedSwitch(hass, config, fake_connection)
-    node._message_id = "s-1"
-    node._connection = fake_connection  # pyright: ignore[reportAttributeAccessIssue]
 
     # Test notify on/off: assert messages were sent in order using sent_history
     node._notify_node_red_on()
@@ -134,8 +132,6 @@ async def test_async_turn_on_off_sends_messages(
         "state": True,
     }
     node = NodeRedSwitch(hass, config, fake_connection)
-    node._message_id = "s-3"
-    node._connection = fake_connection  # pyright: ignore[reportAttributeAccessIssue]
 
     await node.async_turn_on()
     assert fake_connection.sent is not None, "No message sent"
@@ -159,8 +155,6 @@ async def test_async_trigger_node_defaults_and_no_message(
 ) -> None:
     config = {"id": "s-4", "server_id": "s1", "node_id": "n1", "config": {}}
     node = NodeRedSwitch(hass, config, fake_connection)
-    node._message_id = "s-4"
-    node._connection = fake_connection  # pyright: ignore[reportAttributeAccessIssue]
 
     # trigger without kwargs -> default output path should be present, message absent
     await node.async_trigger_node()

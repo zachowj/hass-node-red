@@ -24,14 +24,13 @@ def test_update_entity_state_coerces_to_string(
     hass: HomeAssistant, fake_connection: FakeConnection
 ) -> None:
     """Text entity should coerce incoming state to a string."""
-    connection: FakeConnection = fake_connection
     config: dict[str, Any] = {
         text.CONF_ID: "id-1",
         "server_id": "s1",
         "node_id": "n1",
         "config": {},
     }
-    node: NodeRedText = NodeRedText(hass, config, connection)
+    node: NodeRedText = NodeRedText(hass, config, fake_connection)
 
     # Integer state should be coerced to string
     node.update_entity_state_attributes({text.CONF_STATE: 1765968779435})
@@ -51,21 +50,20 @@ async def test_async_set_value_sends_event_message(
     hass: HomeAssistant, fake_connection: FakeConnection
 ) -> None:
     """async_set_value should send correct websocket event message."""
-    connection: FakeConnection = fake_connection
     config: dict[str, Any] = {
         text.CONF_ID: "id-send",
         "server_id": "s1",
         "node_id": "n1",
         "config": {},
     }
-    node: NodeRedText = NodeRedText(hass, config, connection)
+    node: NodeRedText = NodeRedText(hass, config, fake_connection)
 
     captured: dict[str, Any] = {}
 
     def fake_send_message(msg: dict[str, Any]) -> None:
         captured["msg"] = msg
 
-    connection.send_message = fake_send_message
+    fake_connection.send_message = fake_send_message
     await node.async_set_value("new-value")
 
     message_id: Any = "id-send"
@@ -81,14 +79,13 @@ async def test_async_added_to_hass_restores_native_values_when_available(
     hass: HomeAssistant, fake_connection: FakeConnection
 ) -> None:
     """async_added_to_hass should restore native values when last data exists."""
-    connection: FakeConnection = fake_connection
     config: dict[str, Any] = {
         text.CONF_ID: "id-restore",
         "server_id": "s1",
         "node_id": "n1",
         "config": {},
     }
-    node: NodeRedText = NodeRedText(hass, config, connection)
+    node: NodeRedText = NodeRedText(hass, config, fake_connection)
 
     async def fake_get_last_text_data() -> TextExtraStoredData:
         return TextExtraStoredData(
@@ -110,14 +107,13 @@ async def test_async_added_to_hass_handles_none_gracefully(
     hass: HomeAssistant, fake_connection: FakeConnection
 ) -> None:
     """async_added_to_hass should handle no last data without raising."""
-    connection: FakeConnection = fake_connection
     config: dict[str, Any] = {
         text.CONF_ID: "id-no-restore",
         "server_id": "s1",
         "node_id": "n1",
         "config": {},
     }
-    node: NodeRedText = NodeRedText(hass, config, connection)
+    node: NodeRedText = NodeRedText(hass, config, fake_connection)
 
     async def fake_get_last_text_data() -> None:
         return None
@@ -128,17 +124,17 @@ async def test_async_added_to_hass_handles_none_gracefully(
 
 
 def test_update_discovery_config_applies_defaults(
+    hass: HomeAssistant,
     fake_connection: FakeConnection,
 ) -> None:
     """update_discovery_config should set default discovery values when not provided."""
-    connection: FakeConnection = fake_connection
     config: dict[str, Any] = {
         text.CONF_ID: "id-defaults",
         "server_id": "s1",
         "node_id": "n1",
         "config": {},  # empty inner config to trigger defaults
     }
-    node: NodeRedText = NodeRedText(None, config, connection)  # type: ignore[arg-type]
+    node: NodeRedText = NodeRedText(hass, config, fake_connection)
     node.update_discovery_config({CONF_CONFIG: {}})
 
     assert node._attr_icon == text.TEXT_ICON
@@ -165,8 +161,7 @@ def test_update_discovery_config_applies_custom_values(
             text.CONF_MODE: "password",
         },
     }
-    connection: FakeConnection = fake_connection
-    node: NodeRedText = NodeRedText(hass, custom_cfg, connection)
+    node: NodeRedText = NodeRedText(hass, custom_cfg, fake_connection)
     node.update_discovery_config({CONF_CONFIG: custom_cfg["config"]})
 
     assert node._attr_icon == "mdi:test-icon"
