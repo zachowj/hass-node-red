@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from custom_components.nodered import websocket
 from custom_components.nodered.const import DOMAIN, VERSION
+from custom_components.nodered.websocket import websocket_device_trigger
 from homeassistant.components.device_automation.exceptions import DeviceNotFound
 from homeassistant.components.websocket_api.messages import (
     error_message,
@@ -17,7 +18,7 @@ from homeassistant.components.websocket_api.messages import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from tests.helpers import create_device_with_entity
+from tests.helpers import FakeConnection, create_device_with_entity
 
 
 @pytest.mark.asyncio
@@ -295,6 +296,82 @@ async def test_websocket_webhook_register_handle_and_remove(
 
 
 @pytest.mark.asyncio
+async def test_webhook_allowed_methods_valid(
+    monkeypatch: pytest.MonkeyPatch,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Providing valid allowed methods should be normalized to uppercase and passed to register."""
+    captured: dict[str, Any] = {}
+
+    real_register = websocket.webhook_async_register
+
+    def fake_register(
+        _hass2: HomeAssistant,
+        _domain: str,
+        _name: str,
+        _webhook_id: str,
+        _handler: Any,
+        allowed_methods: Any = None,
+    ) -> None:
+        captured["webhook_id"] = _webhook_id
+        captured["allowed_methods"] = allowed_methods
+        return real_register(
+            _hass2,
+            _domain,
+            _name,
+            _webhook_id,
+            _handler,
+            allowed_methods=allowed_methods,
+        )
+
+    monkeypatch.setattr(websocket, "webhook_async_register", fake_register)
+
+    websocket.register_websocket_handlers(hass)
+    client = await hass_ws_client(hass)
+
+    msg = {
+        "id": 30,
+        "server_id": "s1",
+        "name": "n",
+        "webhook_id": "wid-methods",
+        "allowed_methods": ["post", "get"],
+    }
+
+    await client.send_json({"id": msg["id"], "type": "nodered/webhook", **msg})
+    resp = await client.receive_json()
+
+    assert resp == result_message(msg["id"])
+    assert "allowed_methods" in captured
+    assert set(captured["allowed_methods"]) == {"GET", "POST"}
+
+
+@pytest.mark.asyncio
+async def test_webhook_allowed_methods_invalid(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Providing invalid allowed methods should result in validation error."""
+    websocket.register_websocket_handlers(hass)
+    client = await hass_ws_client(hass)
+
+    msg = {
+        "id": 31,
+        "server_id": "s1",
+        "name": "n",
+        "webhook_id": "wid-bad",
+        "allowed_methods": ["FOO"],
+    }
+
+    await client.send_json({"id": msg["id"], "type": "nodered/webhook", **msg})
+    resp = await client.receive_json()
+
+    # Schema validation should cause websocket to return an error
+    assert resp["success"] is False
+    assert "error" in resp
+
+
+@pytest.mark.asyncio
 async def test_websocket_webhook_register_value_error(
     monkeypatch: pytest.MonkeyPatch,
     hass: HomeAssistant,
@@ -303,7 +380,7 @@ async def test_websocket_webhook_register_value_error(
     """Simulate registration failure when webhook async register raises ValueError."""
 
     def fake_register(
-        _hass2: Any,
+        _hass2: HomeAssistant,
         _domain: str,
         _name: str,
         _webhook_id: str,
@@ -432,3 +509,55 @@ async def test_websocket_device_trigger_success_and_errors(
     resp3 = await client.receive_json()
     assert resp3["success"] is False
     assert resp3["error"]["code"] == "runtime_error"
+
+
+@pytest.mark.asyncio
+async def test_websocket_device_trigger_remove_on_connection_close(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """When the websocket connection is closed, the device trigger removal callback should be called."""
+    captured: dict[str, Any] = {"removed": False}
+
+    async def fake_validate(_hass2: HomeAssistant, config: Any) -> list[Any]:
+        return [config]
+
+    async def fake_initialize(
+        _hass2: HomeAssistant,
+        _cfg: Any,
+        _forward: Any,
+        _domain: str,
+        _platform: str,
+        _logger: Any,
+    ) -> Any:
+        def remove() -> None:
+            captured["removed"] = True
+
+        return remove
+
+    # Patch the trigger helpers directly
+    monkeypatch.setattr(
+        websocket.trigger, "async_validate_trigger_config", fake_validate
+    )
+    monkeypatch.setattr(websocket.trigger, "async_initialize_triggers", fake_initialize)
+
+    # Call the raw handler with a FakeConnection so we can inspect subscriptions
+    func: Any = websocket_device_trigger
+    while hasattr(func, "__wrapped__"):
+        func = func.__wrapped__
+
+    fake_conn = FakeConnection()
+    msg = {"id": 99, "node_id": "node-close", "device_trigger": {}}
+
+    # Call the handler
+    await func(hass, fake_conn, msg)
+
+    # Registration should have set a subscription for this message id
+    assert msg["id"] in fake_conn.subscriptions
+
+    # Closing the connection should call all unsubscribe callbacks
+    fake_conn.close()
+
+    # Our remove callback should have been invoked
+    assert captured["removed"] is True
+    # and subscriptions should now be cleared
+    assert fake_conn.subscriptions == {}
