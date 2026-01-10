@@ -5,6 +5,7 @@ from collections.abc import Callable
 import sys
 import types
 from typing import Any, cast
+from unittest.mock import patch
 
 import pytest
 from pytest_homeassistant_custom_component.typing import WebSocketGenerator
@@ -56,10 +57,10 @@ def test_convert_recognize_result_to_dict_various(
 
 
 @pytest.mark.asyncio
+@patch.dict(sys.modules)
 async def test_websocket_sentence_manager_none_returns_value_error(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """When get_agent_manager returns None, websocket_sentence should send value_error."""
 
@@ -82,16 +83,10 @@ async def test_websocket_sentence_manager_none_returns_value_error(
 
     trigger_mod.TriggerDetails = TriggerDetails  # pyright: ignore[reportAttributeAccessIssue]
 
-    monkeypatch.setitem(
-        sys.modules,
-        "homeassistant.components.conversation.agent_manager",
-        agent_manager_mod,
+    sys.modules["homeassistant.components.conversation.agent_manager"] = (
+        agent_manager_mod
     )
-    monkeypatch.setitem(
-        sys.modules,
-        "homeassistant.components.conversation.trigger",
-        trigger_mod,
-    )
+    sys.modules["homeassistant.components.conversation.trigger"] = trigger_mod
 
     websocket.register_websocket_handlers(hass)
     client = await hass_ws_client(hass)
@@ -115,10 +110,10 @@ async def test_websocket_sentence_manager_none_returns_value_error(
 
 
 @pytest.mark.asyncio
+@patch.dict(sys.modules)
 async def test_websocket_sentence_dynamic_response_flow(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Dynamic response flow: trigger emits event and response delivered."""
     # Fake manager that registers a trigger and returns a removal function
@@ -153,16 +148,10 @@ async def test_websocket_sentence_dynamic_response_flow(
 
     trigger_mod.TriggerDetails = TriggerDetails  # pyright: ignore[reportAttributeAccessIssue]
 
-    monkeypatch.setitem(
-        sys.modules,
-        "homeassistant.components.conversation.agent_manager",
-        agent_manager_mod,
+    sys.modules["homeassistant.components.conversation.agent_manager"] = (
+        agent_manager_mod
     )
-    monkeypatch.setitem(
-        sys.modules,
-        "homeassistant.components.conversation.trigger",
-        trigger_mod,
-    )
+    sys.modules["homeassistant.components.conversation.trigger"] = trigger_mod
 
     message_id = 123
     websocket.register_websocket_handlers(hass)

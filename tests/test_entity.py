@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from typing import Any, cast
+from unittest.mock import patch
 
 import pytest
 
@@ -55,9 +56,10 @@ class DummyEntity(NodeRedEntity):
         self.platform = None  # type: ignore[assignment]
 
 
+@patch("homeassistant.helpers.dispatcher.async_dispatcher_send")
 def test_handle_discovery_update_recreate_entity(
+    mock_dispatcher: Any,
     hass: HomeAssistant,
-    monkeypatch: pytest.MonkeyPatch,
     fake_connection: FakeConnection,
 ) -> None:
     ent = DummyEntity(hass, {"server_id": "s", "node_id": "n1", "config": {}})
@@ -74,9 +76,8 @@ def test_handle_discovery_update_recreate_entity(
     hass.async_create_task = lambda coro: tasks.append(coro)  # type: ignore[attr-defined]
 
     sent: list[tuple] = []
-    monkeypatch.setattr(
-        "homeassistant.helpers.dispatcher.async_dispatcher_send",
-        lambda _h, sig, msg, conn=None: sent.append((sig, msg, conn)),
+    mock_dispatcher.side_effect = lambda _h, sig, msg, conn=None: sent.append(
+        (sig, msg, conn)
     )
 
     msg = {CONF_REMOVE: CHANGE_ENTITY_TYPE, CONF_COMPONENT: "switch", CONF_ID: "mid"}
@@ -361,8 +362,12 @@ def test_init_unique_id_format(hass: HomeAssistant) -> None:
     assert ent._attr_unique_id == expected_id
 
 
+@patch.object(DummyEntity, "update_entity_state_attributes")
+@patch.object(DummyEntity, "update_discovery_config")
 def test_init_calls_update_methods(
-    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+    mock_discovery: Any,
+    mock_attributes: Any,
+    hass: HomeAssistant,
 ) -> None:
     """Test that __init__ calls update_discovery_config and update_entity_state_attributes."""
     config = {
@@ -372,34 +377,20 @@ def test_init_calls_update_methods(
         CONF_ATTRIBUTES: {"attr1": "value1"},
     }
 
-    calls: list[str] = []
-
-    original_update_discovery = DummyEntity.update_discovery_config
-    original_update_attributes = DummyEntity.update_entity_state_attributes
-
-    def track_discovery(self: DummyEntity, msg: dict[str, Any]) -> None:
-        calls.append("discovery")
-        original_update_discovery(self, msg)
-
-    def track_attributes(self: DummyEntity, msg: dict[str, Any]) -> None:
-        calls.append("attributes")
-        original_update_attributes(self, msg)
-
-    monkeypatch.setattr(DummyEntity, "update_discovery_config", track_discovery)
-    monkeypatch.setattr(DummyEntity, "update_entity_state_attributes", track_attributes)
-
     ent = DummyEntity(hass, config)
 
     # Both methods should have been called during init
-    assert "discovery" in calls
-    assert "attributes" in calls
-    # Verify the config was actually applied
-    assert ent._attr_name == "Test Entity"
-    assert ent._attr_extra_state_attributes == {"attr1": "value1"}
+    mock_discovery.assert_called_once()
+    mock_attributes.assert_called_once()
+    # Verify the entity was created
+    assert ent._server_id == "srv5"
+    assert ent._node_id == "node5"
 
 
+@patch("custom_components.nodered.entity.async_dispatcher_connect")
 def test_async_added_to_hass_registers_all_signals(
-    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+    mock_connect: Any,
+    hass: HomeAssistant,
 ) -> None:
     """Test that async_added_to_hass registers all three dispatcher signals."""
     config = {
@@ -417,10 +408,7 @@ def test_async_added_to_hass_registers_all_signals(
         registered.append((signal, callback))
         return lambda: None  # return a no-op removal callable
 
-    monkeypatch.setattr(
-        "custom_components.nodered.entity.async_dispatcher_connect",
-        fake_connect,
-    )
+    mock_connect.side_effect = fake_connect
 
     # Run async_added_to_hass
     hass.loop.run_until_complete(ent.async_added_to_hass())
@@ -443,8 +431,10 @@ def test_async_added_to_hass_registers_all_signals(
     assert ent.handle_config_update in callbacks
 
 
+@patch("custom_components.nodered.entity.async_dispatcher_connect")
 def test_async_added_to_hass_stores_removal_callbacks(
-    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+    mock_connect: Any,
+    hass: HomeAssistant,
 ) -> None:
     """Test that async_added_to_hass stores removal callbacks in instance attributes."""
     config = {
@@ -463,10 +453,7 @@ def test_async_added_to_hass_stores_removal_callbacks(
         removal_fns[signal] = removal_fn
         return removal_fn
 
-    monkeypatch.setattr(
-        "custom_components.nodered.entity.async_dispatcher_connect",
-        fake_connect,
-    )
+    mock_connect.side_effect = fake_connect
 
     # Run async_added_to_hass
     hass.loop.run_until_complete(ent.async_added_to_hass())

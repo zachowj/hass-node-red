@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -100,7 +101,6 @@ async def test_async_unload_entry_stops_discovery_and_cleans_data(
 
 @pytest.mark.asyncio
 async def test_async_unload_entry_partial_failure(
-    monkeypatch: pytest.MonkeyPatch,
     hass: HomeAssistant,
 ) -> None:
     """Test unload when some platforms fail to unload."""
@@ -123,16 +123,17 @@ async def test_async_unload_entry_partial_failure(
             return await original_unload(entry, platform)
         return False
 
-    monkeypatch.setattr(hass.config_entries, "async_forward_entry_unload", fake_unload)
+    with patch.object(
+        hass.config_entries, "async_forward_entry_unload", side_effect=fake_unload
+    ):
+        # Try to unload - should fail
+        result = await hass.config_entries.async_unload(config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    # Try to unload - should fail
-    result = await hass.config_entries.async_unload(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Should return False when any platform fails
-    assert result is False
-    # Domain data should remain since unload failed
-    assert DOMAIN_DATA in hass.data
+        # Should return False when any platform fails
+        assert result is False
+        # Domain data should remain since unload failed
+        assert DOMAIN_DATA in hass.data
 
 
 @pytest.mark.asyncio

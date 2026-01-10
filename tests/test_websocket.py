@@ -2,7 +2,7 @@
 
 import json
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from pytest_homeassistant_custom_component.typing import WebSocketGenerator
@@ -12,6 +12,7 @@ from custom_components.nodered import websocket
 from custom_components.nodered.const import DOMAIN, VERSION
 from custom_components.nodered.websocket import websocket_device_trigger
 from homeassistant.components.device_automation.exceptions import DeviceNotFound
+from homeassistant.components.webhook import async_register as webhook_real_register
 from homeassistant.components.websocket_api.messages import (
     error_message,
     result_message,
@@ -22,8 +23,9 @@ from tests.helpers import FakeConnection, create_device_with_entity
 
 
 @pytest.mark.asyncio
+@patch.object(websocket.device_automation, "async_get_device_automation_platform")
 async def test_websocket_device_action_calls_platform_and_sends_result(
-    monkeypatch: pytest.MonkeyPatch,
+    mock_get_platform: Any,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
@@ -39,9 +41,7 @@ async def test_websocket_device_action_calls_platform_and_sends_result(
         return Platform()
 
     # Patch the object imported in the websocket module directly
-    monkeypatch.setattr(
-        websocket.device_automation, "async_get_device_automation_platform", fake_get
-    )
+    mock_get_platform.side_effect = fake_get
     # Create a real entity registry entry so the handler can resolve it
     ent_reg = er.async_get(hass)
     ent_reg.async_get_or_create("sensor", "nodered", "foo", suggested_object_id="foo")
@@ -86,8 +86,9 @@ async def test_websocket_device_action_entity_not_found(
 
 
 @pytest.mark.asyncio
+@patch.object(websocket.device_automation, "async_get_device_automation_platform")
 async def test_websocket_device_action_handles_device_not_found(
-    monkeypatch: pytest.MonkeyPatch,
+    mock_get_platform: Any,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
@@ -101,9 +102,7 @@ async def test_websocket_device_action_handles_device_not_found(
     async def fake_get2(_hass: HomeAssistant, _domain: Any, _t: Any) -> Platform:
         return Platform()
 
-    monkeypatch.setattr(
-        websocket.device_automation, "async_get_device_automation_platform", fake_get2
-    )
+    mock_get_platform.side_effect = fake_get2
     websocket.register_websocket_handlers(hass)
     client = await hass_ws_client(hass)
     msg = {
@@ -149,17 +148,16 @@ async def test_websocket_device_remove_handles_device_and_entities(
 
 
 @pytest.mark.asyncio
+@patch.object(websocket, "async_dispatcher_send")
 async def test_websocket_discovery_and_entity_and_update_config_and_version(
-    monkeypatch: pytest.MonkeyPatch,
+    mock_dispatcher: Any,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     sent: list[tuple[str, dict[str, Any], Any | None]] = []
-    # Monkeypatch the websocket module's dispatcher send to capture arguments
-    monkeypatch.setattr(
-        websocket,
-        "async_dispatcher_send",
-        lambda _hass2, sig, msg, conn=None: sent.append((sig, msg, conn)),
+    # Patch the websocket module's dispatcher send to capture arguments
+    mock_dispatcher.side_effect = lambda _hass2, sig, msg, conn=None: sent.append(
+        (sig, msg, conn)
     )
 
     websocket.register_websocket_handlers(hass)
@@ -212,16 +210,15 @@ async def test_websocket_discovery_and_entity_and_update_config_and_version(
 
 
 @pytest.mark.asyncio
+@patch.object(websocket, "webhook_async_register")
 async def test_websocket_webhook_register_handle_and_remove(
-    monkeypatch: pytest.MonkeyPatch,
+    mock_register: Any,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Register a webhook and ensure requests forward to the websocket connection."""
     # Capture handler during registration instead of inspecting hass.data
     captured: dict[str, Any] = {}
-
-    real_register = websocket.webhook_async_register
 
     def fake_register(
         _hass2: HomeAssistant,
@@ -235,7 +232,7 @@ async def test_websocket_webhook_register_handle_and_remove(
         captured["handler"] = _handler
         captured["allowed_methods"] = allowed_methods
         # Call through to the real register so HA state is populated
-        return real_register(
+        return webhook_real_register(
             _hass2,
             _domain,
             _name,
@@ -246,7 +243,7 @@ async def test_websocket_webhook_register_handle_and_remove(
 
     # Patch the registration function to capture the handler BEFORE the webhook
     # registration message is sent so we capture the handler when HA registers it.
-    monkeypatch.setattr(websocket, "webhook_async_register", fake_register)
+    mock_register.side_effect = fake_register
 
     websocket.register_websocket_handlers(hass)
     client = await hass_ws_client(hass)
@@ -296,15 +293,14 @@ async def test_websocket_webhook_register_handle_and_remove(
 
 
 @pytest.mark.asyncio
+@patch.object(websocket, "webhook_async_register")
 async def test_webhook_allowed_methods_valid(
-    monkeypatch: pytest.MonkeyPatch,
+    mock_register: Any,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Providing valid allowed methods should be normalized to uppercase and passed to register."""
     captured: dict[str, Any] = {}
-
-    real_register = websocket.webhook_async_register
 
     def fake_register(
         _hass2: HomeAssistant,
@@ -316,7 +312,7 @@ async def test_webhook_allowed_methods_valid(
     ) -> None:
         captured["webhook_id"] = _webhook_id
         captured["allowed_methods"] = allowed_methods
-        return real_register(
+        return webhook_real_register(
             _hass2,
             _domain,
             _name,
@@ -325,7 +321,7 @@ async def test_webhook_allowed_methods_valid(
             allowed_methods=allowed_methods,
         )
 
-    monkeypatch.setattr(websocket, "webhook_async_register", fake_register)
+    mock_register.side_effect = fake_register
 
     websocket.register_websocket_handlers(hass)
     client = await hass_ws_client(hass)
@@ -372,8 +368,9 @@ async def test_webhook_allowed_methods_invalid(
 
 
 @pytest.mark.asyncio
+@patch.object(websocket, "webhook_async_register")
 async def test_websocket_webhook_register_value_error(
-    monkeypatch: pytest.MonkeyPatch,
+    mock_register: Any,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
@@ -390,7 +387,7 @@ async def test_websocket_webhook_register_value_error(
         msg = "bad"
         raise ValueError(msg)
 
-    monkeypatch.setattr(websocket, "webhook_async_register", fake_register)
+    mock_register.side_effect = fake_register
 
     websocket.register_websocket_handlers(hass)
     client = await hass_ws_client(hass)
@@ -411,8 +408,11 @@ async def test_websocket_webhook_register_value_error(
 
 
 @pytest.mark.asyncio
+@patch.object(websocket.trigger, "async_initialize_triggers")
+@patch.object(websocket.trigger, "async_validate_trigger_config")
 async def test_websocket_device_trigger_success_and_errors(
-    monkeypatch: pytest.MonkeyPatch,
+    mock_validate: Any,
+    mock_initialize: Any,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
@@ -434,10 +434,8 @@ async def test_websocket_device_trigger_success_and_errors(
 
         return remove
 
-    monkeypatch.setattr(
-        websocket.trigger, "async_validate_trigger_config", fake_validate
-    )
-    monkeypatch.setattr(websocket.trigger, "async_initialize_triggers", fake_initialize)
+    mock_validate.side_effect = fake_validate
+    mock_initialize.side_effect = fake_initialize
 
     websocket.register_websocket_handlers(hass)
     client = await hass_ws_client(hass)
@@ -458,9 +456,7 @@ async def test_websocket_device_trigger_success_and_errors(
     async def fake_validate_raise(_hass2: HomeAssistant, _config: Any) -> list[Any]:
         raise vol.MultipleInvalid([vol.Invalid("x")])
 
-    monkeypatch.setattr(
-        websocket.trigger, "async_validate_trigger_config", fake_validate_raise
-    )
+    mock_validate.side_effect = fake_validate_raise
     msg2 = {"id": 16, "node_id": "n2", "device_trigger": {}}
     await client.send_json(
         {
@@ -490,12 +486,8 @@ async def test_websocket_device_trigger_success_and_errors(
         msg = "fail"
         raise RuntimeError(msg)
 
-    monkeypatch.setattr(
-        websocket.trigger, "async_validate_trigger_config", fake_validate_ok
-    )
-    monkeypatch.setattr(
-        websocket.trigger, "async_initialize_triggers", fake_initialize_raise
-    )
+    mock_validate.side_effect = fake_validate_ok
+    mock_initialize.side_effect = fake_initialize_raise
 
     msg3 = {"id": 17, "node_id": "n3", "device_trigger": {}}
     await client.send_json(
@@ -512,8 +504,12 @@ async def test_websocket_device_trigger_success_and_errors(
 
 
 @pytest.mark.asyncio
+@patch.object(websocket.trigger, "async_initialize_triggers")
+@patch.object(websocket.trigger, "async_validate_trigger_config")
 async def test_websocket_device_trigger_remove_on_connection_close(
-    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+    mock_validate: Any,
+    mock_initialize: Any,
+    hass: HomeAssistant,
 ) -> None:
     """When the websocket connection is closed, the device trigger removal callback should be called."""
     captured: dict[str, Any] = {"removed": False}
@@ -535,10 +531,8 @@ async def test_websocket_device_trigger_remove_on_connection_close(
         return remove
 
     # Patch the trigger helpers directly
-    monkeypatch.setattr(
-        websocket.trigger, "async_validate_trigger_config", fake_validate
-    )
-    monkeypatch.setattr(websocket.trigger, "async_initialize_triggers", fake_initialize)
+    mock_validate.side_effect = fake_validate
+    mock_initialize.side_effect = fake_initialize
 
     # Call the raw handler with a FakeConnection so we can inspect subscriptions
     func: Any = websocket_device_trigger
