@@ -73,7 +73,7 @@ def test_handle_discovery_update_recreate_entity(
 
     ent.async_on_remove = fake_async_on_remove  # type: ignore[attr-defined]
     tasks: list[Any] = []
-    hass.async_create_task = lambda coro: tasks.append(coro)  # type: ignore[attr-defined]
+    hass.async_create_task = tasks.append  # type: ignore[attr-defined]
 
     sent: list[tuple] = []
     mock_dispatcher.side_effect = lambda _h, sig, msg, conn=None: sent.append(
