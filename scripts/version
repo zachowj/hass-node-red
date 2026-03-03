@@ -9,38 +9,92 @@ if ! command -v uv >/dev/null 2>&1; then
     exit 1
 fi
 
+# Install Home Assistant from GitHub
+install_from_github() {
+    local ref=$1
+    echo "Installing Home Assistant $ref from GitHub..."
+    uv pip install --upgrade --force-reinstall "git+https://github.com/home-assistant/core.git@$ref"
+}
+
+# Fetch latest beta version from GitHub
+fetch_latest_beta() {
+    curl -s https://api.github.com/repos/home-assistant/core/tags | \
+        python3 -c "import sys, json; tags = [t['name'] for t in json.load(sys.stdin) if 'b' in t['name']]; print(tags[0] if tags else '')"
+}
+
+# List available versions from GitHub
+list_versions() {
+    echo "Fetching available versions from GitHub..."
+    curl -s https://api.github.com/repos/home-assistant/core/tags | \
+        python3 -c "import sys, json; tags = [t['name'] for t in json.load(sys.stdin)]; print('\n'.join(tags[:50]))"
+}
+
+# Show usage information
+show_usage() {
+    echo "Usage: $0 [stable|beta|dev|version|list|help|<version>]"
+    echo ""
+    echo "Commands:"
+    echo "  stable         Install the latest stable version from PyPI"
+    echo "  beta           Install the latest beta version from GitHub"
+    echo "  dev            Install the latest dev version from GitHub"
+    echo "  version        Print the currently installed version"
+    echo "  list           List available versions from GitHub"
+    echo "  help           Show this help message"
+    echo "  <version>      Install a specific version (e.g., 2024.1.0 or 2024.2.0b1)"
+}
+
 case "$1" in
     stable)
-        # install the latest stable version of home assistant
-        uv pip install --force-reinstall homeassistant
+        echo "Fetching latest stable version from PyPI..."
+        LATEST_STABLE=$(curl -s https://pypi.org/pypi/homeassistant/json | \
+            python3 -c "import sys, json; print(json.load(sys.stdin)['info']['version'])")
+        
+        if [ -z "$LATEST_STABLE" ]; then
+            echo "Error: Could not fetch latest stable version" >&2
+            exit 1
+        fi
+        
+        echo "Installing Home Assistant $LATEST_STABLE from PyPI..."
+        uv pip install --upgrade --force-reinstall homeassistant
         ;;
     beta)
-        # install the latest beta version of home assistant
-        uv pip install --upgrade --pre homeassistant
+        echo "Fetching latest beta version from GitHub..."
+        LATEST_BETA=$(fetch_latest_beta)
+        
+        if [ -z "$LATEST_BETA" ]; then
+            echo "Error: Could not find latest beta version" >&2
+            exit 1
+        fi
+        
+        install_from_github "$LATEST_BETA"
         ;;
     dev)
-        # install the latest dev version of home assistant
-        uv pip install --upgrade git+https://github.com/home-assistant/core.git@dev
+        install_from_github "dev"
         ;;
     version)
-        # print the version of home assistant
         python3 -m homeassistant --version
         ;;
-    help)
-        # print the help message
-        echo "Usage: $0 [stable|beta|dev|version|<version>]"
-        ;;
     list)
-        # list all available versions of home assistant
-        uv pip index versions homeassistant --pre
-        ;;                
-    *)         
-        # if first argument matches a version number, install that version ie 0.115.6 or 0.116.0b0
-        if [[ $1 =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?(b[0-9]+)?$ ]]; then
-            uv pip install --upgrade homeassistant==$1
+        list_versions
+        ;;
+    help|"")
+        show_usage
+        ;;
+    *)
+        # Install a specific version number (e.g., 2024.1.0 or 2024.2.0b1)
+        if [[ $1 =~ ^[0-9]+\.[0-9]+\.[0-9]+(b[0-9]+)?$ ]]; then
+            # Beta versions must be installed from GitHub
+            if [[ $1 =~ b[0-9]+$ ]]; then
+                install_from_github "$1"
+            else
+                echo "Installing Home Assistant $1 from PyPI..."
+                uv pip install --upgrade homeassistant==$1
+            fi
         else
-            # otherwise print the help message
-            echo "Usage: $0 [stable|beta|dev|version|list|<version>]"
+            echo "Error: Invalid command or version format: $1" >&2
+            echo ""
+            show_usage
+            exit 1
         fi
         ;;
 esac
