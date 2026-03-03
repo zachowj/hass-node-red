@@ -134,19 +134,32 @@ async def websocket_sentence(
         from homeassistant.components.conversation.agent_manager import (  # noqa: PLC0415
             get_agent_manager,
         )
-        from homeassistant.components.conversation.trigger import (  # noqa: PLC0415
-            TriggerDetails,
-        )
 
         manager = get_agent_manager(hass)
         if manager is None:
             raise ValueError("Conversation integration not loaded")  # noqa: TRY301
 
-        _remove_trigger = manager.register_trigger(
-            TriggerDetails(sentences, handle_trigger)  # type: ignore[arg-type]
-        )
+        # Try to use TriggerDetails for backwards compatibility with HA < 2026.3
+        try:
+            from homeassistant.components.conversation.trigger import (  # noqa: PLC0415
+                TriggerDetails,
+            )
+
+            # log that we’re on the older API and are using the backwards‑compatible
+            # TriggerDetails “fallback” path
+            _LOGGER.debug(
+                "Using TriggerDetails compatibility layer for sentence trigger "
+                "(fallback for HA < 2026.3)"
+            )
+            _remove_trigger = manager.register_trigger(
+                TriggerDetails(sentences, handle_trigger)  # type: ignore[arg-type]
+            )
+        except ImportError:
+            # TriggerDetails removed in HA 2026.3+, use new API
+            _remove_trigger = manager.register_trigger(sentences, handle_trigger)  # type: ignore[arg-type]
     except ImportError:
         # Fallback for Home Assistant versions before 2025.10.0
+        _LOGGER.debug("Using conversation default_agent fallback for HA < 2025.10.0")
         from homeassistant.components.conversation.default_agent import (  # noqa: PLC0415
             DATA_DEFAULT_ENTITY,  # type: ignore[import]
             DefaultAgent,
