@@ -16,6 +16,31 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## [4.2.3](https://github.com/zachowj/hass-node-red/compare/v4.2.2...v4.2.3) (2026-03-03)
+
+
+### Bug Fixes
+
+* **sentence:** add backwards compatibility for TriggerDetails in conversation integration ([ac4c212](https://github.com/zachowj/hass-node-red/commit/ac4c21224cccbc5ba16fbc8176cda13ae268e0c0)), closes [#393](https://github.com/zachowj/hass-node-red/issues/393)
+
+
+### Code Refactoring
+
+* **version:** enhance version management and error handling in installation script ([7f4823a](https://github.com/zachowj/hass-node-red/commit/7f4823a485537818cd4f3b5cdbfa1e40a9169de6))
+
+
+### Tests
+
+* **websocket:** add tests for webhook allowed methods validation and device trigger removal on connection close ([80580dd](https://github.com/zachowj/hass-node-red/commit/80580dddcf75728cd6b3dbd477ed11ab6d572540))
+
+
+### Continuous Integration
+
+* **pre-commit:** pre-commit autoupdate ([#387](https://github.com/zachowj/hass-node-red/issues/387)) ([fe8216a](https://github.com/zachowj/hass-node-red/commit/fe8216a80c326f0e9447a4948b208f59cc885d0d))
+* **pre-commit:** pre-commit autoupdate ([#389](https://github.com/zachowj/hass-node-red/issues/389)) ([b914867](https://github.com/zachowj/hass-node-red/commit/b9148676978b47fd91d39bd0c247d8eb38fdfdba))
+* **pre-commit:** pre-commit autoupdate ([#390](https://github.com/zachowj/hass-node-red/issues/390)) ([435a165](https://github.com/zachowj/hass-node-red/commit/435a165dcf1c74c46cdec4bc7e132e0b8b0f001f))
+* **pre-commit:** pre-commit autoupdate ([#391](https://github.com/zachowj/hass-node-red/issues/391)) ([b1b227f](https://github.com/zachowj/hass-node-red/commit/b1b227f5a2675ee616452cfb5608a819ed2cc925))
+
 ## [4.2.2](https://github.com/zachowj/hass-node-red/compare/v4.2.1...v4.2.2) (2026-01-05)
 
 
