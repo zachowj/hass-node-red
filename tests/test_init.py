@@ -222,7 +222,7 @@ async def test_async_remove_config_entry_device_no_entities(
     )
 
     dummy_device = SimpleNamespace(id=device.id)
-    res = await async_remove_config_entry_device(hass, dummy_device)  # type: ignore[arg-type]
+    res = await async_remove_config_entry_device(hass, config_entry, dummy_device)  # type: ignore[arg-type]
     # Should succeed even with no entities
     assert res is True
 
@@ -262,7 +262,7 @@ async def test_async_remove_config_entry_device_multiple_entities(
     assert entity3.device_id == device.id
 
     dummy_device = SimpleNamespace(id=device.id)
-    res = await async_remove_config_entry_device(hass, dummy_device)  # type: ignore[arg-type]
+    res = await async_remove_config_entry_device(hass, config_entry, dummy_device)  # type: ignore[arg-type]
     assert res is True
 
     # All entities should have device_id cleared
