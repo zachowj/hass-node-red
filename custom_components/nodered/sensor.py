@@ -116,7 +116,7 @@ class NodeRedSensor(NodeRedEntity, SensorEntity):
                 try:
                     parsed = datetime.fromtimestamp(seconds, tz=timezone.utc)
                 except (OverflowError, OSError, ValueError):
-                    _LOGGER.exception(
+                    _LOGGER.error(
                         "Invalid timestamp (%s): %s has a timestamp device class",
                         state,
                         self.entity_id,
@@ -129,7 +129,7 @@ class NodeRedSensor(NodeRedEntity, SensorEntity):
 
             # Fallback to ISO parsing for string states
             if not isinstance(state, str):
-                _LOGGER.exception(
+                _LOGGER.error(
                     "Invalid ISO date string (%s): %s has a timestamp device class",
                     state,
                     self.entity_id,
@@ -138,7 +138,7 @@ class NodeRedSensor(NodeRedEntity, SensorEntity):
             try:
                 parsed = parser.parse(state)
             except (ValueError, TypeError):
-                _LOGGER.exception(
+                _LOGGER.error(
                     "Invalid ISO date string (%s): %s has a timestamp device class",
                     state,
                     self.entity_id,
@@ -202,7 +202,7 @@ class NodeRedSensor(NodeRedEntity, SensorEntity):
         try:
             parsed = parser.parse(last)
         except (ValueError, TypeError):
-            _LOGGER.exception(
+            _LOGGER.error(
                 "Invalid ISO date string (%s): %s requires last_reset to be "
                 "an iso date formatted string",
                 last,

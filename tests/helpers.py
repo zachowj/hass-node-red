@@ -67,7 +67,7 @@ class FakeConnection(ActiveConnection):
         """Send a websocket event message (wrapper around `send_message`)."""
         self.send_message(event_message(msg_id, event))
 
-    def send_error(
+    def send_error(  # noqa: PLR0917
         self,
         msg_id: int,
         code: str,
