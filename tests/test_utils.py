@@ -1,10 +1,43 @@
 """Test helpers."""
 
 from datetime import timedelta
+import json
+from pathlib import Path
 
 import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.nodered.utils import NodeRedJSONEncoder
+from custom_components.nodered.const import CONF_CONTRIB_VERSION, DOMAIN, VERSION
+from custom_components.nodered.utils import (
+    NodeRedJSONEncoder,
+    contrib_announced_version,
+)
+from custom_components.nodered.version import __version__
+from homeassistant.core import HomeAssistant
+
+
+def test_version_matches_manifest() -> None:
+    """VERSION is loaded from manifest.json (release-please source of truth)."""
+    manifest = json.loads(
+        Path(__file__)
+        .resolve()
+        .parents[1]
+        .joinpath("custom_components/nodered/manifest.json")
+        .read_text(encoding="utf-8")
+    )
+    assert VERSION == __version__ == manifest["version"]
+
+
+def test_contrib_announced_version_from_entry_data(hass: HomeAssistant) -> None:
+    """Helper is true when contrib_version is stored on the entry."""
+    assert contrib_announced_version(hass) is False
+
+    entry = MockConfigEntry(domain=DOMAIN, data={})
+    entry.add_to_hass(hass)
+    assert contrib_announced_version(hass) is False
+
+    hass.config_entries.async_update_entry(entry, data={CONF_CONTRIB_VERSION: "0.80.3"})
+    assert contrib_announced_version(hass) is True
 
 
 def test_json_encoder() -> None:
