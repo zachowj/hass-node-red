@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from typing import Any, cast
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -89,6 +89,7 @@ def test_handle_discovery_update_recreate_entity(
     # A task scheduling the entity removal should have been created
     assert tasks
     assert hasattr(tasks[0], "__await__")
+    tasks[0].close()
     # dispatcher_send not executed yet — recreate_entity will run when the
     # on_remove callback is invoked
     assert not sent
@@ -100,10 +101,8 @@ def test_handle_discovery_update_cleanup_discovery(hass: HomeAssistant) -> None:
     ent._remove_signal_entity_update = None
     ent._remove_signal_discovery_update = None
     ent._remove_signal_config_update = None
-    # Prepare discovery tracking with the entity present
-    hass.data.setdefault(DOMAIN_DATA, {})[ALREADY_DISCOVERED] = {
-        ent.unique_id: {"x": 1}
-    }
+    # Prepare discovery tracking as discovery.py does (a set of hashes)
+    hass.data.setdefault(DOMAIN_DATA, {})[ALREADY_DISCOVERED] = {ent.unique_id}
 
     captured: dict[str, Any] = {}
 
@@ -111,15 +110,68 @@ def test_handle_discovery_update_cleanup_discovery(hass: HomeAssistant) -> None:
         captured["cb"] = cb
 
     ent.async_on_remove = fake_async_on_remove  # type: ignore[attr-defined]
+    tasks: list[Any] = []
+    hass.async_create_task = tasks.append  # type: ignore[attr-defined]
 
-    msg = {CONF_REMOVE: "permanent"}
+    msg = {CONF_REMOVE: True}
     ent.handle_discovery_update(msg, None)  # type: ignore[arg-type]
+
+    # Permanent remove must schedule MQTT-style registry+state cleanup
+    assert tasks
+    assert hasattr(tasks[0], "__await__")
+    tasks[0].close()
 
     # Call the registered cleanup callback and assert it removes discovery entry
     assert "cb" in captured
     assert callable(captured["cb"])
     captured["cb"]()
-    assert ent.unique_id not in hass.data[DOMAIN_DATA].get(ALREADY_DISCOVERED, {})
+    assert ent.unique_id not in hass.data[DOMAIN_DATA].get(ALREADY_DISCOVERED, set())
+
+
+@pytest.mark.asyncio
+async def test_async_remove_from_hass_removes_registry_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Registered entities must be deleted from the entity registry."""
+    ent = DummyEntity(hass, {"server_id": "s", "node_id": "reg", "config": {}})
+    ent._remove_signal_entity_update = None
+    ent._remove_signal_discovery_update = None
+    ent._remove_signal_config_update = None
+    ent.entity_id = "sensor.nodered_reg"
+
+    registry = MagicMock()
+    registry.async_get.return_value = MagicMock()
+    ent.async_remove = AsyncMock()  # type: ignore[method-assign]
+
+    with patch(
+        "custom_components.nodered.entity.async_get",
+        return_value=registry,
+    ):
+        await ent._async_remove_from_hass()
+
+    registry.async_remove.assert_called_once_with("sensor.nodered_reg")
+    ent.async_remove.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_async_remove_from_hass_force_removes_unregistered(
+    hass: HomeAssistant,
+) -> None:
+    """Unregistered entities must force-remove state."""
+    ent = DummyEntity(hass, {"server_id": "s", "node_id": "unreg", "config": {}})
+    ent._remove_signal_entity_update = None
+    ent._remove_signal_discovery_update = None
+    ent._remove_signal_config_update = None
+    ent.entity_id = "sensor.nodered_unreg"
+    ent.async_remove = AsyncMock()  # type: ignore[method-assign]
+
+    with patch(
+        "custom_components.nodered.entity.async_get",
+        return_value=MagicMock(async_get=MagicMock(return_value=None)),
+    ):
+        await ent._async_remove_from_hass()
+
+    ent.async_remove.assert_awaited_once_with(force_remove=True)
 
 
 def test_handle_discovery_update_bidirectional_sets_connection_subscription(
