@@ -13,6 +13,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_BINARY_SENSOR, NODERED_DISCOVERY_NEW
 from .entity import NodeRedEntity
+from .utils import contrib_supports_presence_available
 
 try:
     from homeassistant.components.lock.const import LockState
@@ -71,12 +72,19 @@ class NodeRedBinarySensor(NodeRedEntity, BinarySensorEntity):
     def __init__(self, hass: HomeAssistant, config: dict[str, Any]) -> None:
         """Initialize the binary sensor."""
         super().__init__(hass, config)
-        self._attr_is_on = self._evaluate_sensor_state(config.get(CONF_STATE))
+        if CONF_STATE in config:
+            self._attr_is_on = self._evaluate_sensor_state(config[CONF_STATE])
+        else:
+            self._attr_is_on = None
+            # No reading yet: unavailable once presence-available applies
+            if contrib_supports_presence_available(hass):
+                self._attr_available = False
 
     def update_entity_state_attributes(self, msg: dict[str, Any]) -> None:
         """Update entity state attributes."""
         super().update_entity_state_attributes(msg)
-        self._attr_is_on = self._evaluate_sensor_state(msg.get(CONF_STATE))
+        if CONF_STATE in msg:
+            self._attr_is_on = self._evaluate_sensor_state(msg[CONF_STATE])
 
     def _evaluate_sensor_state(self, value: Any) -> Any:
         """Parse state."""

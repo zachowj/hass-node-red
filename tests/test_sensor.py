@@ -4,16 +4,21 @@ from datetime import UTC, date, datetime
 from typing import Any, cast
 
 import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.nodered.const import (
+    CONF_AVAILABLE,
     CONF_CONFIG,
+    CONF_CONTRIB_VERSION,
     CONF_LAST_RESET,
     CONF_STATE_CLASS,
+    DOMAIN,
 )
 from custom_components.nodered.sensor import NodeRedSensor
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
+    CONF_STATE,
     CONF_UNIT_OF_MEASUREMENT,
     EntityCategory,
 )
@@ -261,6 +266,63 @@ def test_update_entity_state_attributes_does_not_overwrite_when_state_missing(
     assert node._attr_native_value == "initial"
 
 
+def test_sensor_discovered_without_state_legacy_is_unknown(
+    hass: HomeAssistant,
+) -> None:
+    """Without presence-available: discovery without state stays Unknown."""
+    node = NodeRedSensor(
+        hass, {"server_id": "s1", "node_id": "node-no-state", CONF_CONFIG: {}}
+    )
+    assert node._attr_available is True
+    assert node._attr_native_value is None
+
+
+def test_sensor_discovered_without_state_presence_is_unavailable(
+    hass: HomeAssistant,
+) -> None:
+    """With presence-available: discovery without state is Unavailable."""
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_CONTRIB_VERSION: "0.80.3"})
+    entry.add_to_hass(hass)
+    node = NodeRedSensor(
+        hass, {"server_id": "s1", "node_id": "node-no-state-new", CONF_CONFIG: {}}
+    )
+    assert node._attr_available is False
+    assert node._attr_native_value is None
+
+
+def test_sensor_discovered_with_state_is_available(hass: HomeAssistant) -> None:
+    """Discovery with state comes up available with that reading."""
+    node = NodeRedSensor(
+        hass,
+        {
+            "server_id": "s1",
+            "node_id": "node-with-state",
+            CONF_CONFIG: {},
+            CONF_STATE: 21.5,
+        },
+    )
+    assert node._attr_available is True
+    assert node._attr_native_value == 21.5
+
+
+def test_sensor_discovered_with_state_and_available_false(
+    hass: HomeAssistant,
+) -> None:
+    """Explicit available false on discovery is respected even with state."""
+    node = NodeRedSensor(
+        hass,
+        {
+            "server_id": "s1",
+            "node_id": "node-unavail",
+            CONF_CONFIG: {},
+            CONF_STATE: 21.5,
+            CONF_AVAILABLE: False,
+        },
+    )
+    assert node._attr_available is False
+    assert node._attr_native_value == 21.5
+
+
 def _make_node(hass: HomeAssistant, node_id: str) -> NodeRedSensor:
     return NodeRedSensor(
         hass, {"id": node_id, "server_id": "s1", "node_id": node_id, "config": {}}
@@ -432,6 +494,33 @@ def test_update_entity_state_attributes_updates_native_when_state_present(
     assert node._attr_native_value == datetime.fromisoformat(
         "2022-04-05T06:07:08+00:00"
     )
+
+
+def test_sensor_retains_native_value_updated_while_unavailable(
+    hass: HomeAssistant,
+) -> None:
+    """State+available false must update native value for later availability-only restore."""
+    node = NodeRedSensor(
+        hass,
+        {
+            "id": "id-15b",
+            "server_id": "s1",
+            "node_id": "node-15b",
+            CONF_CONFIG: {},
+            CONF_STATE: 21.4,
+        },
+    )
+    assert node._attr_native_value == 21.4
+
+    node.update_entity_state_attributes(
+        {CONF_AVAILABLE: False, CONF_STATE: 19.0, "attributes": {}}
+    )
+    assert node._attr_available is False
+    assert node._attr_native_value == 19.0
+
+    node.update_entity_state_attributes({CONF_AVAILABLE: True})
+    assert node._attr_available is True
+    assert node._attr_native_value == 19.0
 
 
 def test_update_discovery_config_overwrites_existing_last_reset(

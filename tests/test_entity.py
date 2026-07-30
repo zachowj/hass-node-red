@@ -7,11 +7,14 @@ from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.nodered.const import (
     CONF_ATTRIBUTES,
+    CONF_AVAILABLE,
     CONF_COMPONENT,
     CONF_CONFIG,
+    CONF_CONTRIB_VERSION,
     CONF_DEVICE_INFO,
     CONF_NAME,
     CONF_NODE_ID,
@@ -31,6 +34,7 @@ from homeassistant.const import (
     CONF_ENTITY_CATEGORY,
     CONF_ICON,
     CONF_ID,
+    CONF_STATE,
     CONF_UNIT_OF_MEASUREMENT,
     EntityCategory,
 )
@@ -54,6 +58,98 @@ class DummyEntity(NodeRedEntity):
             self.entity_id = f"sensor.nodered_{self._node_id}"
         # Prevent async_remove from being triggered during garbage collection
         self.platform = None  # type: ignore[assignment]
+
+
+def test_update_entity_state_attributes_legacy_state_only_clears_attrs(
+    hass: HomeAssistant,
+) -> None:
+    """Legacy: state without available injects True and clears omitted attrs."""
+    ent = DummyEntity(hass, {CONF_SERVER_ID: "s", CONF_NODE_ID: "n", CONF_CONFIG: {}})
+    ent._attr_extra_state_attributes = {"keep": False}
+    ent._attr_available = False
+    msg = {CONF_STATE: 21.5}
+
+    ent.update_entity_state_attributes(msg)
+
+    assert msg[CONF_AVAILABLE] is True
+    assert ent._attr_available is True
+    assert ent._attr_extra_state_attributes == {}
+
+
+def test_update_entity_state_attributes_presence_state_only_holds_available(
+    hass: HomeAssistant,
+) -> None:
+    """Presence-available: state without available holds availability."""
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_CONTRIB_VERSION: "0.80.3"})
+    entry.add_to_hass(hass)
+    ent = DummyEntity(hass, {CONF_SERVER_ID: "s", CONF_NODE_ID: "n", CONF_CONFIG: {}})
+    ent._attr_extra_state_attributes = {"keep": True}
+    ent._attr_available = False
+    msg = {CONF_STATE: 43}
+
+    ent.update_entity_state_attributes(msg)
+
+    assert CONF_AVAILABLE not in msg
+    assert ent._attr_available is False
+    assert ent._attr_extra_state_attributes == {"keep": True}
+
+    ent.update_entity_state_attributes({CONF_STATE: 44, CONF_ATTRIBUTES: {"unit": "C"}})
+
+    assert ent._attr_available is False
+    assert ent._attr_extra_state_attributes == {"unit": "C"}
+
+
+def test_update_entity_state_attributes_legacy_state_and_attrs(
+    hass: HomeAssistant,
+) -> None:
+    """Legacy: state + attributes applies both and injects available True."""
+    ent = DummyEntity(hass, {CONF_SERVER_ID: "s", CONF_NODE_ID: "n", CONF_CONFIG: {}})
+
+    ent.update_entity_state_attributes(
+        {CONF_STATE: 21.5, CONF_ATTRIBUTES: {"unit": "C"}}
+    )
+
+    assert ent._attr_available is True
+    assert ent._attr_extra_state_attributes == {"unit": "C"}
+
+
+def test_update_entity_state_attributes_presence_updates_only_present_keys(
+    hass: HomeAssistant,
+) -> None:
+    """Presence-available: update only keys present; do not invent attrs."""
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_CONTRIB_VERSION: "0.80.3"})
+    entry.add_to_hass(hass)
+    ent = DummyEntity(hass, {CONF_SERVER_ID: "s", CONF_NODE_ID: "n", CONF_CONFIG: {}})
+    ent._attr_extra_state_attributes = {"prev": 1}
+    ent._attr_available = True
+
+    ent.update_entity_state_attributes({CONF_AVAILABLE: False, CONF_STATE: 18.0})
+
+    assert ent._attr_available is False
+    assert ent._attr_extra_state_attributes == {"prev": 1}
+
+    ent.update_entity_state_attributes({CONF_AVAILABLE: True})
+
+    assert ent._attr_available is True
+    assert ent._attr_extra_state_attributes == {"prev": 1}
+
+    ent.update_entity_state_attributes({CONF_ATTRIBUTES: {"only": "attrs"}})
+
+    assert ent._attr_available is True
+    assert ent._attr_extra_state_attributes == {"only": "attrs"}
+
+
+def test_handle_lost_connection_marks_unavailable(hass: HomeAssistant) -> None:
+    """Lost connection still forces unavailable."""
+    ent = DummyEntity(hass, {CONF_SERVER_ID: "s", CONF_NODE_ID: "n", CONF_CONFIG: {}})
+    ent._attr_available = True
+    written: list[bool] = []
+    ent.async_write_ha_state = lambda: written.append(True)  # type: ignore[method-assign]
+
+    ent.handle_lost_connection()
+
+    assert ent._attr_available is False
+    assert written == [True]
 
 
 @patch("homeassistant.helpers.dispatcher.async_dispatcher_send")

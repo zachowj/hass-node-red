@@ -8,6 +8,7 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ENTITY_CATEGORY,
     CONF_ICON,
+    CONF_STATE,
     CONF_UNIT_OF_MEASUREMENT,
     EntityCategory,
 )
@@ -26,6 +27,7 @@ if TYPE_CHECKING:
 
 from .const import (
     CONF_ATTRIBUTES,
+    CONF_AVAILABLE,
     CONF_COMPONENT,
     CONF_CONFIG,
     CONF_DEVICE_INFO,
@@ -43,6 +45,7 @@ from .const import (
     NODERED_ENTITY,
 )
 from .discovery import ALREADY_DISCOVERED, CHANGE_ENTITY_TYPE
+from .utils import contrib_supports_presence_available
 
 
 class MissingConfigError(TypeError):
@@ -99,8 +102,24 @@ class NodeRedEntity(Entity):
         self.async_write_ha_state()
 
     def update_entity_state_attributes(self, msg: dict[str, Any]) -> None:
-        """Set extra state attributes from incoming message."""
-        self._attr_extra_state_attributes = msg.get(CONF_ATTRIBUTES, {})
+        """Apply attributes and availability from an incoming message.
+
+        When presence-available is not supported, inject ``available: true`` if
+        ``state`` is present without ``available``, and clear attributes to ``{}``
+        when the attributes key is omitted.
+        """
+        if (
+            not contrib_supports_presence_available(self.hass)
+            and CONF_STATE in msg
+            and CONF_AVAILABLE not in msg
+        ):
+            msg[CONF_AVAILABLE] = True
+            if CONF_ATTRIBUTES not in msg:
+                self._attr_extra_state_attributes = {}
+        if CONF_ATTRIBUTES in msg:
+            self._attr_extra_state_attributes = msg[CONF_ATTRIBUTES]
+        if CONF_AVAILABLE in msg:
+            self._attr_available = msg[CONF_AVAILABLE]
 
     @callback
     def handle_lost_connection(self) -> None:
