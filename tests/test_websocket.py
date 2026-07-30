@@ -10,7 +10,15 @@ from pytest_homeassistant_custom_component.typing import WebSocketGenerator
 import voluptuous as vol
 
 from custom_components.nodered import websocket
-from custom_components.nodered.const import CONF_CONTRIB_VERSION, DOMAIN, VERSION
+from custom_components.nodered.const import (
+    CONF_ATTRIBUTES,
+    CONF_AVAILABLE,
+    CONF_CONTRIB_VERSION,
+    DOMAIN,
+    NODERED_DISCOVERY,
+    NODERED_ENTITY,
+    VERSION,
+)
 from custom_components.nodered.websocket import (
     websocket_device_trigger,
     websocket_version,
@@ -21,6 +29,7 @@ from homeassistant.components.websocket_api.messages import (
     error_message,
     result_message,
 )
+from homeassistant.const import CONF_STATE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from tests.helpers import FakeConnection, create_device_with_entity
@@ -193,6 +202,11 @@ async def test_websocket_discovery_and_entity_and_update_config_and_version(
     )
     resp2 = await client.receive_json()
     assert resp2 == result_message(msg2["id"])
+    entity_sig, entity_msg, _ = sent[-1]
+    assert entity_sig == NODERED_ENTITY.format("s", "n")
+    assert entity_msg[CONF_STATE] is True
+    assert CONF_ATTRIBUTES not in entity_msg
+    assert CONF_AVAILABLE not in entity_msg
 
     msg3 = {"id": 11, "server_id": "s", "node_id": "n", "config": {}}
     await client.send_json(
@@ -211,6 +225,74 @@ async def test_websocket_discovery_and_entity_and_update_config_and_version(
     await client.send_json({"id": 12, "type": "nodered/version"})
     resp4 = await client.receive_json()
     assert resp4 == result_message(12, VERSION)
+
+
+@pytest.mark.asyncio
+@patch.object(websocket, "async_dispatcher_send")
+async def test_websocket_entity_accepts_available_and_omitted_state(
+    mock_dispatcher: Any,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Entity/discovery schemas accept available; entity state may be omitted."""
+    sent: list[tuple[str, dict[str, Any], Any | None]] = []
+    mock_dispatcher.side_effect = lambda _hass2, sig, msg, conn=None: sent.append(
+        (sig, msg, conn)
+    )
+
+    websocket.register_websocket_handlers(hass)
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 40,
+            "type": "nodered/discovery",
+            "component": "sensor",
+            "server_id": "s",
+            "node_id": "n",
+            "available": False,
+        }
+    )
+    resp = await client.receive_json()
+    assert resp == result_message(40)
+    disc_sig, disc_msg, _ = sent[-1]
+    assert disc_sig == NODERED_DISCOVERY.format("sensor")
+    assert disc_msg[CONF_AVAILABLE] is False
+
+    await client.send_json(
+        {
+            "id": 41,
+            "type": "nodered/entity",
+            "server_id": "s",
+            "node_id": "n",
+            "available": False,
+        }
+    )
+    resp2 = await client.receive_json()
+    assert resp2 == result_message(41)
+    entity_sig, entity_msg, _ = sent[-1]
+    assert entity_sig == NODERED_ENTITY.format("s", "n")
+    assert CONF_STATE not in entity_msg
+    assert entity_msg[CONF_AVAILABLE] is False
+    assert CONF_ATTRIBUTES not in entity_msg
+
+    await client.send_json(
+        {
+            "id": 42,
+            "type": "nodered/entity",
+            "server_id": "s",
+            "node_id": "n",
+            "state": 21.5,
+            "attributes": {"friendly": "x"},
+            "available": True,
+        }
+    )
+    resp3 = await client.receive_json()
+    assert resp3 == result_message(42)
+    _, full_msg, _ = sent[-1]
+    assert full_msg[CONF_STATE] == 21.5
+    assert full_msg[CONF_ATTRIBUTES] == {"friendly": "x"}
+    assert full_msg[CONF_AVAILABLE] is True
 
 
 @pytest.mark.asyncio

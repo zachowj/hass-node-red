@@ -51,6 +51,7 @@ from homeassistant.helpers.entity_registry import async_entries_for_device, asyn
 
 from .const import (
     CONF_ATTRIBUTES,
+    CONF_AVAILABLE,
     CONF_COMPONENT,
     CONF_CONFIG,
     CONF_CONTRIB_VERSION,
@@ -193,6 +194,7 @@ async def websocket_device_remove(
         vol.Optional(CONF_CONFIG, default={}): dict,
         vol.Optional(CONF_STATE): vol.Any(bool, str, int, float, None),
         vol.Optional(CONF_ATTRIBUTES): dict,
+        vol.Optional(CONF_AVAILABLE): bool,
         vol.Optional(CONF_REMOVE): bool,
         vol.Optional(CONF_DEVICE_INFO): dict,
         vol.Optional(CONF_DEVICE_TRIGGER): TRIGGER_SCHEMA,
@@ -215,8 +217,9 @@ def websocket_discovery(
         vol.Required(CONF_TYPE): "nodered/entity",
         vol.Required(CONF_SERVER_ID): cv.string,
         vol.Required(CONF_NODE_ID): cv.string,
-        vol.Required(CONF_STATE): vol.Any(bool, str, int, float, None),
-        vol.Optional(CONF_ATTRIBUTES, default={}): dict,
+        vol.Optional(CONF_STATE): vol.Any(bool, str, int, float, None),
+        vol.Optional(CONF_ATTRIBUTES): dict,
+        vol.Optional(CONF_AVAILABLE): bool,
     }
 )
 def websocket_entity(
