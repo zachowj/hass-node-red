@@ -5,12 +5,16 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 from pytest_homeassistant_custom_component.typing import WebSocketGenerator
 import voluptuous as vol
 
 from custom_components.nodered import websocket
-from custom_components.nodered.const import DOMAIN, VERSION
-from custom_components.nodered.websocket import websocket_device_trigger
+from custom_components.nodered.const import CONF_CONTRIB_VERSION, DOMAIN, VERSION
+from custom_components.nodered.websocket import (
+    websocket_device_trigger,
+    websocket_version,
+)
 from homeassistant.components.device_automation.exceptions import DeviceNotFound
 from homeassistant.components.webhook import async_register as webhook_real_register
 from homeassistant.components.websocket_api.messages import (
@@ -555,3 +559,71 @@ async def test_websocket_device_trigger_remove_on_connection_close(
     assert captured["removed"] is True
     # and subscriptions should now be cleared
     assert fake_conn.subscriptions == {}
+
+
+@pytest.mark.asyncio
+async def test_websocket_version_stores_and_clears_contrib_version(
+    hass: HomeAssistant,
+) -> None:
+    """contrib_version is stored when present; empty clears; omit leaves entry."""
+    entry = MockConfigEntry(domain=DOMAIN, data={})
+    entry.add_to_hass(hass)
+    fake_conn = FakeConnection()
+
+    func: Any = websocket_version
+    while hasattr(func, "__wrapped__"):
+        func = func.__wrapped__
+
+    func(hass, fake_conn, {"id": 1, "type": "nodered/version"})
+    assert CONF_CONTRIB_VERSION not in entry.data
+    assert fake_conn.sent == result_message(1, VERSION)
+
+    func(
+        hass,
+        fake_conn,
+        {
+            "id": 2,
+            "type": "nodered/version",
+            CONF_CONTRIB_VERSION: "0.80.3",
+        },
+    )
+    assert entry.data[CONF_CONTRIB_VERSION] == "0.80.3"
+    assert 2 in fake_conn.subscriptions
+
+    func(hass, fake_conn, {"id": 3, "type": "nodered/version"})
+    assert entry.data[CONF_CONTRIB_VERSION] == "0.80.3"
+
+    func(
+        hass,
+        fake_conn,
+        {"id": 4, "type": "nodered/version", CONF_CONTRIB_VERSION: ""},
+    )
+    assert CONF_CONTRIB_VERSION not in entry.data
+
+
+@pytest.mark.asyncio
+async def test_websocket_version_clears_contrib_version_on_disconnect(
+    hass: HomeAssistant,
+) -> None:
+    """Disconnect after announce clears stored contrib_version."""
+    entry = MockConfigEntry(domain=DOMAIN, data={})
+    entry.add_to_hass(hass)
+    fake_conn = FakeConnection()
+
+    func: Any = websocket_version
+    while hasattr(func, "__wrapped__"):
+        func = func.__wrapped__
+
+    func(
+        hass,
+        fake_conn,
+        {
+            "id": 5,
+            "type": "nodered/version",
+            CONF_CONTRIB_VERSION: "0.80.3",
+        },
+    )
+    assert entry.data[CONF_CONTRIB_VERSION] == "0.80.3"
+
+    fake_conn.close()
+    assert CONF_CONTRIB_VERSION not in entry.data
