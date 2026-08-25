@@ -16,6 +16,7 @@ HA_MAX_STATE_LENGTH = 255
 
 # Configuration
 CONF_ATTRIBUTES = "attributes"
+CONF_AVAILABLE = "available"
 CONF_BINARY_SENSOR = "binary_sensor"
 CONF_BUTTON = "button"
 CONF_COMPONENT = "component"

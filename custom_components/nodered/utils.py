@@ -17,6 +17,11 @@ def contrib_announced_version(hass: HomeAssistant) -> bool:
     )
 
 
+def contrib_supports_presence_available(hass: HomeAssistant) -> bool:
+    """Whether presence-available entity semantics apply."""
+    return contrib_announced_version(hass)
+
+
 class NodeRedJSONEncoder(JSONEncoder):
     """JSONEncoder that supports timedelta objects and falls back to the Home Assistant Encoder."""
 

@@ -11,6 +11,7 @@ from custom_components.nodered.const import CONF_CONTRIB_VERSION, DOMAIN, VERSIO
 from custom_components.nodered.utils import (
     NodeRedJSONEncoder,
     contrib_announced_version,
+    contrib_supports_presence_available,
 )
 from custom_components.nodered.version import __version__
 from homeassistant.core import HomeAssistant
@@ -38,6 +39,17 @@ def test_contrib_announced_version_from_entry_data(hass: HomeAssistant) -> None:
 
     hass.config_entries.async_update_entry(entry, data={CONF_CONTRIB_VERSION: "0.80.3"})
     assert contrib_announced_version(hass) is True
+
+
+def test_contrib_supports_presence_available_aliases_announced(
+    hass: HomeAssistant,
+) -> None:
+    """Presence-available capability tracks announced version."""
+    assert contrib_supports_presence_available(hass) is False
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_CONTRIB_VERSION: "0.80.3"})
+    entry.add_to_hass(hass)
+    assert contrib_supports_presence_available(hass) is True
+    assert contrib_supports_presence_available(hass) is contrib_announced_version(hass)
 
 
 def test_json_encoder() -> None:

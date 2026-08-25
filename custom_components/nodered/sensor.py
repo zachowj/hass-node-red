@@ -23,6 +23,7 @@ from .const import (
     NODERED_DISCOVERY_NEW,
 )
 from .entity import NodeRedEntity
+from .utils import contrib_supports_presence_available
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,6 +72,9 @@ class NodeRedSensor(NodeRedEntity, SensorEntity):
             self._attr_native_value = self.convert_state(config.get(CONF_STATE))
         else:
             self._attr_native_value = None
+            # No reading yet: unavailable once presence-available applies
+            if contrib_supports_presence_available(hass):
+                self._attr_available = False
         self._attr_native_unit_of_measurement = self._config.get(
             CONF_UNIT_OF_MEASUREMENT
         )
