@@ -16,6 +16,43 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## [4.3.0](https://github.com/zachowj/hass-node-red/compare/v4.2.3...v4.3.0) (2026-09-07)
+
+
+### Features
+
+* **entity:** optional available on nodered/entity ([689fb6a](https://github.com/zachowj/hass-node-red/commit/689fb6af7d12916c33cd8bd2caf091d7b843e08f))
+* **websocket:** store contrib version from nodered/version ([#408](https://github.com/zachowj/hass-node-red/issues/408)) ([9168920](https://github.com/zachowj/hass-node-red/commit/916892024e372e68b6eb09b60506f5694d70ea95))
+
+
+### Bug Fixes
+
+* Fix incorrect async_remove_config_entry_device signature causing device removal failure ([064f329](https://github.com/zachowj/hass-node-red/commit/064f329eb9d75ded5faf976707755f1d95b7478f)), closes [#398](https://github.com/zachowj/hass-node-red/issues/398)
+* Fix permanent entity remove to clear registry entries. ([c743bc4](https://github.com/zachowj/hass-node-red/commit/c743bc4a6b313ea1eb5cb603e6d002a284e2cfa7))
+* Update tests for async_remove_config_entry_device signature ([d518891](https://github.com/zachowj/hass-node-red/commit/d518891e691e31981d73de96cd4ecb681fbc4342))
+
+
+### Styles
+
+* Fix ruff issues ([82ff4e6](https://github.com/zachowj/hass-node-red/commit/82ff4e6b7bb4e0fbc46b938122019e5cb898b4b9))
+
+
+### Build System
+
+* **deps:** bump actions/checkout from 6 to 7 ([#399](https://github.com/zachowj/hass-node-red/issues/399)) ([31628af](https://github.com/zachowj/hass-node-red/commit/31628af5aea355363b16b23c939f95cc69659c86))
+* **deps:** bump actions/github-script from 8 to 9 ([#396](https://github.com/zachowj/hass-node-red/issues/396)) ([55baa46](https://github.com/zachowj/hass-node-red/commit/55baa4660fbdd08461a995b63c7e98eb3fa9b593))
+* **deps:** bump actions/setup-python from 6 to 7 ([#405](https://github.com/zachowj/hass-node-red/issues/405)) ([6121800](https://github.com/zachowj/hass-node-red/commit/6121800f4e09cbee07aac09318e21c1c8c25489b))
+* **deps:** bump actions/stale from 10 to 11 ([#411](https://github.com/zachowj/hass-node-red/issues/411)) ([8941ff9](https://github.com/zachowj/hass-node-red/commit/8941ff9f6e5112e3726a1314e6d3ad5e3685a3de))
+* **deps:** bump colorlog from 6.10.1 to 6.12.0 ([#406](https://github.com/zachowj/hass-node-red/issues/406)) ([b412fc8](https://github.com/zachowj/hass-node-red/commit/b412fc8602a33dca9b53efc114a64f97549c9e1d))
+* **deps:** bump GoogleCloudPlatform/release-please-action from 4 to 5 ([#397](https://github.com/zachowj/hass-node-red/issues/397)) ([180e854](https://github.com/zachowj/hass-node-red/commit/180e85442390180a949b4e1741c6eb5d313670c1))
+
+
+### Continuous Integration
+
+* **pre-commit:** pre-commit autoupdate ([#394](https://github.com/zachowj/hass-node-red/issues/394)) ([21e3f36](https://github.com/zachowj/hass-node-red/commit/21e3f36ca88a7d526f8e968ed8b36d8b935dc166))
+* **pre-commit:** pre-commit autoupdate ([#404](https://github.com/zachowj/hass-node-red/issues/404)) ([a6fac96](https://github.com/zachowj/hass-node-red/commit/a6fac96ccfa0ae25950a2fa19830f9e11f1f9363))
+* **pre-commit:** pre-commit autoupdate ([#410](https://github.com/zachowj/hass-node-red/issues/410)) ([77d154f](https://github.com/zachowj/hass-node-red/commit/77d154f69b2d2e5605de35e0da5e96928f26f50d))
+
 ## [4.2.3](https://github.com/zachowj/hass-node-red/compare/v4.2.2...v4.2.3) (2026-03-03)
 
 
