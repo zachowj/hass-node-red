@@ -61,6 +61,7 @@ from .const import (
     CONF_REMOVE,
     CONF_SERVER_ID,
     CONF_SUB_TYPE,
+    CONTRIB_VERSIONS,
     DOMAIN,
     DOMAIN_DATA,
     NODERED_CONFIG_UPDATE,
@@ -251,19 +252,20 @@ def websocket_config_update(
     connection.send_message(result_message(msg[CONF_ID]))
 
 
-def _store_contrib_version(hass: HomeAssistant, contrib_version: str | None) -> None:
-    """Persist or clear contrib package version on the Node-RED config entry."""
-    entries = hass.config_entries.async_entries(DOMAIN)
-    if not entries:
-        return
-    entry = entries[0]
-    new_data = dict(entry.data)
+def _set_contrib_version(
+    hass: HomeAssistant, connection: ActiveConnection, contrib_version: str | None
+) -> None:
+    """Record or clear the contrib package version announced on a connection.
+
+    Kept in hass.data rather than on the config entry: updating the entry
+    reloads it, and contrib answers the resulting ``loaded`` event by
+    registering all of its nodes again on the same connection.
+    """
+    versions: dict[ActiveConnection, str] = hass.data.setdefault(CONTRIB_VERSIONS, {})
     if contrib_version:
-        new_data[CONF_CONTRIB_VERSION] = contrib_version
+        versions[connection] = contrib_version
     else:
-        new_data.pop(CONF_CONTRIB_VERSION, None)
-    if new_data != entry.data:
-        hass.config_entries.async_update_entry(entry, data=new_data)
+        versions.pop(connection, None)
 
 
 @require_admin
@@ -278,18 +280,18 @@ def websocket_version(
 ) -> None:
     """Version command.
 
-    Optional ``contrib_version`` is stored on the config entry. Only update when
+    Optional ``contrib_version`` is stored for this connection. Only update when
     the key is present so a version probe without it does not clear a prior
     announce. Empty string clears. On announce, register a disconnect callback
-    so reconnect from a contrib that does not announce clears the stored value.
+    so the value is dropped together with the connection.
     """
     if CONF_CONTRIB_VERSION in msg:
 
         def clear_contrib_version() -> None:
-            _store_contrib_version(hass, None)
+            _set_contrib_version(hass, connection, None)
 
         contrib_version = msg[CONF_CONTRIB_VERSION]
-        _store_contrib_version(hass, contrib_version or None)
+        _set_contrib_version(hass, connection, contrib_version or None)
         if contrib_version:
             connection.subscriptions[msg[CONF_ID]] = clear_contrib_version
 

@@ -13,7 +13,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity_registry import async_entries_for_device, async_get
 
-from .const import CONF_VERSION, DOMAIN, DOMAIN_DATA, STARTUP_MESSAGE, WEBHOOKS
+from .const import (
+    CONF_CONTRIB_VERSION,
+    CONF_VERSION,
+    DOMAIN,
+    DOMAIN_DATA,
+    STARTUP_MESSAGE,
+    WEBHOOKS,
+)
 from .discovery import (
     PLATFORMS_LOADED,
     SUPPORTED_COMPONENTS,
@@ -28,6 +35,15 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up this integration using UI."""
+    # 4.3.0 stored the announced contrib version on the entry; it now lives with
+    # the websocket connection. Drop the stale copy before the update listener
+    # below is registered, so this doesn't trigger a reload.
+    if CONF_CONTRIB_VERSION in entry.data:
+        hass.config_entries.async_update_entry(
+            entry,
+            data={k: v for k, v in entry.data.items() if k != CONF_CONTRIB_VERSION},
+        )
+
     domain_data = hass.data.setdefault(DOMAIN_DATA, {})
 
     if not domain_data:

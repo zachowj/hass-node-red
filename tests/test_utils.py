@@ -5,9 +5,8 @@ import json
 from pathlib import Path
 
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.nodered.const import CONF_CONTRIB_VERSION, DOMAIN, VERSION
+from custom_components.nodered.const import VERSION
 from custom_components.nodered.utils import (
     NodeRedJSONEncoder,
     contrib_announced_version,
@@ -15,6 +14,7 @@ from custom_components.nodered.utils import (
 )
 from custom_components.nodered.version import __version__
 from homeassistant.core import HomeAssistant
+from tests.helpers import announce_contrib_version
 
 
 def test_version_matches_manifest() -> None:
@@ -29,16 +29,15 @@ def test_version_matches_manifest() -> None:
     assert VERSION == __version__ == manifest["version"]
 
 
-def test_contrib_announced_version_from_entry_data(hass: HomeAssistant) -> None:
-    """Helper is true when contrib_version is stored on the entry."""
+def test_contrib_announced_version_tracks_connection(hass: HomeAssistant) -> None:
+    """Helper is true while a connection that announced a version is open."""
     assert contrib_announced_version(hass) is False
 
-    entry = MockConfigEntry(domain=DOMAIN, data={})
-    entry.add_to_hass(hass)
-    assert contrib_announced_version(hass) is False
-
-    hass.config_entries.async_update_entry(entry, data={CONF_CONTRIB_VERSION: "0.80.3"})
+    connection = announce_contrib_version(hass)
     assert contrib_announced_version(hass) is True
+
+    connection.close()
+    assert contrib_announced_version(hass) is False
 
 
 def test_contrib_supports_presence_available_aliases_announced(
@@ -46,8 +45,7 @@ def test_contrib_supports_presence_available_aliases_announced(
 ) -> None:
     """Presence-available capability tracks announced version."""
     assert contrib_supports_presence_available(hass) is False
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_CONTRIB_VERSION: "0.80.3"})
-    entry.add_to_hass(hass)
+    announce_contrib_version(hass)
     assert contrib_supports_presence_available(hass) is True
     assert contrib_supports_presence_available(hass) is contrib_announced_version(hass)
 

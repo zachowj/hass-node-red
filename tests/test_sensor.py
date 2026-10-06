@@ -4,15 +4,12 @@ from datetime import UTC, date, datetime
 from typing import Any, cast
 
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.nodered.const import (
     CONF_AVAILABLE,
     CONF_CONFIG,
-    CONF_CONTRIB_VERSION,
     CONF_LAST_RESET,
     CONF_STATE_CLASS,
-    DOMAIN,
 )
 from custom_components.nodered.sensor import NodeRedSensor
 from homeassistant.components.sensor import SensorDeviceClass
@@ -23,6 +20,7 @@ from homeassistant.const import (
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant
+from tests.helpers import announce_contrib_version
 
 
 def test_update_discovery_config_sets_last_reset_for_timestamp(
@@ -281,8 +279,7 @@ def test_sensor_discovered_without_state_presence_is_unavailable(
     hass: HomeAssistant,
 ) -> None:
     """With presence-available: discovery without state is Unavailable."""
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_CONTRIB_VERSION: "0.80.3"})
-    entry.add_to_hass(hass)
+    announce_contrib_version(hass)
     node = NodeRedSensor(
         hass, {"server_id": "s1", "node_id": "node-no-state-new", CONF_CONFIG: {}}
     )
