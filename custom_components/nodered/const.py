@@ -7,6 +7,7 @@ VERSION = __version__
 # Base component constants
 DOMAIN = "nodered"
 DOMAIN_DATA = f"{DOMAIN}_data"
+CONTRIB_VERSION_DATA = f"{DOMAIN}_contrib_version"
 WEBHOOKS = "webhooks"
 
 ISSUE_URL = "https://github.com/zachowj/hass-node-red/issues"
