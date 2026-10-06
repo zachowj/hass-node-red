@@ -7,6 +7,9 @@ VERSION = __version__
 # Base component constants
 DOMAIN = "nodered"
 DOMAIN_DATA = f"{DOMAIN}_data"
+# Contrib versions announced per open websocket connection. Kept outside
+# DOMAIN_DATA so they survive a reload of the config entry.
+CONTRIB_VERSIONS = f"{DOMAIN}_contrib_versions"
 WEBHOOKS = "webhooks"
 
 ISSUE_URL = "https://github.com/zachowj/hass-node-red/issues"

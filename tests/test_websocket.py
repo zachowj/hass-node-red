@@ -19,6 +19,7 @@ from custom_components.nodered.const import (
     NODERED_ENTITY,
     VERSION,
 )
+from custom_components.nodered.utils import contrib_announced_version
 from custom_components.nodered.websocket import (
     websocket_device_trigger,
     websocket_version,
@@ -647,7 +648,11 @@ async def test_websocket_device_trigger_remove_on_connection_close(
 async def test_websocket_version_stores_and_clears_contrib_version(
     hass: HomeAssistant,
 ) -> None:
-    """contrib_version is stored when present; empty clears; omit leaves entry."""
+    """contrib_version is kept per connection; empty clears; omit leaves it.
+
+    The config entry is never touched, since updating it would reload the
+    integration.
+    """
     entry = MockConfigEntry(domain=DOMAIN, data={})
     entry.add_to_hass(hass)
     fake_conn = FakeConnection()
@@ -657,7 +662,7 @@ async def test_websocket_version_stores_and_clears_contrib_version(
         func = func.__wrapped__
 
     func(hass, fake_conn, {"id": 1, "type": "nodered/version"})
-    assert CONF_CONTRIB_VERSION not in entry.data
+    assert not contrib_announced_version(hass)
     assert fake_conn.sent == result_message(1, VERSION)
 
     func(
@@ -669,17 +674,18 @@ async def test_websocket_version_stores_and_clears_contrib_version(
             CONF_CONTRIB_VERSION: "0.80.3",
         },
     )
-    assert entry.data[CONF_CONTRIB_VERSION] == "0.80.3"
+    assert contrib_announced_version(hass)
     assert 2 in fake_conn.subscriptions
 
     func(hass, fake_conn, {"id": 3, "type": "nodered/version"})
-    assert entry.data[CONF_CONTRIB_VERSION] == "0.80.3"
+    assert contrib_announced_version(hass)
 
     func(
         hass,
         fake_conn,
         {"id": 4, "type": "nodered/version", CONF_CONTRIB_VERSION: ""},
     )
+    assert not contrib_announced_version(hass)
     assert CONF_CONTRIB_VERSION not in entry.data
 
 
@@ -687,9 +693,7 @@ async def test_websocket_version_stores_and_clears_contrib_version(
 async def test_websocket_version_clears_contrib_version_on_disconnect(
     hass: HomeAssistant,
 ) -> None:
-    """Disconnect after announce clears stored contrib_version."""
-    entry = MockConfigEntry(domain=DOMAIN, data={})
-    entry.add_to_hass(hass)
+    """Disconnect after announce clears the stored contrib_version."""
     fake_conn = FakeConnection()
 
     func: Any = websocket_version
@@ -705,7 +709,7 @@ async def test_websocket_version_clears_contrib_version_on_disconnect(
             CONF_CONTRIB_VERSION: "0.80.3",
         },
     )
-    assert entry.data[CONF_CONTRIB_VERSION] == "0.80.3"
+    assert contrib_announced_version(hass)
 
     fake_conn.close()
-    assert CONF_CONTRIB_VERSION not in entry.data
+    assert not contrib_announced_version(hass)

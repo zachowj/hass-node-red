@@ -1,16 +1,10 @@
 """Unit tests for Node-RED binary sensor availability semantics."""
 
-from pytest_homeassistant_custom_component.common import MockConfigEntry
-
 from custom_components.nodered.binary_sensor import NodeRedBinarySensor
-from custom_components.nodered.const import (
-    CONF_AVAILABLE,
-    CONF_CONFIG,
-    CONF_CONTRIB_VERSION,
-    DOMAIN,
-)
+from custom_components.nodered.const import CONF_AVAILABLE, CONF_CONFIG
 from homeassistant.const import CONF_STATE
 from homeassistant.core import HomeAssistant
+from tests.helpers import announce_contrib_version
 
 
 def test_binary_sensor_discovered_without_state_legacy_is_unknown(
@@ -28,8 +22,7 @@ def test_binary_sensor_discovered_without_state_presence_is_unavailable(
     hass: HomeAssistant,
 ) -> None:
     """With presence-available: discovery without state is Unavailable."""
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_CONTRIB_VERSION: "0.80.3"})
-    entry.add_to_hass(hass)
+    announce_contrib_version(hass)
     node = NodeRedBinarySensor(
         hass, {"server_id": "s1", "node_id": "bs-no-state-new", CONF_CONFIG: {}}
     )
