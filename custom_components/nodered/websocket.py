@@ -61,6 +61,7 @@ from .const import (
     CONF_REMOVE,
     CONF_SERVER_ID,
     CONF_SUB_TYPE,
+    CONTRIB_VERSION_DATA,
     DOMAIN,
     DOMAIN_DATA,
     NODERED_CONFIG_UPDATE,
@@ -252,18 +253,15 @@ def websocket_config_update(
 
 
 def _store_contrib_version(hass: HomeAssistant, contrib_version: str | None) -> None:
-    """Persist or clear contrib package version on the Node-RED config entry."""
-    entries = hass.config_entries.async_entries(DOMAIN)
-    if not entries:
-        return
-    entry = entries[0]
-    new_data = dict(entry.data)
+    """Store or clear the contrib package version announced by Node-RED.
+
+    Kept in hass.data, not on the config entry: updating the entry reloads it,
+    and contrib then registers all of its nodes again on the same connection.
+    """
     if contrib_version:
-        new_data[CONF_CONTRIB_VERSION] = contrib_version
+        hass.data[CONTRIB_VERSION_DATA] = contrib_version
     else:
-        new_data.pop(CONF_CONTRIB_VERSION, None)
-    if new_data != entry.data:
-        hass.config_entries.async_update_entry(entry, data=new_data)
+        hass.data.pop(CONTRIB_VERSION_DATA, None)
 
 
 @require_admin
@@ -278,7 +276,7 @@ def websocket_version(
 ) -> None:
     """Version command.
 
-    Optional ``contrib_version`` is stored on the config entry. Only update when
+    Optional ``contrib_version`` is stored in hass.data. Only update when
     the key is present so a version probe without it does not clear a prior
     announce. Empty string clears. On announce, register a disconnect callback
     so reconnect from a contrib that does not announce clears the stored value.
