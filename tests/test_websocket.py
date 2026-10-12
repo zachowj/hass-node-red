@@ -19,6 +19,7 @@ from custom_components.nodered.const import (
     NODERED_ENTITY,
     VERSION,
 )
+from custom_components.nodered.utils import contrib_announced_version
 from custom_components.nodered.websocket import (
     websocket_device_trigger,
     websocket_version,
@@ -29,8 +30,8 @@ from homeassistant.components.websocket_api.messages import (
     error_message,
     result_message,
 )
-from homeassistant.const import CONF_STATE
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_STATE, CONF_TYPE
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from tests.helpers import FakeConnection, create_device_with_entity
 
@@ -647,7 +648,11 @@ async def test_websocket_device_trigger_remove_on_connection_close(
 async def test_websocket_version_stores_and_clears_contrib_version(
     hass: HomeAssistant,
 ) -> None:
-    """contrib_version is stored when present; empty clears; omit leaves entry."""
+    """contrib_version is kept per connection; empty clears; omit leaves it.
+
+    The config entry is never touched, since updating it would reload the
+    integration.
+    """
     entry = MockConfigEntry(domain=DOMAIN, data={})
     entry.add_to_hass(hass)
     fake_conn = FakeConnection()
@@ -657,7 +662,7 @@ async def test_websocket_version_stores_and_clears_contrib_version(
         func = func.__wrapped__
 
     func(hass, fake_conn, {"id": 1, "type": "nodered/version"})
-    assert CONF_CONTRIB_VERSION not in entry.data
+    assert not contrib_announced_version(hass)
     assert fake_conn.sent == result_message(1, VERSION)
 
     func(
@@ -669,17 +674,18 @@ async def test_websocket_version_stores_and_clears_contrib_version(
             CONF_CONTRIB_VERSION: "0.80.3",
         },
     )
-    assert entry.data[CONF_CONTRIB_VERSION] == "0.80.3"
+    assert contrib_announced_version(hass)
     assert 2 in fake_conn.subscriptions
 
     func(hass, fake_conn, {"id": 3, "type": "nodered/version"})
-    assert entry.data[CONF_CONTRIB_VERSION] == "0.80.3"
+    assert contrib_announced_version(hass)
 
     func(
         hass,
         fake_conn,
         {"id": 4, "type": "nodered/version", CONF_CONTRIB_VERSION: ""},
     )
+    assert not contrib_announced_version(hass)
     assert CONF_CONTRIB_VERSION not in entry.data
 
 
@@ -687,9 +693,7 @@ async def test_websocket_version_stores_and_clears_contrib_version(
 async def test_websocket_version_clears_contrib_version_on_disconnect(
     hass: HomeAssistant,
 ) -> None:
-    """Disconnect after announce clears stored contrib_version."""
-    entry = MockConfigEntry(domain=DOMAIN, data={})
-    entry.add_to_hass(hass)
+    """Disconnect after announce clears the stored contrib_version."""
     fake_conn = FakeConnection()
 
     func: Any = websocket_version
@@ -705,7 +709,45 @@ async def test_websocket_version_clears_contrib_version_on_disconnect(
             CONF_CONTRIB_VERSION: "0.80.3",
         },
     )
-    assert entry.data[CONF_CONTRIB_VERSION] == "0.80.3"
+    assert contrib_announced_version(hass)
 
     fake_conn.close()
-    assert CONF_CONTRIB_VERSION not in entry.data
+    assert not contrib_announced_version(hass)
+
+
+async def test_websocket_version_announce_does_not_reload_entry(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Announcing contrib_version and disconnecting must not reload the entry.
+
+    A reload fires ``unloaded``/``loaded`` while the connection stays open, and
+    contrib then registers all of its nodes a second time (device triggers
+    fire twice).
+    """
+    entry = MockConfigEntry(domain=DOMAIN, data={})
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    events: list[str] = []
+
+    @callback
+    def _listener(event: Event) -> None:
+        events.append(event.data[CONF_TYPE])
+
+    hass.bus.async_listen(DOMAIN, _listener)
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {"id": 1, "type": "nodered/version", CONF_CONTRIB_VERSION: "0.81.0"}
+    )
+    assert (await client.receive_json())["success"]
+    await hass.async_block_till_done()
+    assert contrib_announced_version(hass)
+
+    await client.close()
+    await hass.async_block_till_done()
+    assert not contrib_announced_version(hass)
+
+    assert events == []

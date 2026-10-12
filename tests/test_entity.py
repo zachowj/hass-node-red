@@ -7,14 +7,12 @@ from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.nodered.const import (
     CONF_ATTRIBUTES,
     CONF_AVAILABLE,
     CONF_COMPONENT,
     CONF_CONFIG,
-    CONF_CONTRIB_VERSION,
     CONF_DEVICE_INFO,
     CONF_NAME,
     CONF_NODE_ID,
@@ -39,7 +37,7 @@ from homeassistant.const import (
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant
-from tests.helpers import FakeConnection
+from tests.helpers import FakeConnection, announce_contrib_version
 
 
 class DummyEntity(NodeRedEntity):
@@ -80,8 +78,7 @@ def test_update_entity_state_attributes_presence_state_only_holds_available(
     hass: HomeAssistant,
 ) -> None:
     """Presence-available: state without available holds availability."""
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_CONTRIB_VERSION: "0.80.3"})
-    entry.add_to_hass(hass)
+    announce_contrib_version(hass)
     ent = DummyEntity(hass, {CONF_SERVER_ID: "s", CONF_NODE_ID: "n", CONF_CONFIG: {}})
     ent._attr_extra_state_attributes = {"keep": True}
     ent._attr_available = False
@@ -117,8 +114,7 @@ def test_update_entity_state_attributes_presence_updates_only_present_keys(
     hass: HomeAssistant,
 ) -> None:
     """Presence-available: update only keys present; do not invent attrs."""
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_CONTRIB_VERSION: "0.80.3"})
-    entry.add_to_hass(hass)
+    announce_contrib_version(hass)
     ent = DummyEntity(hass, {CONF_SERVER_ID: "s", CONF_NODE_ID: "n", CONF_CONFIG: {}})
     ent._attr_extra_state_attributes = {"prev": 1}
     ent._attr_available = True

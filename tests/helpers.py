@@ -15,7 +15,8 @@ from typing import Any
 
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.nodered.const import DOMAIN
+from custom_components.nodered.const import CONF_CONTRIB_VERSION, DOMAIN
+from custom_components.nodered.websocket import websocket_version
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.components.websocket_api.messages import (
     error_message,
@@ -169,3 +170,24 @@ def create_device_with_entity(
     )
 
     return entry, device, entity
+
+
+def announce_contrib_version(
+    hass: HomeAssistant,
+    connection: FakeConnection | None = None,
+    contrib_version: str = "0.80.3",
+) -> FakeConnection:
+    """Announce a contrib version through ``nodered/version``, as contrib does.
+
+    Returns the connection; close it to drop the announce again.
+    """
+    connection = connection or FakeConnection()
+    func: Any = websocket_version
+    while hasattr(func, "__wrapped__"):
+        func = func.__wrapped__
+    func(
+        hass,
+        connection,
+        {"id": 1, "type": "nodered/version", CONF_CONTRIB_VERSION: contrib_version},
+    )
+    return connection

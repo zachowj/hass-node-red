@@ -8,11 +8,8 @@ from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
 
-async def _setup_nodered(
-    hass: HomeAssistant, *, contrib_version: str | None = None
-) -> None:
-    data = {CONF_CONTRIB_VERSION: contrib_version} if contrib_version else {}
-    config_entry = MockConfigEntry(domain=DOMAIN, data=data)
+async def _setup_nodered(hass: HomeAssistant) -> None:
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -50,12 +47,16 @@ async def test_sensor_discovery_without_state_presence_is_unavailable(
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """With presence-available: discovery without state is Unavailable."""
-    await _setup_nodered(hass, contrib_version="0.80.3")
+    await _setup_nodered(hass)
     client = await hass_ws_client(hass)
+    await client.send_json(
+        {"id": 1, "type": "nodered/version", CONF_CONTRIB_VERSION: "0.80.3"}
+    )
+    assert (await client.receive_json())["success"]
 
     await client.send_json(
         {
-            "id": 1,
+            "id": 2,
             "type": "nodered/discovery",
             "component": "sensor",
             "server_id": "s1",
@@ -243,12 +244,16 @@ async def test_binary_sensor_discovery_without_state_presence_is_unavailable(
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """With presence-available: binary discovery without state is Unavailable."""
-    await _setup_nodered(hass, contrib_version="0.80.3")
+    await _setup_nodered(hass)
     client = await hass_ws_client(hass)
+    await client.send_json(
+        {"id": 1, "type": "nodered/version", CONF_CONTRIB_VERSION: "0.80.3"}
+    )
+    assert (await client.receive_json())["success"]
 
     await client.send_json(
         {
-            "id": 1,
+            "id": 2,
             "type": "nodered/discovery",
             "component": "binary_sensor",
             "server_id": "s1",

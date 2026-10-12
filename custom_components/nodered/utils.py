@@ -6,15 +6,12 @@ from typing import Any
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSONEncoder
 
-from .const import CONF_CONTRIB_VERSION, DOMAIN
+from .const import CONTRIB_VERSION_DATA
 
 
 def contrib_announced_version(hass: HomeAssistant) -> bool:
-    """Return True when contrib has stored a package version on the config entry."""
-    return any(
-        entry.data.get(CONF_CONTRIB_VERSION)
-        for entry in hass.config_entries.async_entries(DOMAIN)
-    )
+    """Return True when contrib has announced its package version."""
+    return bool(hass.data.get(CONTRIB_VERSION_DATA))
 
 
 def contrib_supports_presence_available(hass: HomeAssistant) -> bool:
