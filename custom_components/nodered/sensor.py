@@ -1,6 +1,6 @@
 """Sensor platform for nodered."""
 
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 import logging
 from typing import Any
 
@@ -118,7 +118,7 @@ class NodeRedSensor(NodeRedEntity, SensorEntity):
                 else:
                     seconds = ts
                 try:
-                    parsed = datetime.fromtimestamp(seconds, tz=timezone.utc)
+                    parsed = datetime.fromtimestamp(seconds, tz=UTC)
                 except (OverflowError, OSError, ValueError):
                     _LOGGER.error(
                         "Invalid timestamp (%s): %s has a timestamp device class",
