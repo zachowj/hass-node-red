@@ -141,7 +141,7 @@ async def test_websocket_device_remove_handles_device_and_entities(
     # Create a config entry so we can link the device to it
 
     # Create a device and linked entity using the test helper
-    config_entry, _device, entity = create_device_with_entity(hass, "node-1")
+    _config_entry, device, entity = create_device_with_entity(hass, "node-1")
 
     websocket.register_websocket_handlers(hass)
     client = await hass_ws_client(hass)
@@ -154,11 +154,11 @@ async def test_websocket_device_remove_handles_device_and_entities(
 
     assert resp == result_message(msg["id"])
     # Device should be removed
-    assert (
-        dr.async_get(hass).async_get_device_by_identifier(
-            (DOMAIN, "node-1"), config_entry.entry_id
+    assert all(
+        entry.id != device.id
+        for entry in dr.async_entries_for_config_entry(
+            dr.async_get(hass), _config_entry.entry_id
         )
-        is None
     )
     # Entity should have device_id cleared
     updated_entry = er.async_get(hass).async_get(entity.entity_id)

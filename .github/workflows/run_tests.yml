@@ -32,7 +32,7 @@ jobs:
           #   ha_version: "2024.5.0"
           #   phac_version: "0.13.120"
           - name: ha-latest
-            python: "3.13"
+            python: "3.14"
             ha_channel: latest
             ha_version: latest
 
@@ -96,7 +96,7 @@ jobs:
       matrix:
         include:
           - name: ha-beta
-            python: "3.13"
+            python: "3.14"
             ha_channel: beta
             ha_version: beta
 
