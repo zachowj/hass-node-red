@@ -16,6 +16,13 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## [4.3.2](https://github.com/zachowj/hass-node-red/compare/v4.3.1...v4.3.2) (2026-10-12)
+
+
+### Miscellaneous Chores
+
+* update Python version to 3.14 in devcontainer and workflows ([482adb5](https://github.com/zachowj/hass-node-red/commit/482adb586eb75ab33e599233fa7abfe9f55c1636))
+
 ## [4.3.1](https://github.com/zachowj/hass-node-red/compare/v4.3.0...v4.3.1) (2026-10-12)
 
 
