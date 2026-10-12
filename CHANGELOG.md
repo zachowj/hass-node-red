@@ -16,6 +16,18 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## [4.3.1](https://github.com/zachowj/hass-node-red/compare/v4.3.0...v4.3.1) (2026-10-12)
+
+
+### Bug Fixes
+
+* **websocket:** keep announced contrib_version off the config entry ([#419](https://github.com/zachowj/hass-node-red/issues/419)) ([669f0af](https://github.com/zachowj/hass-node-red/commit/669f0afc93337b08f5c0ddd3cbe2684827ede26f)), closes [#416](https://github.com/zachowj/hass-node-red/issues/416)
+
+
+### Continuous Integration
+
+* **pre-commit:** pre-commit autoupdate ([#417](https://github.com/zachowj/hass-node-red/issues/417)) ([a2ff1ec](https://github.com/zachowj/hass-node-red/commit/a2ff1ec200bde503fcaf4bd00ea200b35f6a34cd))
+
 ## [4.3.0](https://github.com/zachowj/hass-node-red/compare/v4.2.3...v4.3.0) (2026-09-29)
 
 
