@@ -141,9 +141,7 @@ async def websocket_sentence(
 
         # Try to use TriggerDetails for backwards compatibility with HA < 2026.3
         try:
-            from homeassistant.components.conversation.trigger import (  # noqa: PLC0415
-                TriggerDetails,
-            )
+            from homeassistant.components.conversation.trigger import TriggerDetails  # noqa: PLC0415
 
             # log that we’re on the older API and are using the backwards‑compatible
             # TriggerDetails “fallback” path
