@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.10
+    rev: v0.17.2
     hooks:
       - id: ruff-check
         args: [ --fix ]
@@ -15,7 +15,7 @@ repos:
         exclude: (.vscode|.devcontainer)
 
   - repo: https://github.com/cdce8p/python-typing-update
-    rev: v0.8.1
+    rev: v0.9.0
     hooks:
       - id: python-typing-update
         stages: [manual]
