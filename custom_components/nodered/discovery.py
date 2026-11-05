@@ -7,6 +7,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
     CONF_BINARY_SENSOR,
@@ -107,9 +108,13 @@ def async_get_entity(
 def async_discover(
     hass: HomeAssistant, msg: dict[str, Any], connection: ActiveConnection
 ) -> None:
-    """Create or update the entity described by a discovery message."""
+    """Create or update the entity described by a discovery message.
+
+    Raises if a new entity can't be created, so the caller can reply with
+    the error.
+    """
     if (data := hass.data.get(DOMAIN_DATA)) is None:
-        return
+        raise HomeAssistantError("Node-RED integration is not loaded")
 
     component = msg[CONF_COMPONENT]
     server_id = msg[CONF_SERVER_ID]
@@ -137,11 +142,7 @@ def async_discover(
     else:
         _LOGGER.info("Creating %s %s %s", component, server_id, node_id)
 
-        discovered.add(unique_id)
-
         if (discover := data.get(DISCOVERY_PLATFORMS, {}).get(component)) is None:
-            return
-        try:
-            discover(msg, connection)
-        except Exception:
-            _LOGGER.exception("Error creating %s %s %s", component, server_id, node_id)
+            raise HomeAssistantError(f"Node-RED {component} platform is not loaded")
+        discover(msg, connection)
+        discovered.add(unique_id)

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, ClassVar
 
+import voluptuous as vol
+
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ENTITY_CATEGORY,
@@ -132,6 +134,17 @@ class NodeRedEntity(Entity):
             self._attr_extra_state_attributes = msg[CONF_ATTRIBUTES]
         if CONF_AVAILABLE in msg:
             self._attr_available = msg[CONF_AVAILABLE]
+
+    def validate_state(self) -> None:
+        """Raise vol.Invalid if Home Assistant would reject the entity's state.
+
+        Home Assistant checks the state when the state property is read, so
+        reading it runs the same check as writing the state.
+        """
+        try:
+            _ = self.state
+        except ValueError as err:
+            raise vol.Invalid(str(err), path=[CONF_STATE]) from err
 
     @callback
     def handle_lost_connection(self) -> None:
@@ -280,7 +293,9 @@ def async_setup_discovery(
 
     @callback
     def discover(config: dict[str, Any], connection: ActiveConnection) -> None:
-        async_add_entities([entity_class(hass, config, connection)])
+        entity = entity_class(hass, config, connection)
+        entity.validate_state()
+        async_add_entities([entity])
 
     config_entry.async_on_unload(
         async_register_platform(hass, entity_class.component, discover)
