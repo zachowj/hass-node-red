@@ -2,7 +2,7 @@
 
 import json
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -15,8 +15,6 @@ from custom_components.nodered.const import (
     CONF_AVAILABLE,
     CONF_CONTRIB_VERSION,
     DOMAIN,
-    NODERED_DISCOVERY,
-    NODERED_ENTITY,
     VERSION,
 )
 from custom_components.nodered.utils import contrib_announced_version
@@ -167,17 +165,15 @@ async def test_websocket_device_remove_handles_device_and_entities(
 
 
 @pytest.mark.asyncio
-@patch.object(websocket, "async_dispatcher_send")
+@patch.object(websocket, "async_get_entity")
+@patch.object(websocket, "async_discover")
 async def test_websocket_discovery_and_entity_and_update_config_and_version(
-    mock_dispatcher: Any,
+    mock_discover: MagicMock,
+    mock_get_entity: MagicMock,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    sent: list[tuple[str, dict[str, Any], Any | None]] = []
-    # Patch the websocket module's dispatcher send to capture arguments
-    mock_dispatcher.side_effect = lambda _hass2, sig, msg, conn=None: sent.append(
-        (sig, msg, conn)
-    )
+    entity = mock_get_entity.return_value
 
     websocket.register_websocket_handlers(hass)
     client = await hass_ws_client(hass)
@@ -194,7 +190,7 @@ async def test_websocket_discovery_and_entity_and_update_config_and_version(
     )
     resp = await client.receive_json()
     assert resp == result_message(msg["id"])
-    assert sent
+    mock_discover.assert_called_once()
 
     msg2 = {"id": 10, "server_id": "s", "node_id": "n", "state": True}
     await client.send_json(
@@ -208,8 +204,8 @@ async def test_websocket_discovery_and_entity_and_update_config_and_version(
     )
     resp2 = await client.receive_json()
     assert resp2 == result_message(msg2["id"])
-    entity_sig, entity_msg, _ = sent[-1]
-    assert entity_sig == NODERED_ENTITY.format("s", "n")
+    mock_get_entity.assert_called_with(hass, "s", "n")
+    entity_msg = entity.handle_entity_update.call_args.args[0]
     assert entity_msg[CONF_STATE] is True
     assert CONF_ATTRIBUTES not in entity_msg
     assert CONF_AVAILABLE not in entity_msg
@@ -226,6 +222,7 @@ async def test_websocket_discovery_and_entity_and_update_config_and_version(
     )
     resp3 = await client.receive_json()
     assert resp3 == result_message(msg3["id"])
+    entity.handle_config_update.assert_called_once()
 
     # version
     await client.send_json({"id": 12, "type": "nodered/version"})
@@ -234,17 +231,16 @@ async def test_websocket_discovery_and_entity_and_update_config_and_version(
 
 
 @pytest.mark.asyncio
-@patch.object(websocket, "async_dispatcher_send")
+@patch.object(websocket, "async_get_entity")
+@patch.object(websocket, "async_discover")
 async def test_websocket_entity_accepts_available_and_omitted_state(
-    mock_dispatcher: Any,
+    mock_discover: MagicMock,
+    mock_get_entity: MagicMock,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Entity/discovery schemas accept available; entity state may be omitted."""
-    sent: list[tuple[str, dict[str, Any], Any | None]] = []
-    mock_dispatcher.side_effect = lambda _hass2, sig, msg, conn=None: sent.append(
-        (sig, msg, conn)
-    )
+    entity = mock_get_entity.return_value
 
     websocket.register_websocket_handlers(hass)
     client = await hass_ws_client(hass)
@@ -261,8 +257,7 @@ async def test_websocket_entity_accepts_available_and_omitted_state(
     )
     resp = await client.receive_json()
     assert resp == result_message(40)
-    disc_sig, disc_msg, _ = sent[-1]
-    assert disc_sig == NODERED_DISCOVERY.format("sensor")
+    disc_msg = mock_discover.call_args.args[1]
     assert disc_msg[CONF_AVAILABLE] is False
 
     await client.send_json(
@@ -276,8 +271,8 @@ async def test_websocket_entity_accepts_available_and_omitted_state(
     )
     resp2 = await client.receive_json()
     assert resp2 == result_message(41)
-    entity_sig, entity_msg, _ = sent[-1]
-    assert entity_sig == NODERED_ENTITY.format("s", "n")
+    mock_get_entity.assert_called_with(hass, "s", "n")
+    entity_msg = entity.handle_entity_update.call_args.args[0]
     assert CONF_STATE not in entity_msg
     assert entity_msg[CONF_AVAILABLE] is False
     assert CONF_ATTRIBUTES not in entity_msg
@@ -295,7 +290,7 @@ async def test_websocket_entity_accepts_available_and_omitted_state(
     )
     resp3 = await client.receive_json()
     assert resp3 == result_message(42)
-    _, full_msg, _ = sent[-1]
+    full_msg = entity.handle_entity_update.call_args.args[0]
     assert full_msg[CONF_STATE] == 21.5
     assert full_msg[CONF_ATTRIBUTES] == {"friendly": "x"}
     assert full_msg[CONF_AVAILABLE] is True

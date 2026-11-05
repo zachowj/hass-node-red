@@ -52,12 +52,6 @@ CONF_VERSION = "version"
 
 EVENT_VALUE_CHANGE = "value_change"
 
-NODERED_DISCOVERY = "nodered_discovery"
-NODERED_DISCOVERY_NEW = "nodered_discovery_new_{}"
-NODERED_DISCOVERY_UPDATED = "nodered_discovery_updated_{}"
-NODERED_ENTITY = "nodered_entity_{}_{}"
-NODERED_CONFIG_UPDATE = "nodered_config_update_{}_{}"
-
 SERVICE_TRIGGER = "trigger"
 
 # Defaults

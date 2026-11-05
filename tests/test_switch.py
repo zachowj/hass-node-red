@@ -181,7 +181,7 @@ def test_update_discovery_config_sets_custom_icon(
     assert node._attr_icon == "mdi:custom-switch"
 
 
-async def test_async_setup_entry_registers_dispatcher_and_service(
+async def test_async_setup_entry_registers_discovery_and_service(
     hass: HomeAssistant,
 ) -> None:
     """Test that switch platform enables discovery and registers trigger service."""
