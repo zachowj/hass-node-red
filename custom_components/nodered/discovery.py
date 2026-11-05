@@ -73,18 +73,25 @@ def async_register_platform(
 
 
 @callback
-def async_register_entity(hass: HomeAssistant, entity: NodeRedEntity) -> None:
+def async_register_entity(hass: HomeAssistant, entity: NodeRedEntity) -> CALLBACK_TYPE:
     """Route Node-RED messages for this entity's node to it."""
     entities = hass.data.setdefault(DOMAIN_DATA, {}).setdefault(ENTITIES, {})
     entities[entity.unique_id] = entity
 
+    @callback
+    def unregister() -> None:
+        if entities.get(entity.unique_id) is entity:
+            del entities[entity.unique_id]
+
+    return unregister
+
 
 @callback
-def async_unregister_entity(hass: HomeAssistant, entity: NodeRedEntity) -> None:
-    """Stop routing Node-RED messages to this entity."""
-    entities = hass.data.get(DOMAIN_DATA, {}).get(ENTITIES, {})
-    if entities.get(entity.unique_id) is entity:
-        del entities[entity.unique_id]
+def async_forget_discovery(hass: HomeAssistant, unique_id: str) -> None:
+    """Let the next discovery message for this node create its entity again."""
+    discovered = hass.data.get(DOMAIN_DATA, {}).get(ALREADY_DISCOVERED)
+    if discovered is not None:
+        discovered.discard(unique_id)
 
 
 @callback
