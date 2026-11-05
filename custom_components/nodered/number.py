@@ -15,7 +15,6 @@ from homeassistant.components.websocket_api.messages import event_message
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ICON,
-    CONF_ID,
     CONF_STATE,
     CONF_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
@@ -93,9 +92,7 @@ class NodeRedNumber(NodeRedEntity, RestoreNumber):
         connection: ActiveConnection,
     ) -> None:
         """Initialize the number."""
-        super().__init__(hass, config)
-        self._message_id = config[CONF_ID]
-        self._connection = connection
+        super().__init__(hass, config, connection)
 
         self._attr_icon = self._config.get(CONF_ICON, NUMBER_ICON)
         self._attr_native_value = config.get(CONF_STATE)

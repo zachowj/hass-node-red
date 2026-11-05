@@ -362,6 +362,35 @@ def test_missing_ids_raises_type_error(
         GoodEntity(hass, {CONF_SERVER_ID: "s1"})  # pyright: ignore[reportArgumentType] # missing node id
 
 
+class BidirectionalEntity(NodeRedEntity):
+    """Bidirectional entity that relies on the base class constructor."""
+
+    _bidirectional = True
+    component = "switch"
+
+
+def test_bidirectional_without_connection_raises_type_error(
+    hass: HomeAssistant,
+) -> None:
+    """Ensure a bidirectional entity cannot be created without a connection."""
+    config = {CONF_ID: "msg-1", CONF_SERVER_ID: "s1", CONF_NODE_ID: "n1", "config": {}}
+
+    with pytest.raises(TypeError, match="requires a connection"):
+        BidirectionalEntity(hass, config)
+
+
+def test_bidirectional_stores_message_id_and_connection(
+    hass: HomeAssistant, fake_connection: FakeConnection
+) -> None:
+    """Ensure the base class stores the message id and connection."""
+    config = {CONF_ID: "msg-1", CONF_SERVER_ID: "s1", CONF_NODE_ID: "n1", "config": {}}
+
+    ent = BidirectionalEntity(hass, config, fake_connection)
+
+    assert ent._message_id == "msg-1"
+    assert ent._connection is fake_connection
+
+
 def test_generate_device_identifiers_returns_correct_format() -> None:
     """Test generate_device_identifiers returns proper identifiers set."""
     device_id = "test-device-123"

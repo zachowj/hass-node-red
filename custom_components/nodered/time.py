@@ -10,7 +10,7 @@ from homeassistant.components.time import TimeEntity
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.components.websocket_api.messages import event_message
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ICON, CONF_ID, CONF_STATE, CONF_TYPE
+from homeassistant.const import CONF_ICON, CONF_STATE, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -76,17 +76,6 @@ class NodeRedTime(NodeRedEntity, TimeEntity):
     _attr_native_value = None
     _bidirectional = True
     component = CONF_TIME
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: dict[str, Any],
-        connection: ActiveConnection,
-    ) -> None:
-        """Initialize the time."""
-        super().__init__(hass, config)
-        self._message_id = config[CONF_ID]
-        self._connection = connection
 
     async def async_set_value(self, value: time) -> None:
         """Set new value."""

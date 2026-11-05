@@ -7,6 +7,7 @@ from pytest_homeassistant_custom_component.typing import WebSocketGenerator
 from custom_components.nodered import select
 from custom_components.nodered.const import CONF_VALUE, DOMAIN
 from custom_components.nodered.select import NodeRedSelect
+from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 from tests.helpers import FakeConnection
 
@@ -17,7 +18,7 @@ async def test_async_select_option_sends_message(
 ) -> None:
     """async_select_option should send an event message with the selected option."""
     config = {
-        select.CONF_ID: "test-msg-id",
+        CONF_ID: "test-msg-id",
         "server_id": "s1",
         "node_id": "n1",
         select.CONF_CONFIG: {},
@@ -41,7 +42,7 @@ def test_update_entity_state_attributes_sets_current_option(
 ) -> None:
     """update_entity_state_attributes should set _attr_current_option."""
     config = {
-        select.CONF_ID: "id-1",
+        CONF_ID: "id-1",
         "server_id": "s1",
         "node_id": "n1",
         select.CONF_CONFIG: {},
@@ -59,7 +60,7 @@ def test_update_discovery_config_sets_icon_and_options(
 ) -> None:
     """update_discovery_config should set icon and options from discovery config."""
     config = {
-        select.CONF_ID: "id-2",
+        CONF_ID: "id-2",
         "server_id": "s1",
         "node_id": "n1",
         select.CONF_CONFIG: {},
@@ -84,7 +85,7 @@ def test_update_discovery_config_without_options_or_icon(
 ) -> None:
     """update_discovery_config should handle missing icon and options gracefully."""
     config = {
-        select.CONF_ID: "id-3",
+        CONF_ID: "id-3",
         "server_id": "s1",
         "node_id": "n1",
         select.CONF_CONFIG: {},

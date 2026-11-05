@@ -63,9 +63,14 @@ class NodeRedSensor(NodeRedEntity, SensorEntity):
 
     component = CONF_SENSOR
 
-    def __init__(self, hass: HomeAssistant, config: dict[str, Any]) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: dict[str, Any],
+        connection: ActiveConnection | None = None,
+    ) -> None:
         """Initialize the sensor."""
-        super().__init__(hass, config)
+        super().__init__(hass, config, connection)
         self._attr_unit_of_measurement = None
         # Only attempt conversion if a state was provided in discovery/config
         if CONF_STATE in config:

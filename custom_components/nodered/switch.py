@@ -11,7 +11,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_ICON,
-    CONF_ID,
     CONF_STATE,
     CONF_TYPE,
     EVENT_STATE_CHANGED,
@@ -100,9 +99,7 @@ class NodeRedSwitch(NodeRedEntity, ToggleEntity):
         connection: ActiveConnection,
     ) -> None:
         """Initialize the switch."""
-        super().__init__(hass, config)
-        self._message_id = config[CONF_ID]
-        self._connection = connection
+        super().__init__(hass, config, connection)
 
         self._attr_state = config.get(CONF_STATE, True)
         self._attr_icon = self._config.get(CONF_ICON)

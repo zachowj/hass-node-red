@@ -69,9 +69,14 @@ class NodeRedBinarySensor(NodeRedEntity, BinarySensorEntity):
     )
     component = CONF_BINARY_SENSOR
 
-    def __init__(self, hass: HomeAssistant, config: dict[str, Any]) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: dict[str, Any],
+        connection: ActiveConnection | None = None,
+    ) -> None:
         """Initialize the binary sensor."""
-        super().__init__(hass, config)
+        super().__init__(hass, config, connection)
         if CONF_STATE in config:
             self._attr_is_on = self._evaluate_sensor_state(config[CONF_STATE])
         else:

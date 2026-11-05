@@ -9,6 +9,7 @@ from custom_components.nodered.const import CONF_CONFIG, CONF_VALUE, HA_MAX_STAT
 from custom_components.nodered.text import NodeRedText
 from homeassistant.components.text import TextExtraStoredData, TextMode
 from homeassistant.components.websocket_api.messages import event_message
+from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 from tests.helpers import FakeConnection
 
@@ -24,7 +25,7 @@ def test_update_entity_state_coerces_to_string(
 ) -> None:
     """Text entity should coerce incoming state to a string."""
     config: dict[str, Any] = {
-        text.CONF_ID: "id-1",
+        CONF_ID: "id-1",
         "server_id": "s1",
         "node_id": "n1",
         "config": {},
@@ -50,7 +51,7 @@ async def test_async_set_value_sends_event_message(
 ) -> None:
     """async_set_value should send correct websocket event message."""
     config: dict[str, Any] = {
-        text.CONF_ID: 12345,
+        CONF_ID: 12345,
         "server_id": "s1",
         "node_id": "n1",
         "config": {},
@@ -79,7 +80,7 @@ async def test_async_added_to_hass_restores_native_values_when_available(
 ) -> None:
     """async_added_to_hass should restore native values when last data exists."""
     config: dict[str, Any] = {
-        text.CONF_ID: "id-restore",
+        CONF_ID: "id-restore",
         "server_id": "s1",
         "node_id": "n1",
         "config": {},
@@ -107,7 +108,7 @@ async def test_async_added_to_hass_handles_none_gracefully(
 ) -> None:
     """async_added_to_hass should handle no last data without raising."""
     config: dict[str, Any] = {
-        text.CONF_ID: "id-no-restore",
+        CONF_ID: "id-no-restore",
         "server_id": "s1",
         "node_id": "n1",
         "config": {},
@@ -128,7 +129,7 @@ def test_update_discovery_config_applies_defaults(
 ) -> None:
     """update_discovery_config should set default discovery values when not provided."""
     config: dict[str, Any] = {
-        text.CONF_ID: "id-defaults",
+        CONF_ID: "id-defaults",
         "server_id": "s1",
         "node_id": "n1",
         "config": {},  # empty inner config to trigger defaults
@@ -149,7 +150,7 @@ def test_update_discovery_config_applies_custom_values(
 ) -> None:
     """update_discovery_config should read and apply configuration values."""
     custom_cfg: dict[str, Any] = {
-        text.CONF_ID: "id-custom",
+        CONF_ID: "id-custom",
         "server_id": "s1",
         "node_id": "n1",
         "config": {
@@ -176,7 +177,7 @@ def test_update_entity_state_truncates_to_max_length(
 ) -> None:
     """Text entity should truncate incoming state exceeding max length."""
     config: dict[str, Any] = {
-        text.CONF_ID: "id-truncate",
+        CONF_ID: "id-truncate",
         "server_id": "s1",
         "node_id": "n1",
         "config": {},
@@ -197,7 +198,7 @@ def test_update_discovery_config_clamps_to_ha_max_length(
 ) -> None:
     """Discovery config should clamp max length to Home Assistant limit."""
     custom_cfg: dict[str, Any] = {
-        text.CONF_ID: "id-clamp",
+        CONF_ID: "id-clamp",
         "server_id": "s1",
         "node_id": "n1",
         "config": {text.CONF_MAX_LENGTH: 300},
@@ -214,7 +215,7 @@ async def test_async_added_to_hass_preserves_restored_max(
 ) -> None:
     """Restored native_max values should be preserved (not clamped)."""
     config: dict[str, Any] = {
-        text.CONF_ID: "id-restore-clamp",
+        CONF_ID: "id-restore-clamp",
         "server_id": "s1",
         "node_id": "n1",
         "config": {},
@@ -239,7 +240,7 @@ def test_update_entity_state_truncates_to_ha_max_when_config_high(
 ) -> None:
     """If config max > 255, incoming values are truncated to 255."""
     custom_cfg: dict[str, Any] = {
-        text.CONF_ID: "id-high-config",
+        CONF_ID: "id-high-config",
         "server_id": "s1",
         "node_id": "n1",
         "config": {text.CONF_MAX_LENGTH: 300},

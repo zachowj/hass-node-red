@@ -7,7 +7,7 @@ from homeassistant.components.text import RestoreText, TextMode
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.components.websocket_api.messages import event_message
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ICON, CONF_ID, CONF_TYPE
+from homeassistant.const import CONF_ICON, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -71,17 +71,6 @@ class NodeRedText(NodeRedEntity, RestoreText):
 
     _bidirectional = True
     component = CONF_TEXT
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: dict[str, Any],
-        connection: ActiveConnection,
-    ) -> None:
-        """Initialize the number."""
-        super().__init__(hass, config)
-        self._message_id = config[CONF_ID]
-        self._connection = connection
 
     async def async_added_to_hass(self) -> None:
         """Restore native_*."""

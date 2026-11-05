@@ -8,6 +8,7 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ENTITY_CATEGORY,
     CONF_ICON,
+    CONF_ID,
     CONF_STATE,
     CONF_UNIT_OF_MEASUREMENT,
     EntityCategory,
@@ -58,11 +59,22 @@ class NodeRedEntity(Entity):
     component: ClassVar[str] = ""
     _bidirectional = False
 
-    def __init__(self, hass: HomeAssistant, config: dict[str, Any]) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: dict[str, Any],
+        connection: ActiveConnection | None = None,
+    ) -> None:
         """Initialize the entity."""
         if not type(self).component:
             msg = f"{type(self).__name__} must set class attribute `component`"
             raise TypeError(msg)
+        if self._bidirectional:
+            if connection is None:
+                msg = f"{type(self).__name__} requires a connection"
+                raise TypeError(msg)
+            self._message_id = config[CONF_ID]
+            self._connection = connection
         self.hass = hass
         self._server_id = config.get(CONF_SERVER_ID)
         self._node_id = config.get(CONF_NODE_ID)

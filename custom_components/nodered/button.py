@@ -7,7 +7,7 @@ from homeassistant.components.button import ButtonEntity
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.components.websocket_api.messages import event_message
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ID, CONF_TYPE
+from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -55,14 +55,6 @@ class NodeRedButton(NodeRedEntity, ButtonEntity):
 
     _bidirectional = True
     component = CONF_BUTTON
-
-    def __init__(
-        self, hass: HomeAssistant, config: dict[str, Any], connection: ActiveConnection
-    ) -> None:
-        """Initialize the button."""
-        super().__init__(hass, config)
-        self._message_id = config[CONF_ID]
-        self._connection = connection
 
     def press(self) -> None:
         """Handle the button press."""

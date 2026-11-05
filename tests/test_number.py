@@ -3,6 +3,7 @@
 from custom_components.nodered import number
 from custom_components.nodered.const import CONF_CONFIG, CONF_NUMBER
 from custom_components.nodered.number import NodeRedNumber
+from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 from tests.helpers import FakeConnection
 
@@ -24,7 +25,7 @@ def test_update_config_sets_number_specific_attributes(
 ) -> None:
     """update_config sets number-specific attributes from a config message."""
     config = {
-        number.CONF_ID: "id-1",
+        CONF_ID: "id-1",
         "server_id": "s1",
         "node_id": "n1",
         CONF_CONFIG: {},
@@ -63,7 +64,7 @@ def test_update_config_handles_partial_config(
 ) -> None:
     """update_config should handle partial config updates gracefully."""
     config = {
-        number.CONF_ID: "id-2",
+        CONF_ID: "id-2",
         "server_id": "s1",
         "node_id": "n2",
         CONF_CONFIG: {},
@@ -101,7 +102,7 @@ def test_update_config_handles_empty_config(
 ) -> None:
     """update_config should handle empty config gracefully."""
     config = {
-        number.CONF_ID: "id-3",
+        CONF_ID: "id-3",
         "server_id": "s1",
         "node_id": "n3",
         CONF_CONFIG: {},
@@ -133,7 +134,7 @@ def test_update_discovery_config_sets_number_attributes(
 ) -> None:
     """update_discovery_config sets number-specific attributes from discovery config."""
     config = {
-        number.CONF_ID: "id-4",
+        CONF_ID: "id-4",
         "server_id": "s4",
         "node_id": "n4",
         CONF_CONFIG: {},
