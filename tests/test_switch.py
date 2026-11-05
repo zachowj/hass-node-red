@@ -9,11 +9,7 @@ from custom_components.nodered.const import (
     CONF_OUTPUT_PATH,
     DOMAIN,
 )
-from custom_components.nodered.switch import (
-    SERVICE_TRIGGER,
-    NodeRedSwitch,
-    _async_setup_entity,
-)
+from custom_components.nodered.switch import SERVICE_TRIGGER, NodeRedSwitch
 from homeassistant.const import CONF_ICON, CONF_ID, CONF_STATE
 from homeassistant.core import HomeAssistant
 from tests.helpers import FakeConnection
@@ -174,21 +170,6 @@ async def test_async_trigger_node_defaults_and_no_message(
         if "output_path" in payload or any(v is True for v in payload.values()):
             found = True
     assert found
-
-
-async def test_async_setup_entity_adds_switch(
-    hass: HomeAssistant, fake_connection: FakeConnection
-) -> None:
-    config = {"id": "s-5", "server_id": "s1", "node_id": "n1", "config": {}}
-    added: list = []
-
-    def add_entities(ent_list):
-        added.extend(ent_list)
-
-    await _async_setup_entity(hass, config, add_entities, fake_connection)  # type: ignore[arg-type]
-    assert len(added) == 1
-    assert isinstance(added[0], NodeRedSwitch)
-    assert added[0]._message_id == config["id"]
 
 
 def test_update_discovery_config_sets_custom_icon(

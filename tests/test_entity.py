@@ -7,6 +7,7 @@ from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.nodered.const import (
     CONF_ATTRIBUTES,
@@ -22,11 +23,16 @@ from custom_components.nodered.const import (
     DOMAIN,
     DOMAIN_DATA,
     NODERED_CONFIG_UPDATE,
+    NODERED_DISCOVERY_NEW,
     NODERED_DISCOVERY_UPDATED,
     NODERED_ENTITY,
 )
 from custom_components.nodered.discovery import ALREADY_DISCOVERED, CHANGE_ENTITY_TYPE
-from custom_components.nodered.entity import NodeRedEntity, generate_device_identifiers
+from custom_components.nodered.entity import (
+    NodeRedEntity,
+    async_setup_discovery,
+    generate_device_identifiers,
+)
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ENTITY_CATEGORY,
@@ -37,6 +43,8 @@ from homeassistant.const import (
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity import Entity
 from tests.helpers import FakeConnection, announce_contrib_version
 
 
@@ -389,6 +397,28 @@ def test_bidirectional_stores_message_id_and_connection(
 
     assert ent._message_id == "msg-1"
     assert ent._connection is fake_connection
+
+
+async def test_async_setup_discovery_adds_entity(
+    hass: HomeAssistant, fake_connection: FakeConnection
+) -> None:
+    """Ensure a discovery for the class's component adds a new entity."""
+    config_entry = MockConfigEntry(domain=DOMAIN)
+    added: list[Entity] = []
+
+    def add_entities(entities: list[Entity], _update_before_add: bool = False) -> None:
+        added.extend(entities)
+
+    async_setup_discovery(hass, config_entry, BidirectionalEntity, add_entities)  # pyright: ignore[reportArgumentType]
+    config = {CONF_ID: "msg-1", CONF_SERVER_ID: "s1", CONF_NODE_ID: "n1", "config": {}}
+    async_dispatcher_send(
+        hass, NODERED_DISCOVERY_NEW.format("switch"), config, fake_connection
+    )
+    await hass.async_block_till_done()
+
+    assert len(added) == 1
+    assert isinstance(added[0], BidirectionalEntity)
+    assert added[0]._connection is fake_connection
 
 
 def test_generate_device_identifiers_returns_correct_format() -> None:

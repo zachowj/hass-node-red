@@ -7,23 +7,14 @@ from typing import Any
 from dateutil import parser
 
 from homeassistant.components.time import TimeEntity
-from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.components.websocket_api.messages import event_message
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ICON, CONF_STATE, CONF_TYPE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    CONF_CONFIG,
-    CONF_TIME,
-    CONF_VALUE,
-    EVENT_VALUE_CHANGE,
-    NODERED_DISCOVERY_NEW,
-    TIME_ICON,
-)
-from .entity import NodeRedEntity
+from .const import CONF_CONFIG, CONF_TIME, CONF_VALUE, EVENT_VALUE_CHANGE, TIME_ICON
+from .entity import NodeRedEntity, async_setup_discovery
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,28 +26,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the time platform."""
 
-    async def async_discover(
-        config: dict[str, Any], connection: ActiveConnection
-    ) -> None:
-        await _async_setup_entity(hass, config, async_add_entities, connection)
-
-    config_entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
-            NODERED_DISCOVERY_NEW.format(CONF_TIME),
-            async_discover,
-        )
-    )
-
-
-async def _async_setup_entity(
-    hass: HomeAssistant,
-    config: dict[str, Any],
-    async_add_entities: AddEntitiesCallback,
-    connection: ActiveConnection,
-) -> None:
-    """Set up the Node-RED time."""
-    async_add_entities([NodeRedTime(hass, config, connection)])
+    async_setup_discovery(hass, config_entry, NodeRedTime, async_add_entities)
 
 
 def _convert_string_to_time(value: str | None) -> None | time:

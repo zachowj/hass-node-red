@@ -25,6 +25,8 @@ from homeassistant.helpers.entity_registry import async_get
 
 if TYPE_CHECKING:
     from homeassistant.components.websocket_api.connection import ActiveConnection
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_ATTRIBUTES,
@@ -42,6 +44,7 @@ from .const import (
     DOMAIN_DATA,
     NODERED_CONFIG_UPDATE,
     NODERED_DISCOVERY,
+    NODERED_DISCOVERY_NEW,
     NODERED_DISCOVERY_UPDATED,
     NODERED_ENTITY,
 )
@@ -306,6 +309,28 @@ class NodeRedEntity(Entity):
             self._remove_signal_discovery_update()
         if self._remove_signal_config_update is not None:
             self._remove_signal_config_update()
+
+
+@callback
+def async_setup_discovery(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    entity_class: type[NodeRedEntity],
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Add an entity of entity_class for each new Node-RED discovery."""
+
+    @callback
+    def async_discover(config: dict[str, Any], connection: ActiveConnection) -> None:
+        async_add_entities([entity_class(hass, config, connection)])
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            NODERED_DISCOVERY_NEW.format(entity_class.component),
+            async_discover,
+        )
+    )
 
 
 def generate_device_identifiers(device_id: str) -> set[tuple[str, str]]:

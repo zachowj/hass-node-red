@@ -22,18 +22,10 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    CONF_CONFIG,
-    CONF_NUMBER,
-    CONF_VALUE,
-    EVENT_VALUE_CHANGE,
-    NODERED_DISCOVERY_NEW,
-    NUMBER_ICON,
-)
-from .entity import NodeRedEntity
+from .const import CONF_CONFIG, CONF_NUMBER, CONF_VALUE, EVENT_VALUE_CHANGE, NUMBER_ICON
+from .entity import NodeRedEntity, async_setup_discovery
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,28 +42,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the number platform."""
 
-    async def async_discover(
-        config: dict[str, Any], connection: ActiveConnection
-    ) -> None:
-        await _async_setup_entity(hass, config, async_add_entities, connection)
-
-    config_entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
-            NODERED_DISCOVERY_NEW.format(CONF_NUMBER),
-            async_discover,
-        )
-    )
-
-
-async def _async_setup_entity(
-    hass: HomeAssistant,
-    config: dict[str, Any],
-    async_add_entities: AddEntitiesCallback,
-    connection: ActiveConnection,
-) -> None:
-    """Set up the Node-RED number."""
-    async_add_entities([NodeRedNumber(hass, config, connection)])
+    async_setup_discovery(hass, config_entry, NodeRedNumber, async_add_entities)
 
 
 class NodeRedNumber(NodeRedEntity, RestoreNumber):

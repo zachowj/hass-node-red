@@ -3,12 +3,10 @@
 from typing import Any
 
 from homeassistant.components.select import SelectEntity
-from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.components.websocket_api.messages import event_message
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ICON, CONF_STATE, CONF_TYPE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -17,10 +15,9 @@ from .const import (
     CONF_SELECT,
     CONF_VALUE,
     EVENT_VALUE_CHANGE,
-    NODERED_DISCOVERY_NEW,
     SELECT_ICON,
 )
-from .entity import NodeRedEntity
+from .entity import NodeRedEntity, async_setup_discovery
 
 
 async def async_setup_entry(
@@ -30,28 +27,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the text platform."""
 
-    async def async_discover(
-        config: dict[str, Any], connection: ActiveConnection
-    ) -> None:
-        await _async_setup_entity(hass, config, async_add_entities, connection)
-
-    config_entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
-            NODERED_DISCOVERY_NEW.format(CONF_SELECT),
-            async_discover,
-        )
-    )
-
-
-async def _async_setup_entity(
-    hass: HomeAssistant,
-    config: dict[str, Any],
-    async_add_entities: AddEntitiesCallback,
-    connection: ActiveConnection,
-) -> None:
-    """Set up the Node-RED text."""
-    async_add_entities([NodeRedSelect(hass, config, connection)])
+    async_setup_discovery(hass, config_entry, NodeRedSelect, async_add_entities)
 
 
 class NodeRedSelect(NodeRedEntity, SelectEntity):

@@ -4,12 +4,10 @@ import logging
 from typing import Any
 
 from homeassistant.components.text import RestoreText, TextMode
-from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.components.websocket_api.messages import event_message
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ICON, CONF_TYPE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -17,10 +15,9 @@ from .const import (
     CONF_VALUE,
     EVENT_VALUE_CHANGE,
     HA_MAX_STATE_LENGTH,
-    NODERED_DISCOVERY_NEW,
     TEXT_ICON,
 )
-from .entity import NodeRedEntity
+from .entity import NodeRedEntity, async_setup_discovery
 
 CONF_MAX_LENGTH = "max_length"
 CONF_MIN_LENGTH = "min_length"
@@ -42,28 +39,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the text platform."""
 
-    async def async_discover(
-        config: dict[str, Any], connection: ActiveConnection
-    ) -> None:
-        await _async_setup_entity(hass, config, async_add_entities, connection)
-
-    config_entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
-            NODERED_DISCOVERY_NEW.format(CONF_TEXT),
-            async_discover,
-        )
-    )
-
-
-async def _async_setup_entity(
-    hass: HomeAssistant,
-    config: dict[str, Any],
-    async_add_entities: AddEntitiesCallback,
-    connection: ActiveConnection,
-) -> None:
-    """Set up the Node-RED text."""
-    async_add_entities([NodeRedText(hass, config, connection)])
+    async_setup_discovery(hass, config_entry, NodeRedText, async_add_entities)
 
 
 class NodeRedText(NodeRedEntity, RestoreText):
