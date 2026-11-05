@@ -5,7 +5,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from pytest_homeassistant_custom_component.typing import WebSocketGenerator
 
 from custom_components.nodered import select
-from custom_components.nodered.const import DOMAIN
+from custom_components.nodered.const import CONF_VALUE, DOMAIN
 from custom_components.nodered.select import NodeRedSelect
 from homeassistant.core import HomeAssistant
 from tests.helpers import FakeConnection
@@ -33,7 +33,7 @@ async def test_async_select_option_sends_message(
     # payload keys are under the 'event' object
     payload = last.get("event")
     assert payload[select.CONF_TYPE] == select.EVENT_VALUE_CHANGE
-    assert payload[select.CONF_VALUE] == "chosen-option"
+    assert payload[CONF_VALUE] == "chosen-option"
 
 
 def test_update_entity_state_attributes_sets_current_option(

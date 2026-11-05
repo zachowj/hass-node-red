@@ -2,12 +2,11 @@
 
 from typing import Any
 
-from custom_components.nodered.number import CONF_VALUE
 from homeassistant.components.select import SelectEntity
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.components.websocket_api.messages import event_message
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ICON, CONF_ID, CONF_TYPE
+from homeassistant.const import CONF_ICON, CONF_ID, CONF_STATE, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -16,13 +15,12 @@ from .const import (
     CONF_CONFIG,
     CONF_OPTIONS,
     CONF_SELECT,
+    CONF_VALUE,
     EVENT_VALUE_CHANGE,
     NODERED_DISCOVERY_NEW,
     SELECT_ICON,
 )
 from .entity import NodeRedEntity
-
-CONF_STATE = "state"
 
 
 async def async_setup_entry(

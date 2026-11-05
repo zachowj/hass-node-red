@@ -5,8 +5,7 @@ from typing import Any
 import pytest
 
 from custom_components.nodered import text
-from custom_components.nodered.const import CONF_CONFIG, HA_MAX_STATE_LENGTH
-from custom_components.nodered.number import CONF_VALUE
+from custom_components.nodered.const import CONF_CONFIG, CONF_VALUE, HA_MAX_STATE_LENGTH
 from custom_components.nodered.text import NodeRedText
 from homeassistant.components.text import TextExtraStoredData, TextMode
 from homeassistant.components.websocket_api.messages import event_message

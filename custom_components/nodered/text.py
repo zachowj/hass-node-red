@@ -14,13 +14,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_TEXT,
+    CONF_VALUE,
     EVENT_VALUE_CHANGE,
     HA_MAX_STATE_LENGTH,
     NODERED_DISCOVERY_NEW,
     TEXT_ICON,
 )
 from .entity import NodeRedEntity
-from .number import CONF_VALUE
 
 CONF_MAX_LENGTH = "max_length"
 CONF_MIN_LENGTH = "min_length"

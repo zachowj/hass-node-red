@@ -16,6 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ICON,
     CONF_ID,
+    CONF_STATE,
     CONF_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
@@ -28,6 +29,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import (
     CONF_CONFIG,
     CONF_NUMBER,
+    CONF_VALUE,
     EVENT_VALUE_CHANGE,
     NODERED_DISCOVERY_NEW,
     NUMBER_ICON,
@@ -40,9 +42,6 @@ CONF_MIN_VALUE = "min_value"
 CONF_MAX_VALUE = "max_value"
 CONF_STEP_VALUE = "step_value"
 CONF_MODE = "mode"
-
-CONF_STATE = "state"
-CONF_VALUE = "value"
 
 
 async def async_setup_entry(
