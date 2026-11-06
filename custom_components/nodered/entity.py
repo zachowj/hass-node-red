@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, ClassVar
 
+import voluptuous as vol
+
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ENTITY_CATEGORY,
@@ -36,15 +38,13 @@ from .const import (
     CONF_REMOVE,
     CONF_SERVER_ID,
     DOMAIN,
-    DOMAIN_DATA,
 )
 from .discovery import (
-    ALREADY_DISCOVERED,
     CHANGE_ENTITY_TYPE,
     async_discover,
+    async_forget_discovery,
     async_register_entity,
     async_register_platform,
-    async_unregister_entity,
 )
 from .utils import contrib_supports_presence_available
 
@@ -100,6 +100,8 @@ class NodeRedEntity(Entity):
 
         self.update_discovery_config(config)
         self.update_entity_state_attributes(config)
+        # Also runs when adding the entity is aborted
+        self.async_on_remove(lambda: async_forget_discovery(hass, self.unique_id))
 
     @callback
     def handle_config_update(self, msg: dict[str, Any]) -> None:
@@ -132,6 +134,17 @@ class NodeRedEntity(Entity):
             self._attr_extra_state_attributes = msg[CONF_ATTRIBUTES]
         if CONF_AVAILABLE in msg:
             self._attr_available = msg[CONF_AVAILABLE]
+
+    def validate_state(self) -> None:
+        """Raise vol.Invalid if Home Assistant would reject the entity's state.
+
+        Home Assistant checks the state when the state property is read, so
+        reading it runs the same check as writing the state.
+        """
+        try:
+            _ = self.state
+        except ValueError as err:
+            raise vol.Invalid(str(err), path=[CONF_STATE]) from err
 
     @callback
     def handle_lost_connection(self) -> None:
@@ -170,17 +183,6 @@ class NodeRedEntity(Entity):
                 # callback runs and re-dispatches discovery for the new entity
                 self.hass.async_create_task(self._async_remove_from_hass())
             else:
-
-                @callback
-                def cleanup_discovery() -> None:
-                    """Remove discovery tracking for this entity, if present."""
-                    discovered = self.hass.data[DOMAIN_DATA].get(ALREADY_DISCOVERED)
-                    if discovered is None or self.unique_id is None:
-                        return
-                    # discovery.py stores a set of discovery hashes
-                    discovered.discard(self.unique_id)
-
-                self.async_on_remove(cleanup_discovery)
                 self.hass.async_create_task(self._async_remove_from_hass())
 
             return
@@ -277,11 +279,7 @@ class NodeRedEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Start receiving Node-RED messages when added to Home Assistant."""
-        async_register_entity(self.hass, self)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Stop receiving Node-RED messages when removed from Home Assistant."""
-        async_unregister_entity(self.hass, self)
+        self.async_on_remove(async_register_entity(self.hass, self))
 
 
 @callback
@@ -295,7 +293,9 @@ def async_setup_discovery(
 
     @callback
     def discover(config: dict[str, Any], connection: ActiveConnection) -> None:
-        async_add_entities([entity_class(hass, config, connection)])
+        entity = entity_class(hass, config, connection)
+        entity.validate_state()
+        async_add_entities([entity])
 
     config_entry.async_on_unload(
         async_register_platform(hass, entity_class.component, discover)

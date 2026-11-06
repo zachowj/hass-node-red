@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant_custom_component.typing import WebSocketGenerator
 
 from custom_components.nodered.const import (
     CONF_ATTRIBUTES,
@@ -44,6 +45,7 @@ from homeassistant.const import (
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import Entity
 from tests.helpers import FakeConnection, announce_contrib_version
 
@@ -186,17 +188,8 @@ def test_handle_discovery_update_recreate_entity(
     mock_discover.assert_not_called()
 
 
-def test_handle_discovery_update_cleanup_discovery(hass: HomeAssistant) -> None:
+def test_handle_discovery_update_remove_schedules_removal(hass: HomeAssistant) -> None:
     ent = DummyEntity(hass, {"server_id": "s", "node_id": "n2", "config": {}})
-    # Prepare discovery tracking as discovery.py does (a set of hashes)
-    hass.data.setdefault(DOMAIN_DATA, {})[ALREADY_DISCOVERED] = {ent.unique_id}
-
-    captured: dict[str, Any] = {}
-
-    def fake_async_on_remove(cb: Any) -> None:
-        captured["cb"] = cb
-
-    ent.async_on_remove = fake_async_on_remove  # type: ignore[attr-defined]
     tasks: list[Any] = []
     hass.async_create_task = tasks.append  # type: ignore[attr-defined]
 
@@ -207,12 +200,6 @@ def test_handle_discovery_update_cleanup_discovery(hass: HomeAssistant) -> None:
     assert tasks
     assert hasattr(tasks[0], "__await__")
     tasks[0].close()
-
-    # Call the registered cleanup callback and assert it removes discovery entry
-    assert "cb" in captured
-    assert callable(captured["cb"])
-    captured["cb"]()
-    assert ent.unique_id not in hass.data[DOMAIN_DATA].get(ALREADY_DISCOVERED, set())
 
 
 @pytest.mark.asyncio
@@ -576,33 +563,86 @@ async def test_async_added_to_hass_registers_entity(hass: HomeAssistant) -> None
     assert async_get_entity(hass, "srv-add", "node-add") is ent
 
 
-async def test_async_will_remove_from_hass_unregisters_entity(
+async def test_aborted_add_unregisters_entity_and_forgets_discovery(
     hass: HomeAssistant,
 ) -> None:
-    """Test that async_will_remove_from_hass stops routing messages to the entity."""
+    """Ensure an aborted add leaves no routing or discovery hash behind."""
     ent = DummyEntity(
         hass, {CONF_SERVER_ID: "srv-rm", CONF_NODE_ID: "node-rm", CONF_CONFIG: {}}
     )
+    hass.data.setdefault(DOMAIN_DATA, {})[ALREADY_DISCOVERED] = {ent.unique_id}
     await ent.async_added_to_hass()
 
-    await ent.async_will_remove_from_hass()
+    # HA 2026.10+ aborts the add when the first state write fails
+    ent.add_to_platform_abort()
 
     assert async_get_entity(hass, "srv-rm", "node-rm") is None
+    assert ent.unique_id not in hass.data[DOMAIN_DATA][ALREADY_DISCOVERED]
 
 
-async def test_async_will_remove_from_hass_keeps_replacement_entity(
+async def test_add_aborted_before_added_forgets_discovery(
     hass: HomeAssistant,
 ) -> None:
-    """Test that removing an old entity leaves its replacement registered."""
+    """Ensure the hash is forgotten when the add aborts before it is added."""
+    ent = DummyEntity(hass, {CONF_SERVER_ID: "s", CONF_NODE_ID: "n", CONF_CONFIG: {}})
+    hass.data.setdefault(DOMAIN_DATA, {})[ALREADY_DISCOVERED] = {ent.unique_id}
+
+    ent.add_to_platform_abort()
+
+    assert ent.unique_id not in hass.data[DOMAIN_DATA][ALREADY_DISCOVERED]
+
+
+async def test_removing_old_entity_keeps_replacement_registered(
+    hass: HomeAssistant,
+) -> None:
+    """Ensure removing an old entity leaves its replacement registered."""
     config = {CONF_SERVER_ID: "srv-new", CONF_NODE_ID: "node-new", CONF_CONFIG: {}}
     old = DummyEntity(hass, config)
     new = DummyEntity(hass, config)
     await old.async_added_to_hass()
     async_register_entity(hass, new)
 
-    await old.async_will_remove_from_hass()
+    old.add_to_platform_abort()
 
     assert async_get_entity(hass, "srv-new", "node-new") is new
+
+
+async def test_removed_entity_is_rediscovered(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Ensure discovery recreates an entity that was removed from HA."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    client = await hass_ws_client(hass)
+    discovery = {
+        "type": "nodered/discovery",
+        "component": "sensor",
+        "server_id": "s1",
+        "node_id": "n1",
+        "state": "on",
+    }
+    entity_registry = er.async_get(hass)
+
+    await client.send_json({"id": 1, **discovery})
+    assert (await client.receive_json())["success"]
+    await hass.async_block_till_done()
+    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, "nodered-s1-n1")
+    assert entity_id is not None
+
+    entity_registry.async_remove(entity_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id) is None
+
+    await client.send_json({"id": 2, **discovery})
+    assert (await client.receive_json())["success"]
+    await hass.async_block_till_done()
+    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, "nodered-s1-n1")
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "on"
 
 
 def test_update_config_no_changes(hass: HomeAssistant) -> None:
