@@ -8,11 +8,10 @@ from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_STATE, STATE_HOME, STATE_ON, STATE_OPEN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONF_BINARY_SENSOR, NODERED_DISCOVERY_NEW
-from .entity import NodeRedEntity
+from .const import CONF_BINARY_SENSOR
+from .entity import NodeRedEntity, async_setup_discovery
 from .utils import contrib_supports_presence_available
 
 try:
@@ -27,31 +26,11 @@ except ImportError:
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_devices: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensor platform."""
 
-    async def async_discover(
-        config: dict[str, Any], _connection: ActiveConnection
-    ) -> None:
-        await _async_setup_entity(hass, config, async_add_devices)
-
-    config_entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
-            NODERED_DISCOVERY_NEW.format(CONF_BINARY_SENSOR),
-            async_discover,
-        )
-    )
-
-
-async def _async_setup_entity(
-    hass: HomeAssistant,
-    config: dict[str, Any],
-    async_add_devices: AddEntitiesCallback,
-) -> None:
-    """Set up the Node-RED binary-sensor."""
-    async_add_devices([NodeRedBinarySensor(hass, config)])
+    async_setup_discovery(hass, config_entry, NodeRedBinarySensor, async_add_entities)
 
 
 class NodeRedBinarySensor(NodeRedEntity, BinarySensorEntity):
@@ -69,9 +48,14 @@ class NodeRedBinarySensor(NodeRedEntity, BinarySensorEntity):
     )
     component = CONF_BINARY_SENSOR
 
-    def __init__(self, hass: HomeAssistant, config: dict[str, Any]) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: dict[str, Any],
+        connection: ActiveConnection | None = None,
+    ) -> None:
         """Initialize the binary sensor."""
-        super().__init__(hass, config)
+        super().__init__(hass, config, connection)
         if CONF_STATE in config:
             self._attr_is_on = self._evaluate_sensor_state(config[CONF_STATE])
         else:

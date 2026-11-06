@@ -46,7 +46,6 @@ from homeassistant.helpers import (
     device_registry as dr,
     trigger,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import async_entries_for_device, async_get
 
 from .const import (
@@ -64,12 +63,10 @@ from .const import (
     CONTRIB_VERSION_DATA,
     DOMAIN,
     DOMAIN_DATA,
-    NODERED_CONFIG_UPDATE,
-    NODERED_DISCOVERY,
-    NODERED_ENTITY,
     VERSION,
     WEBHOOKS,
 )
+from .discovery import async_discover, async_get_entity
 from .sentence import websocket_sentence, websocket_sentence_response
 from .utils import NodeRedJSONEncoder
 
@@ -206,9 +203,7 @@ def websocket_discovery(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Sensor command."""
-    async_dispatcher_send(
-        hass, NODERED_DISCOVERY.format(msg[CONF_COMPONENT]), msg, connection
-    )
+    async_discover(hass, msg, connection)
     connection.send_message(result_message(msg[CONF_ID]))
 
 
@@ -227,9 +222,12 @@ def websocket_entity(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Sensor command."""
-    async_dispatcher_send(
-        hass, NODERED_ENTITY.format(msg[CONF_SERVER_ID], msg[CONF_NODE_ID]), msg
-    )
+    entity = async_get_entity(hass, msg[CONF_SERVER_ID], msg[CONF_NODE_ID])
+    if entity is not None:
+        try:
+            entity.handle_entity_update(msg)
+        except Exception:
+            _LOGGER.exception("Error updating %s", entity.entity_id)
     connection.send_message(result_message(msg[CONF_ID]))
 
 
@@ -246,9 +244,12 @@ def websocket_config_update(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Sensor command."""
-    async_dispatcher_send(
-        hass, NODERED_CONFIG_UPDATE.format(msg[CONF_SERVER_ID], msg[CONF_NODE_ID]), msg
-    )
+    entity = async_get_entity(hass, msg[CONF_SERVER_ID], msg[CONF_NODE_ID])
+    if entity is not None:
+        try:
+            entity.handle_config_update(msg)
+        except Exception:
+            _LOGGER.exception("Error updating %s", entity.entity_id)
     connection.send_message(result_message(msg[CONF_ID]))
 
 

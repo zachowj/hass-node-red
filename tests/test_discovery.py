@@ -1,8 +1,11 @@
 """Tests for discovery logic."""
 
 from typing import Any
+from unittest.mock import MagicMock
 
 import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant_custom_component.typing import WebSocketGenerator
 
 from custom_components.nodered.const import (
     CONF_COMPONENT,
@@ -10,137 +13,150 @@ from custom_components.nodered.const import (
     CONF_REMOVE,
     CONF_SENSOR,
     CONF_SERVER_ID,
+    DOMAIN,
     DOMAIN_DATA,
-    NODERED_DISCOVERY,
-    NODERED_DISCOVERY_NEW,
-    NODERED_DISCOVERY_UPDATED,
 )
 from custom_components.nodered.discovery import (
     ALREADY_DISCOVERED,
-    start_discovery,
-    stop_discovery,
+    async_discover,
+    async_register_entity,
+    async_register_platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
+
+SENSOR_MSG = {CONF_COMPONENT: CONF_SENSOR, CONF_SERVER_ID: "srv", CONF_NODE_ID: "node"}
+SENSOR_HASH = "nodered-srv-node"
 
 
-@pytest.mark.asyncio
-async def test_start_discovery_creates_and_dispatches_new(hass: HomeAssistant) -> None:
-    """When a new discovery message arrives it should send a NEW signal and record discovery."""
+def _fake_entity(unique_id: str) -> MagicMock:
+    entity = MagicMock()
+    entity.unique_id = unique_id
+    entity.entity_id = "sensor.fake"
+    return entity
+
+
+async def test_discover_new_calls_platform(hass: HomeAssistant) -> None:
+    """A new node's discovery creates the entity through its platform."""
     hass.data[DOMAIN_DATA] = {}
-    await start_discovery(hass, hass.data[DOMAIN_DATA])
-
-    events: list[Any] = []
-
-    async_dispatcher_connect(
-        hass,
-        NODERED_DISCOVERY_NEW.format(CONF_SENSOR),
-        lambda msg, conn: events.append((msg, conn)),
+    created: list[tuple[dict[str, Any], Any]] = []
+    async_register_platform(
+        hass, CONF_SENSOR, lambda msg, conn: created.append((msg, conn))
     )
+    connection = object()
 
-    msg = {CONF_COMPONENT: CONF_SENSOR, CONF_SERVER_ID: "srv", CONF_NODE_ID: "node"}
-    async_dispatcher_send(hass, NODERED_DISCOVERY, msg, object())
+    async_discover(hass, SENSOR_MSG, connection)  # type: ignore[arg-type]
 
-    await hass.async_block_till_done()
-
-    assert len(events) == 1
-    assert events[0][0] == msg
-
-    # Discovery hash should be recorded
-    discovery_hash = "nodered-srv-node"
-    assert discovery_hash in hass.data[DOMAIN_DATA][ALREADY_DISCOVERED]
+    assert created == [(SENSOR_MSG, connection)]
+    assert SENSOR_HASH in hass.data[DOMAIN_DATA][ALREADY_DISCOVERED]
 
 
-@pytest.mark.asyncio
-async def test_start_discovery_updates_when_already_discovered(
-    hass: HomeAssistant,
-) -> None:
-    """When a message for an already discovered device is received it should send UPDATED."""
-    hass.data[DOMAIN_DATA] = {}
-    discovery_hash = "nodered-srv-node2"
-    hass.data[DOMAIN_DATA][ALREADY_DISCOVERED] = {discovery_hash}
+async def test_discover_existing_updates_entity(hass: HomeAssistant) -> None:
+    """A discovered node's discovery updates its entity, including removal."""
+    hass.data[DOMAIN_DATA] = {ALREADY_DISCOVERED: {SENSOR_HASH}}
+    entity = _fake_entity(SENSOR_HASH)
+    async_register_entity(hass, entity)
+    connection = object()
 
-    await start_discovery(hass, hass.data[DOMAIN_DATA])
+    async_discover(hass, SENSOR_MSG, connection)  # type: ignore[arg-type]
+    remove_msg = {**SENSOR_MSG, CONF_REMOVE: True}
+    async_discover(hass, remove_msg, connection)  # type: ignore[arg-type]
 
-    events: list[Any] = []
-
-    async_dispatcher_connect(
-        hass,
-        NODERED_DISCOVERY_UPDATED.format(discovery_hash),
-        lambda msg, conn: events.append((msg, conn)),
-    )
-
-    msg = {CONF_COMPONENT: CONF_SENSOR, CONF_SERVER_ID: "srv", CONF_NODE_ID: "node2"}
-    async_dispatcher_send(hass, NODERED_DISCOVERY, msg, object())
-    await hass.async_block_till_done()
-
-    assert len(events) == 1
-
-    # Now send with REMOVE flag - should still go to UPDATED
-    msg2 = {**msg, CONF_REMOVE: True}
-    async_dispatcher_send(hass, NODERED_DISCOVERY, msg2, object())
-    await hass.async_block_till_done()
-    assert len(events) == 2
+    assert entity.handle_discovery_update.call_args_list == [
+        ((SENSOR_MSG, connection),),
+        ((remove_msg, connection),),
+    ]
 
 
-@pytest.mark.asyncio
-async def test_start_discovery_ignores_unsupported_component(
+async def test_discover_ignores_unsupported_component(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Unsupported components should be ignored and logged."""
+    """Unsupported components are ignored and logged."""
     hass.data[DOMAIN_DATA] = {}
-    await start_discovery(hass, hass.data[DOMAIN_DATA])
+    platform = MagicMock()
+    async_register_platform(hass, CONF_SENSOR, platform)
 
-    async_dispatcher_connect(
-        hass,
-        NODERED_DISCOVERY_NEW.format(CONF_SENSOR),
-        lambda _msg, _conn: (_ for _ in ()).throw(
-            AssertionError("should not be called")
-        ),
-    )
+    async_discover(hass, {**SENSOR_MSG, CONF_COMPONENT: "unsupported"}, object())  # type: ignore[arg-type]
 
-    msg = {CONF_COMPONENT: "unsupported", CONF_SERVER_ID: "srv", CONF_NODE_ID: "node"}
-    caplog.clear()
-    async_dispatcher_send(hass, NODERED_DISCOVERY, msg, object())
-    await hass.async_block_till_done()
-
+    platform.assert_not_called()
     assert "not supported" in caplog.text
 
 
-@pytest.mark.asyncio
-async def test_stop_discovery_unregisters(hass: HomeAssistant) -> None:
-    """stop_discovery should unregister so subsequent messages don't dispatch."""
+async def test_discover_ignored_when_not_loaded(hass: HomeAssistant) -> None:
+    """Discovery does nothing while the integration is not loaded."""
+    async_discover(hass, SENSOR_MSG, object())  # type: ignore[arg-type]
+
+    assert DOMAIN_DATA not in hass.data
+
+
+async def test_unregistered_platform_creates_nothing(hass: HomeAssistant) -> None:
+    """Discovery for an unloaded platform creates nothing."""
     hass.data[DOMAIN_DATA] = {}
-    await start_discovery(hass, hass.data[DOMAIN_DATA])
+    platform = MagicMock()
+    unregister = async_register_platform(hass, CONF_SENSOR, platform)
 
-    events: list[Any] = []
-    async_dispatcher_connect(
-        hass,
-        NODERED_DISCOVERY_NEW.format(CONF_SENSOR),
-        lambda msg, conn: events.append((msg, conn)),
+    unregister()
+    async_discover(hass, SENSOR_MSG, object())  # type: ignore[arg-type]
+
+    platform.assert_not_called()
+
+
+async def test_discover_logs_platform_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """An error creating the entity is logged, not raised."""
+    hass.data[DOMAIN_DATA] = {}
+    async_register_platform(
+        hass, CONF_SENSOR, MagicMock(side_effect=ValueError("bad state"))
     )
 
-    # Ensure registration works
-    async_dispatcher_send(
-        hass,
-        NODERED_DISCOVERY,
-        {CONF_COMPONENT: CONF_SENSOR, CONF_SERVER_ID: "srv", CONF_NODE_ID: "n"},
-        object(),
-    )
+    async_discover(hass, SENSOR_MSG, object())  # type: ignore[arg-type]
+
+    assert "Error creating sensor srv node" in caplog.text
+    assert "bad state" in caplog.text
+
+
+async def test_rediscovery_and_config_update_reach_entity(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Rediscovery and config updates over the websocket update the entity."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert events
+    client = await hass_ws_client(hass)
+    discovery = {
+        "type": "nodered/discovery",
+        "component": "sensor",
+        "server_id": "s1",
+        "node_id": "n1",
+        "state": "on",
+        "config": {"name": "First"},
+    }
 
-    # Now stop discovery and ensure no further events
-    stop_discovery(hass)
-    events.clear()
-    async_dispatcher_send(
-        hass,
-        NODERED_DISCOVERY,
-        {CONF_COMPONENT: CONF_SENSOR, CONF_SERVER_ID: "srv", CONF_NODE_ID: "n2"},
-        object(),
-    )
+    await client.send_json({"id": 1, **discovery})
+    assert (await client.receive_json())["success"]
     await hass.async_block_till_done()
-    assert not events
+    state = hass.states.get("sensor.first")
+    assert state is not None
+
+    await client.send_json({"id": 2, **discovery, "config": {"name": "Second"}})
+    assert (await client.receive_json())["success"]
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.first")
+    assert state is not None
+    assert state.attributes["friendly_name"] == "Second"
+
+    await client.send_json(
+        {
+            "id": 3,
+            "type": "nodered/entity/update_config",
+            "server_id": "s1",
+            "node_id": "n1",
+            "config": {"name": "Third"},
+        }
+    )
+    assert (await client.receive_json())["success"]
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.first")
+    assert state is not None
+    assert state.attributes["friendly_name"] == "Third"

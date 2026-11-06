@@ -14,12 +14,7 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity_registry import async_entries_for_device, async_get
 
 from .const import CONF_VERSION, DOMAIN, DOMAIN_DATA, STARTUP_MESSAGE, WEBHOOKS
-from .discovery import (
-    PLATFORMS_LOADED,
-    SUPPORTED_COMPONENTS,
-    start_discovery,
-    stop_discovery,
-)
+from .discovery import PLATFORMS_LOADED, SUPPORTED_COMPONENTS
 from .version import __version__
 from .websocket import register_websocket_handlers, unregister_all_webhooks
 
@@ -40,7 +35,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     domain_data[PLATFORMS_LOADED] = set(SUPPORTED_COMPONENTS)
 
     register_websocket_handlers(hass)
-    await start_discovery(hass, domain_data)
     hass.bus.async_fire(DOMAIN, {CONF_TYPE: "loaded", CONF_VERSION: __version__})
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
@@ -63,7 +57,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     if unloaded:
-        stop_discovery(hass)
         hass.data.pop(DOMAIN_DATA)
         hass.bus.async_fire(DOMAIN, {CONF_TYPE: "unloaded"})
 

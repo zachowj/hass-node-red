@@ -8,6 +8,7 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ENTITY_CATEGORY,
     CONF_ICON,
+    CONF_ID,
     CONF_STATE,
     CONF_UNIT_OF_MEASUREMENT,
     EntityCategory,
@@ -15,20 +16,17 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_registry import async_get
 
 if TYPE_CHECKING:
     from homeassistant.components.websocket_api.connection import ActiveConnection
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_ATTRIBUTES,
     CONF_AVAILABLE,
-    CONF_COMPONENT,
     CONF_CONFIG,
     CONF_DEVICE_INFO,
     CONF_ENTITY_PICTURE,
@@ -39,12 +37,15 @@ from .const import (
     CONF_SERVER_ID,
     DOMAIN,
     DOMAIN_DATA,
-    NODERED_CONFIG_UPDATE,
-    NODERED_DISCOVERY,
-    NODERED_DISCOVERY_UPDATED,
-    NODERED_ENTITY,
 )
-from .discovery import ALREADY_DISCOVERED, CHANGE_ENTITY_TYPE
+from .discovery import (
+    ALREADY_DISCOVERED,
+    CHANGE_ENTITY_TYPE,
+    async_discover,
+    async_register_entity,
+    async_register_platform,
+    async_unregister_entity,
+)
 from .utils import contrib_supports_presence_available
 
 
@@ -58,11 +59,22 @@ class NodeRedEntity(Entity):
     component: ClassVar[str] = ""
     _bidirectional = False
 
-    def __init__(self, hass: HomeAssistant, config: dict[str, Any]) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: dict[str, Any],
+        connection: ActiveConnection | None = None,
+    ) -> None:
         """Initialize the entity."""
         if not type(self).component:
             msg = f"{type(self).__name__} must set class attribute `component`"
             raise TypeError(msg)
+        if self._bidirectional:
+            if connection is None:
+                msg = f"{type(self).__name__} requires a connection"
+                raise TypeError(msg)
+            self._message_id = config[CONF_ID]
+            self._connection = connection
         self.hass = hass
         self._server_id = config.get(CONF_SERVER_ID)
         self._node_id = config.get(CONF_NODE_ID)
@@ -151,12 +163,7 @@ class NodeRedEntity(Entity):
                 @callback
                 def recreate_entity() -> None:
                     del msg[CONF_REMOVE]
-                    async_dispatcher_send(
-                        self.hass,
-                        NODERED_DISCOVERY.format(msg[CONF_COMPONENT]),
-                        msg,
-                        connection,
-                    )
+                    async_discover(self.hass, msg, connection)
 
                 self.async_on_remove(recreate_entity)
                 # Schedule entity removal; recreation will happen when the on_remove
@@ -269,31 +276,30 @@ class NodeRedEntity(Entity):
             entity_registry.async_update_entity(entity_id, device_id=device.id)
 
     async def async_added_to_hass(self) -> None:
-        """Register dispatcher listeners when added to Home Assistant."""
-        self._remove_signal_entity_update = async_dispatcher_connect(
-            self.hass,
-            NODERED_ENTITY.format(self._server_id, self._node_id),
-            self.handle_entity_update,
-        )
-        self._remove_signal_discovery_update = async_dispatcher_connect(
-            self.hass,
-            NODERED_DISCOVERY_UPDATED.format(self.unique_id),
-            self.handle_discovery_update,
-        )
-        self._remove_signal_config_update = async_dispatcher_connect(
-            self.hass,
-            NODERED_CONFIG_UPDATE.format(self._server_id, self._node_id),
-            self.handle_config_update,
-        )
+        """Start receiving Node-RED messages when added to Home Assistant."""
+        async_register_entity(self.hass, self)
 
     async def async_will_remove_from_hass(self) -> None:
-        """Remove dispatcher listeners when the entity is removed from hass."""
-        if self._remove_signal_entity_update is not None:
-            self._remove_signal_entity_update()
-        if self._remove_signal_discovery_update is not None:
-            self._remove_signal_discovery_update()
-        if self._remove_signal_config_update is not None:
-            self._remove_signal_config_update()
+        """Stop receiving Node-RED messages when removed from Home Assistant."""
+        async_unregister_entity(self.hass, self)
+
+
+@callback
+def async_setup_discovery(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    entity_class: type[NodeRedEntity],
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Add an entity of entity_class for each new Node-RED discovery."""
+
+    @callback
+    def discover(config: dict[str, Any], connection: ActiveConnection) -> None:
+        async_add_entities([entity_class(hass, config, connection)])
+
+    config_entry.async_on_unload(
+        async_register_platform(hass, entity_class.component, discover)
+    )
 
 
 def generate_device_identifiers(device_id: str) -> set[tuple[str, str]]:

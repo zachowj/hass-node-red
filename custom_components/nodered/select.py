@@ -2,27 +2,22 @@
 
 from typing import Any
 
-from custom_components.nodered.number import CONF_VALUE
 from homeassistant.components.select import SelectEntity
-from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.components.websocket_api.messages import event_message
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ICON, CONF_ID, CONF_TYPE
+from homeassistant.const import CONF_ICON, CONF_STATE, CONF_TYPE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_CONFIG,
     CONF_OPTIONS,
     CONF_SELECT,
+    CONF_VALUE,
     EVENT_VALUE_CHANGE,
-    NODERED_DISCOVERY_NEW,
     SELECT_ICON,
 )
-from .entity import NodeRedEntity
-
-CONF_STATE = "state"
+from .entity import NodeRedEntity, async_setup_discovery
 
 
 async def async_setup_entry(
@@ -32,28 +27,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the text platform."""
 
-    async def async_discover(
-        config: dict[str, Any], connection: ActiveConnection
-    ) -> None:
-        await _async_setup_entity(hass, config, async_add_entities, connection)
-
-    config_entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
-            NODERED_DISCOVERY_NEW.format(CONF_SELECT),
-            async_discover,
-        )
-    )
-
-
-async def _async_setup_entity(
-    hass: HomeAssistant,
-    config: dict[str, Any],
-    async_add_entities: AddEntitiesCallback,
-    connection: ActiveConnection,
-) -> None:
-    """Set up the Node-RED text."""
-    async_add_entities([NodeRedSelect(hass, config, connection)])
+    async_setup_discovery(hass, config_entry, NodeRedSelect, async_add_entities)
 
 
 class NodeRedSelect(NodeRedEntity, SelectEntity):
@@ -61,17 +35,6 @@ class NodeRedSelect(NodeRedEntity, SelectEntity):
 
     _bidirectional = True
     component = CONF_SELECT
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config: dict[str, Any],
-        connection: ActiveConnection,
-    ) -> None:
-        """Initialize the number."""
-        super().__init__(hass, config)
-        self._message_id = config[CONF_ID]
-        self._connection = connection
 
     async def async_select_option(self, option: str) -> None:
         """Set new option."""

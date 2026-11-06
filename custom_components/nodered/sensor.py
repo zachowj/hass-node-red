@@ -12,17 +12,10 @@ from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_STATE, CONF_UNIT_OF_MEASUREMENT, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    CONF_CONFIG,
-    CONF_LAST_RESET,
-    CONF_SENSOR,
-    CONF_STATE_CLASS,
-    NODERED_DISCOVERY_NEW,
-)
-from .entity import NodeRedEntity
+from .const import CONF_CONFIG, CONF_LAST_RESET, CONF_SENSOR, CONF_STATE_CLASS
+from .entity import NodeRedEntity, async_setup_discovery
 from .utils import contrib_supports_presence_available
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,27 +28,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensor platform."""
 
-    async def async_discover(
-        config: dict[str, Any], _connection: ActiveConnection
-    ) -> None:
-        await _async_setup_entity(hass, config, async_add_entities)
-
-    config_entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
-            NODERED_DISCOVERY_NEW.format(CONF_SENSOR),
-            async_discover,
-        )
-    )
-
-
-async def _async_setup_entity(
-    hass: HomeAssistant,
-    config: dict[str, Any],
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up the Node-RED sensor."""
-    async_add_entities([NodeRedSensor(hass, config)])
+    async_setup_discovery(hass, config_entry, NodeRedSensor, async_add_entities)
 
 
 class NodeRedSensor(NodeRedEntity, SensorEntity):
@@ -63,9 +36,14 @@ class NodeRedSensor(NodeRedEntity, SensorEntity):
 
     component = CONF_SENSOR
 
-    def __init__(self, hass: HomeAssistant, config: dict[str, Any]) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config: dict[str, Any],
+        connection: ActiveConnection | None = None,
+    ) -> None:
         """Initialize the sensor."""
-        super().__init__(hass, config)
+        super().__init__(hass, config, connection)
         self._attr_unit_of_measurement = None
         # Only attempt conversion if a state was provided in discovery/config
         if CONF_STATE in config:

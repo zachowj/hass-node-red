@@ -15,24 +15,17 @@ from homeassistant.components.websocket_api.messages import event_message
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ICON,
-    CONF_ID,
+    CONF_STATE,
     CONF_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    CONF_CONFIG,
-    CONF_NUMBER,
-    EVENT_VALUE_CHANGE,
-    NODERED_DISCOVERY_NEW,
-    NUMBER_ICON,
-)
-from .entity import NodeRedEntity
+from .const import CONF_CONFIG, CONF_NUMBER, CONF_VALUE, EVENT_VALUE_CHANGE, NUMBER_ICON
+from .entity import NodeRedEntity, async_setup_discovery
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,9 +33,6 @@ CONF_MIN_VALUE = "min_value"
 CONF_MAX_VALUE = "max_value"
 CONF_STEP_VALUE = "step_value"
 CONF_MODE = "mode"
-
-CONF_STATE = "state"
-CONF_VALUE = "value"
 
 
 async def async_setup_entry(
@@ -52,28 +42,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the number platform."""
 
-    async def async_discover(
-        config: dict[str, Any], connection: ActiveConnection
-    ) -> None:
-        await _async_setup_entity(hass, config, async_add_entities, connection)
-
-    config_entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
-            NODERED_DISCOVERY_NEW.format(CONF_NUMBER),
-            async_discover,
-        )
-    )
-
-
-async def _async_setup_entity(
-    hass: HomeAssistant,
-    config: dict[str, Any],
-    async_add_entities: AddEntitiesCallback,
-    connection: ActiveConnection,
-) -> None:
-    """Set up the Node-RED number."""
-    async_add_entities([NodeRedNumber(hass, config, connection)])
+    async_setup_discovery(hass, config_entry, NodeRedNumber, async_add_entities)
 
 
 class NodeRedNumber(NodeRedEntity, RestoreNumber):
@@ -94,9 +63,7 @@ class NodeRedNumber(NodeRedEntity, RestoreNumber):
         connection: ActiveConnection,
     ) -> None:
         """Initialize the number."""
-        super().__init__(hass, config)
-        self._message_id = config[CONF_ID]
-        self._connection = connection
+        super().__init__(hass, config, connection)
 
         self._attr_icon = self._config.get(CONF_ICON, NUMBER_ICON)
         self._attr_native_value = config.get(CONF_STATE)

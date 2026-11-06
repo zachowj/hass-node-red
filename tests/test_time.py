@@ -11,17 +11,13 @@ from custom_components.nodered.const import (
     CONF_NODE_ID,
     CONF_SERVER_ID,
     CONF_TIME,
+    CONF_VALUE,
     EVENT_VALUE_CHANGE,
     TIME_ICON,
 )
-from custom_components.nodered.number import CONF_STATE
-from custom_components.nodered.time import (
-    CONF_VALUE,
-    NodeRedTime,
-    _convert_string_to_time,
-)
+from custom_components.nodered.time import NodeRedTime, _convert_string_to_time
 from homeassistant.components.websocket_api.messages import event_message
-from homeassistant.const import CONF_ICON, CONF_ID, CONF_TYPE
+from homeassistant.const import CONF_ICON, CONF_ID, CONF_STATE, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from tests.helpers import FakeConnection
 
