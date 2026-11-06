@@ -16,6 +16,28 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## [4.3.3](https://github.com/zachowj/hass-node-red/compare/v4.3.2...v4.3.3) (2026-11-06)
+
+
+### Bug Fixes
+
+* **discovery:** reject invalid states and recreate removed entities ([#428](https://github.com/zachowj/hass-node-red/issues/428)) ([ebb53c2](https://github.com/zachowj/hass-node-red/commit/ebb53c257401dff31c165c37ea9f3ac169cbbde4))
+
+
+### Code Refactoring
+
+* replace dispatcher signals with direct calls ([#427](https://github.com/zachowj/hass-node-red/issues/427)) ([6f36dbd](https://github.com/zachowj/hass-node-red/commit/6f36dbd64b228aad39c757cef3b0aa62a27634be))
+
+
+### Continuous Integration
+
+* **pre-commit:** pre-commit autoupdate ([#422](https://github.com/zachowj/hass-node-red/issues/422)) ([c8b51a7](https://github.com/zachowj/hass-node-red/commit/c8b51a782b5d5d16f6b5f5ee6e936089001042a3))
+
+
+### Miscellaneous Chores
+
+* migrate from Dependabot to Renovate for dependency management ([0ff318c](https://github.com/zachowj/hass-node-red/commit/0ff318cd208c601649b295d66202a9b7690ce65a))
+
 ## [4.3.2](https://github.com/zachowj/hass-node-red/compare/v4.3.1...v4.3.2) (2026-10-12)
 
 
