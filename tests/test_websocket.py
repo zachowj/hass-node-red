@@ -205,7 +205,7 @@ async def test_websocket_discovery_and_entity_and_update_config_and_version(
     resp2 = await client.receive_json()
     assert resp2 == result_message(msg2["id"])
     mock_get_entity.assert_called_with(hass, "s", "n")
-    entity_msg = entity.handle_entity_update.call_args.args[0]
+    entity_msg = entity.update_entity_state_attributes.call_args.args[0]
     assert entity_msg[CONF_STATE] is True
     assert CONF_ATTRIBUTES not in entity_msg
     assert CONF_AVAILABLE not in entity_msg
@@ -222,7 +222,7 @@ async def test_websocket_discovery_and_entity_and_update_config_and_version(
     )
     resp3 = await client.receive_json()
     assert resp3 == result_message(msg3["id"])
-    entity.handle_config_update.assert_called_once()
+    entity.update_config.assert_called_once()
 
     # version
     await client.send_json({"id": 12, "type": "nodered/version"})
@@ -272,7 +272,7 @@ async def test_websocket_entity_accepts_available_and_omitted_state(
     resp2 = await client.receive_json()
     assert resp2 == result_message(41)
     mock_get_entity.assert_called_with(hass, "s", "n")
-    entity_msg = entity.handle_entity_update.call_args.args[0]
+    entity_msg = entity.update_entity_state_attributes.call_args.args[0]
     assert CONF_STATE not in entity_msg
     assert entity_msg[CONF_AVAILABLE] is False
     assert CONF_ATTRIBUTES not in entity_msg
@@ -290,7 +290,7 @@ async def test_websocket_entity_accepts_available_and_omitted_state(
     )
     resp3 = await client.receive_json()
     assert resp3 == result_message(42)
-    full_msg = entity.handle_entity_update.call_args.args[0]
+    full_msg = entity.update_entity_state_attributes.call_args.args[0]
     assert full_msg[CONF_STATE] == 21.5
     assert full_msg[CONF_ATTRIBUTES] == {"friendly": "x"}
     assert full_msg[CONF_AVAILABLE] is True
