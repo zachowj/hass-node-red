@@ -264,3 +264,31 @@ async def test_entity_is_added_without_waiting(
 
     assert async_get_entity(hass, "s1", "n1") is not None
     assert hass.states.get(entity_id) is not None
+
+
+async def test_node_is_forgotten_when_add_is_aborted(hass: HomeAssistant) -> None:
+    """A node whose entity add is aborted is not left marked as discovered."""
+    config_entry = await _setup_entry(hass)
+    er.async_get(hass).async_get_or_create(
+        "sensor",
+        DOMAIN,
+        "nodered-s1-n1",
+        config_entry=config_entry,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+
+    # Adding starts eagerly, so the add aborts before async_discover returns
+    async_discover(
+        hass,
+        {
+            CONF_COMPONENT: "sensor",
+            CONF_SERVER_ID: "s1",
+            CONF_NODE_ID: "n1",
+            "state": 1,
+            "config": {"name": "Disabled"},
+        },
+        FakeConnection(),
+    )
+
+    assert async_get_entity(hass, "s1", "n1") is None
+    assert "nodered-s1-n1" not in hass.data[DOMAIN_DATA][ALREADY_DISCOVERED]
