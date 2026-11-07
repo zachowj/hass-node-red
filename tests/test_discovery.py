@@ -4,7 +4,10 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant_custom_component.common import (
+    MockConfigEntry,
+    mock_restore_cache_with_extra_data,
+)
 from pytest_homeassistant_custom_component.typing import WebSocketGenerator
 import voluptuous as vol
 
@@ -20,11 +23,14 @@ from custom_components.nodered.const import (
 from custom_components.nodered.discovery import (
     ALREADY_DISCOVERED,
     async_discover,
+    async_get_entity,
     async_register_entity,
     async_register_platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
+from tests.helpers import FakeConnection
 
 SENSOR_MSG = {CONF_COMPONENT: CONF_SENSOR, CONF_SERVER_ID: "srv", CONF_NODE_ID: "node"}
 SENSOR_HASH = "nodered-srv-node"
@@ -198,3 +204,63 @@ async def test_discovery_with_invalid_state_is_rejected(
     state = hass.states.get("sensor.temp")
     assert state is not None
     assert state.state == "21.5"
+
+
+ADD_WITHOUT_WAITING_CASES = [
+    pytest.param("binary_sensor", {"state": True}, id="binary_sensor"),
+    pytest.param("button", {}, id="button"),
+    pytest.param("number", {"state": 5}, id="number"),
+    pytest.param(
+        "select", {"state": "a", "config": {"options": ["a", "b"]}}, id="select"
+    ),
+    pytest.param("sensor", {"state": 21.5}, id="sensor"),
+    pytest.param("switch", {"state": True}, id="switch"),
+    pytest.param("text", {"state": "hi"}, id="text"),
+    pytest.param("time", {"state": "12:34:00"}, id="time"),
+]
+
+
+async def _setup_entry(hass: HomeAssistant) -> MockConfigEntry:
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    return config_entry
+
+
+@pytest.mark.parametrize(("component", "fields"), ADD_WITHOUT_WAITING_CASES)
+async def test_entity_is_added_without_waiting(
+    hass: HomeAssistant, component: str, fields: dict[str, Any]
+) -> None:
+    """Discovery adds the entity before returning, without awaiting anything.
+
+    Updates sent straight after discovery rely on this: if adding the entity
+    ever waits (on I/O, for example), they would find no entity and be dropped.
+    A registered entity with restore data runs every await in the add path.
+    """
+    entity_id = f"{component}.sync"
+    mock_restore_cache_with_extra_data(hass, [(State(entity_id, "restored"), {})])
+    config_entry = await _setup_entry(hass)
+    er.async_get(hass).async_get_or_create(
+        component,
+        DOMAIN,
+        "nodered-s1-n1",
+        suggested_object_id="sync",
+        config_entry=config_entry,
+    )
+
+    async_discover(
+        hass,
+        {
+            "id": 1,
+            CONF_COMPONENT: component,
+            CONF_SERVER_ID: "s1",
+            CONF_NODE_ID: "n1",
+            **fields,
+            "config": {"name": "Sync", **fields.get("config", {})},
+        },
+        FakeConnection(),
+    )
+
+    assert async_get_entity(hass, "s1", "n1") is not None
+    assert hass.states.get(entity_id) is not None
