@@ -122,21 +122,21 @@ class NodeRedEntity(Entity):
     @callback
     def handle_entity_update(self, msg: dict[str, Any]) -> None:
         """Update entity state attributes and write state."""
-        with self._undo_if_invalid():
+        with self._undo_on_error():
             self.update_entity_state_attributes(msg)
             self.validate_state()
         self.async_write_ha_state()
 
     @contextmanager
-    def _undo_if_invalid(self) -> Generator[None]:
-        """Restore the update attributes if the block raises vol.Invalid.
+    def _undo_on_error(self) -> Generator[None]:
+        """Restore the update attributes if the block raises.
 
         The block must not await, so nothing else can read a rejected update.
         """
         saved = {name: getattr(self, name, _UNSET) for name in self.update_attrs}
         try:
             yield
-        except vol.Invalid:
+        except Exception:
             for name, value in saved.items():
                 if value is _UNSET:
                     if hasattr(self, name):

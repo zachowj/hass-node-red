@@ -844,7 +844,7 @@ async def test_rejected_update_is_returned_and_undone(
 async def test_unexpected_update_error_is_returned(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """An unexpected exception during an update is not acknowledged as success."""
+    """An unexpected exception during an update is returned and the update undone."""
     client = await _setup_ws_client(hass, hass_ws_client)
     await client.send_json(
         {
@@ -873,6 +873,22 @@ async def test_unexpected_update_error_is_returned(
 
     assert not resp["success"]
     assert resp["error"]["code"] == "unknown_error"
+
+    # The next write would publish the failed update's state if it were kept
+    await client.send_json(
+        {
+            "id": 3,
+            "type": "nodered/entity",
+            "server_id": "s1",
+            "node_id": "n1",
+            "attributes": {"room": "kitchen"},
+        }
+    )
+    assert (await client.receive_json())["success"]
+    state = hass.states.get("sensor.nodered_n1")
+    assert state is not None
+    assert state.state == "1"
+    assert state.attributes["room"] == "kitchen"
 
 
 UNDO_CASES = [
