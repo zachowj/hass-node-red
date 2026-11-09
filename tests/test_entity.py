@@ -757,6 +757,22 @@ REJECTED_STATE_CASES = [
         id="time_unparseable",
     ),
     pytest.param(
+        "text",
+        {"state": "short", "config": {"name": "Temp", "max_length": 5}},
+        "short",
+        "too long",
+        "too long",
+        id="text_over_max_length",
+    ),
+    pytest.param(
+        "text",
+        {"state": "123", "config": {"name": "Temp", "pattern": r"^\d+$"}},
+        "123",
+        "abc",
+        "does not match expected pattern",
+        id="text_pattern_mismatch",
+    ),
+    pytest.param(
         "select",
         {"state": "a", "config": {"name": "Temp", "options": ["a", "b"]}},
         "a",

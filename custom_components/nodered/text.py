@@ -1,6 +1,5 @@
 """Sensor platform for nodered."""
 
-import logging
 from typing import Any
 
 from homeassistant.components.text import RestoreText, TextMode
@@ -28,8 +27,6 @@ CONF_STATE = "state"
 DEFAULT_MODE = "text"
 DEFAULT_MAX_LENGTH = 100
 DEFAULT_MIN_LENGTH = 0
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -72,34 +69,9 @@ class NodeRedText(NodeRedEntity, RestoreText):
     def update_entity_state_attributes(self, msg: dict[str, Any]) -> None:
         """Update the entity state attributes."""
         super().update_entity_state_attributes(msg)
-        # Ensure native value is a string for Text entity to avoid type
-        # errors in Home Assistant when measuring value length.
+        # Home Assistant measures the value's length, so it must be a string
         state = msg.get(CONF_STATE)
-        value = str(state) if state is not None else None
-
-        if value is not None:
-            # Determine max length to enforce. Prefer the attribute if set,
-            # otherwise fall back to the configured value or default.
-            max_len = getattr(self, "_attr_native_max", None)
-            if max_len is None:
-                max_len = self._config.get(CONF_MAX_LENGTH, DEFAULT_MAX_LENGTH)
-
-            # Enforce Home Assistant's maximum state length
-            if isinstance(max_len, int) and max_len >= 0:
-                effective_max = min(max_len, HA_MAX_STATE_LENGTH)
-            else:
-                effective_max = HA_MAX_STATE_LENGTH
-
-            if len(value) > effective_max:
-                _LOGGER.warning(
-                    "Truncating text entity %s (node ID: %s) value to max length %s",
-                    self.entity_id,
-                    self._node_id,
-                    effective_max,
-                )
-                value = value[:effective_max]
-
-        self._attr_native_value = value
+        self._attr_native_value = str(state) if state is not None else None
 
     def update_discovery_config(self, msg: dict[str, Any]) -> None:
         """Update the entity config."""

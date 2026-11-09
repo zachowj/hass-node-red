@@ -3,6 +3,7 @@
 from typing import Any
 
 import pytest
+import voluptuous as vol
 
 from custom_components.nodered import text
 from custom_components.nodered.const import CONF_CONFIG, CONF_VALUE, HA_MAX_STATE_LENGTH
@@ -172,25 +173,45 @@ def test_update_discovery_config_applies_custom_values(
     assert node._attr_mode.value == "password"
 
 
-def test_update_entity_state_truncates_to_max_length(
-    hass: HomeAssistant, fake_connection: FakeConnection
+@pytest.mark.parametrize(
+    ("node_config", "value", "error"),
+    [
+        pytest.param(
+            {}, "x" * (text.DEFAULT_MAX_LENGTH + 1), "too long", id="over_default_max"
+        ),
+        pytest.param(
+            {text.CONF_MAX_LENGTH: 300},
+            "x" * (HA_MAX_STATE_LENGTH + 1),
+            "too long",
+            id="over_ha_max",
+        ),
+        pytest.param({text.CONF_MIN_LENGTH: 5}, "abc", "too short", id="under_min"),
+        pytest.param(
+            {text.CONF_PATTERN: r"^\d+$"}, "abc", "does not match", id="pattern"
+        ),
+    ],
+)
+def test_invalid_value_is_rejected(
+    hass: HomeAssistant,
+    fake_connection: FakeConnection,
+    node_config: dict[str, Any],
+    value: str,
+    error: str,
 ) -> None:
-    """Text entity should truncate incoming state exceeding max length."""
+    """A value Home Assistant would reject is kept as is and fails validation."""
     config: dict[str, Any] = {
-        CONF_ID: "id-truncate",
+        CONF_ID: "id-invalid",
         "server_id": "s1",
         "node_id": "n1",
-        "config": {},
+        "config": node_config,
     }
     node: NodeRedText = NodeRedText(hass, config, fake_connection)
 
-    # Use a string longer than the default max length
-    long_value = "x" * (text.DEFAULT_MAX_LENGTH + 50)
-    node.update_entity_state_attributes({text.CONF_STATE: long_value})
+    node.update_entity_state_attributes({text.CONF_STATE: value})
 
-    assert node._attr_native_value == long_value[: text.DEFAULT_MAX_LENGTH]
-    assert node._attr_native_value is not None
-    assert len(node._attr_native_value) == text.DEFAULT_MAX_LENGTH
+    assert node._attr_native_value == value
+    with pytest.raises(vol.Invalid, match=error):
+        node.validate_state()
 
 
 def test_update_discovery_config_clamps_to_ha_max_length(
@@ -233,23 +254,3 @@ async def test_async_added_to_hass_preserves_restored_max(
     await node.async_added_to_hass()
 
     assert node._attr_native_max == 300
-
-
-def test_update_entity_state_truncates_to_ha_max_when_config_high(
-    hass: HomeAssistant, fake_connection: FakeConnection
-) -> None:
-    """If config max > 255, incoming values are truncated to 255."""
-    custom_cfg: dict[str, Any] = {
-        CONF_ID: "id-high-config",
-        "server_id": "s1",
-        "node_id": "n1",
-        "config": {text.CONF_MAX_LENGTH: 300},
-    }
-    node: NodeRedText = NodeRedText(hass, custom_cfg, fake_connection)
-    node.update_discovery_config({CONF_CONFIG: custom_cfg["config"]})
-
-    long_value = "x" * 300
-    node.update_entity_state_attributes({text.CONF_STATE: long_value})
-
-    assert node._attr_native_value is not None
-    assert len(node._attr_native_value) == HA_MAX_STATE_LENGTH
