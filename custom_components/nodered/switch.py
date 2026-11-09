@@ -67,6 +67,10 @@ class NodeRedSwitch(NodeRedEntity, ToggleEntity):
     """Node-RED Switch class."""
 
     component = CONF_SWITCH
+    update_attrs = (
+        *NodeRedEntity.update_attrs,
+        "_attr_is_on",
+    )
     _bidirectional = True
 
     def __init__(

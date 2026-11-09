@@ -47,6 +47,10 @@ class NodeRedText(NodeRedEntity, RestoreText):
 
     _bidirectional = True
     component = CONF_TEXT
+    update_attrs = (
+        *NodeRedEntity.update_attrs,
+        "_attr_native_value",
+    )
 
     async def async_added_to_hass(self) -> None:
         """Restore native_*."""

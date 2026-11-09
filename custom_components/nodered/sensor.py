@@ -35,6 +35,10 @@ class NodeRedSensor(NodeRedEntity, SensorEntity):
     """Node-RED Sensor class."""
 
     component = CONF_SENSOR
+    update_attrs = (
+        *NodeRedEntity.update_attrs,
+        "_attr_native_value",
+    )
 
     def __init__(
         self,

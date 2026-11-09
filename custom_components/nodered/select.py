@@ -35,6 +35,10 @@ class NodeRedSelect(NodeRedEntity, SelectEntity):
 
     _bidirectional = True
     component = CONF_SELECT
+    update_attrs = (
+        *NodeRedEntity.update_attrs,
+        "_attr_current_option",
+    )
 
     async def async_select_option(self, option: str) -> None:
         """Set new option."""

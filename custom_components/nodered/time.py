@@ -46,6 +46,10 @@ class NodeRedTime(NodeRedEntity, TimeEntity):
     _attr_native_value = None
     _bidirectional = True
     component = CONF_TIME
+    update_attrs = (
+        *NodeRedEntity.update_attrs,
+        "_attr_native_value",
+    )
 
     async def async_set_value(self, value: time) -> None:
         """Set new value."""

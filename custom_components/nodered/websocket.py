@@ -250,13 +250,13 @@ def _async_handle_update(
     msg: dict[str, Any],
     handler: Callable[[NodeRedEntity, dict[str, Any]], None],
 ) -> None:
-    """Apply an update to its node's entity, if there is one, and reply."""
+    """Apply an update to its node's entity, if there is one, and reply.
+
+    If the update raises, the websocket API replies with the error instead.
+    """
     entity = async_get_entity(hass, msg[CONF_SERVER_ID], msg[CONF_NODE_ID])
     if entity is not None:
-        try:
-            handler(entity, msg)
-        except Exception:
-            _LOGGER.exception("Error updating %s", entity.entity_id)
+        handler(entity, msg)
     connection.send_message(result_message(msg[CONF_ID]))
 
 
