@@ -45,7 +45,7 @@ def test_update_entity_state_attributes_sets_current_option(
         CONF_ID: "id-1",
         "server_id": "s1",
         "node_id": "n1",
-        select.CONF_CONFIG: {},
+        select.CONF_CONFIG: {select.CONF_OPTIONS: ["option-42"]},
     }
     node = NodeRedSelect(hass, config, fake_connection)
 

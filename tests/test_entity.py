@@ -737,6 +737,14 @@ REJECTED_STATE_CASES = [
         "longer than 255 characters",
         id="sensor_over_255_characters",
     ),
+    pytest.param(
+        "select",
+        {"state": "a", "config": {"name": "Temp", "options": ["a", "b"]}},
+        "a",
+        "c",
+        "not one of the options",
+        id="select_option_not_listed",
+    ),
 ]
 
 
