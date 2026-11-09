@@ -6,6 +6,7 @@ from typing import Any
 
 from dateutil import parser
 from propcache.api import cached_property
+import voluptuous as vol
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.components.websocket_api.connection import ActiveConnection
@@ -101,13 +102,8 @@ class NodeRedSensor(NodeRedEntity, SensorEntity):
                     seconds = ts
                 try:
                     parsed = datetime.fromtimestamp(seconds, tz=UTC)
-                except (OverflowError, OSError, ValueError):
-                    _LOGGER.error(
-                        "Invalid timestamp (%s): %s has a timestamp device class",
-                        state,
-                        self.entity_id,
-                    )
-                    return None
+                except (OverflowError, OSError, ValueError) as err:
+                    raise self._invalid_date(state) from err
                 else:
                     if self.device_class is SensorDeviceClass.DATE:
                         return parsed.date()
@@ -115,27 +111,23 @@ class NodeRedSensor(NodeRedEntity, SensorEntity):
 
             # Fallback to ISO parsing for string states
             if not isinstance(state, str):
-                _LOGGER.error(
-                    "Invalid ISO date string (%s): %s has a timestamp device class",
-                    state,
-                    self.entity_id,
-                )
-                return None
+                raise self._invalid_date(state)
             try:
                 parsed = parser.parse(state)
-            except (ValueError, TypeError):
-                _LOGGER.error(
-                    "Invalid ISO date string (%s): %s has a timestamp device class",
-                    state,
-                    self.entity_id,
-                )
-                return None
+            except (ValueError, TypeError) as err:
+                raise self._invalid_date(state) from err
             else:
                 if self.device_class is SensorDeviceClass.DATE:
                     return parsed.date()
                 return parsed
 
         return state
+
+    def _invalid_date(self, state: str | float) -> vol.Invalid:
+        """Return the error for a state that can't be parsed for the device class."""
+        return vol.Invalid(
+            f"'{state}' is not a valid {self.device_class}", path=[CONF_STATE]
+        )
 
     def update_entity_state_attributes(self, msg: dict[str, Any]) -> None:
         """Update entity state attributes."""

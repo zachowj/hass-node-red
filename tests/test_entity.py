@@ -738,6 +738,17 @@ REJECTED_STATE_CASES = [
         id="sensor_over_255_characters",
     ),
     pytest.param(
+        "sensor",
+        {
+            "state": "2021-02-03T04:05:06+00:00",
+            "config": {"name": "Temp", "device_class": "timestamp"},
+        },
+        "2021-02-03T04:05:06+00:00",
+        "not a date",
+        "is not a valid timestamp",
+        id="sensor_invalid_timestamp",
+    ),
+    pytest.param(
         "select",
         {"state": "a", "config": {"name": "Temp", "options": ["a", "b"]}},
         "a",
