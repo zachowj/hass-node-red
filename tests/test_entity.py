@@ -720,21 +720,52 @@ async def _setup_ws_client(
     return await hass_ws_client(hass)
 
 
+REJECTED_STATE_CASES = [
+    pytest.param(
+        "sensor",
+        {"state": 21.5, "config": {"name": "Temp", "unit_of_measurement": "°C"}},
+        "21.5",
+        "not a number",
+        "non-numeric value",
+        id="numeric_sensor",
+    ),
+    pytest.param(
+        "sensor",
+        {"state": "short", "config": {"name": "Temp"}},
+        "short",
+        "x" * 256,
+        "longer than 255 characters",
+        id="sensor_over_255_characters",
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    ("component", "discovery", "old_state", "new_state", "error"),
+    REJECTED_STATE_CASES,
+)
 async def test_rejected_update_is_returned_and_undone(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    *,
+    component: str,
+    discovery: dict[str, Any],
+    old_state: str,
+    new_state: Any,
+    error: str,
 ) -> None:
     """An update HA rejects gets an error reply and leaves the entity as it was."""
+    entity_id = f"{component}.temp"
     client = await _setup_ws_client(hass, hass_ws_client)
     await client.send_json(
         {
             "id": 1,
             "type": "nodered/discovery",
-            "component": "sensor",
+            "component": component,
             "server_id": "s1",
             "node_id": "n1",
-            "state": 21.5,
             "attributes": {"room": "kitchen"},
-            "config": {"name": "Temp", "unit_of_measurement": "°C"},
+            **discovery,
         }
     )
     assert (await client.receive_json())["success"]
@@ -745,7 +776,7 @@ async def test_rejected_update_is_returned_and_undone(
         {
             "id": 2,
             **entity_update,
-            "state": "not a number",
+            "state": new_state,
             "attributes": {"room": "lounge"},
         }
     )
@@ -753,16 +784,16 @@ async def test_rejected_update_is_returned_and_undone(
 
     assert not resp["success"]
     assert resp["error"]["code"] == "invalid_format"
-    assert "non-numeric value" in resp["error"]["message"]
-    state = hass.states.get("sensor.temp")
+    assert error in resp["error"]["message"]
+    state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == "21.5"
+    assert state.state == old_state
     assert state.attributes["room"] == "kitchen"
 
     # Would fail too if the rejected state had been kept
     await client.send_json({"id": 3, **entity_update, "available": False})
     assert (await client.receive_json())["success"]
-    state = hass.states.get("sensor.temp")
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "unavailable"
 

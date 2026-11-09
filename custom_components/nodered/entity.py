@@ -35,6 +35,7 @@ from .const import (
     CONF_REMOVE,
     CONF_SERVER_ID,
     DOMAIN,
+    HA_MAX_STATE_LENGTH,
 )
 from .discovery import (
     CHANGE_ENTITY_TYPE,
@@ -171,9 +172,13 @@ class NodeRedEntity(Entity):
         reading it runs the same check as writing the state.
         """
         try:
-            _ = self.state
+            state = self.state
         except ValueError as err:
             raise vol.Invalid(str(err), path=[CONF_STATE]) from err
+        # HA stores longer states as unknown instead of raising
+        if state is not None and len(str(state)) > HA_MAX_STATE_LENGTH:
+            msg = f"State is longer than {HA_MAX_STATE_LENGTH} characters"
+            raise vol.Invalid(msg, path=[CONF_STATE])
 
     @callback
     def handle_lost_connection(self) -> None:
