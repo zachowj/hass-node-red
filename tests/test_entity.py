@@ -749,6 +749,14 @@ REJECTED_STATE_CASES = [
         id="sensor_invalid_timestamp",
     ),
     pytest.param(
+        "time",
+        {"state": "12:34:00", "config": {"name": "Temp"}},
+        "12:34:00",
+        "not a time",
+        "is not a valid time",
+        id="time_unparseable",
+    ),
+    pytest.param(
         "select",
         {"state": "a", "config": {"name": "Temp", "options": ["a", "b"]}},
         "a",

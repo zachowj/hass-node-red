@@ -1,10 +1,10 @@
 """Tests for Node-RED time entity."""
 
 from datetime import time as dt_time
-import logging
 from typing import Any
 
 import pytest
+import voluptuous as vol
 
 from custom_components.nodered.const import (
     CONF_CONFIG,
@@ -42,34 +42,17 @@ def test_convert_string_with_microseconds() -> None:
     assert _convert_string_to_time("09:10:11.123456") == dt_time(9, 10, 11, 123456)
 
 
-def test_convert_non_string_logs_exception(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Non-string inputs should either return None and log, or raise an error.
-
-    Different versions of the parser may raise a TypeError for non-string
-    inputs instead of returning None. Accept either behavior while ensuring
-    we don't silently succeed.
-    """
-    caplog.set_level(logging.ERROR)
-    try:
-        result = _convert_string_to_time(12345)  # type: ignore[arg-type]
-    except TypeError:
-        # Acceptable: implementation may raise for non-string input
-        return
-    # Or, if it returned, ensure it returned None and logged the error
-    assert result is None
-    assert "Unable to parse time" in caplog.text
-
-
-def test_convert_string_to_time_invalid_logs_exception(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Invalid time strings return None and log an exception."""
-    caplog.set_level(logging.ERROR)
-    result = _convert_string_to_time("not-a-time")
-    assert result is None
-    assert "Unable to parse time" in caplog.text
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param("not-a-time", id="invalid_string"),
+        pytest.param(12345, id="number"),
+    ],
+)
+def test_convert_string_to_time_rejects_invalid(value: Any) -> None:
+    """A value that can't be parsed as a time is rejected."""
+    with pytest.raises(vol.Invalid, match="is not a valid time"):
+        _convert_string_to_time(value)
 
 
 def test_node_red_time_update_state_and_discovery(
