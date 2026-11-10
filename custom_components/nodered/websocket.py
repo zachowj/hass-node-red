@@ -417,18 +417,8 @@ async def websocket_device_trigger(
             DOMAIN,
             _LOGGER.log,
         )
-    except vol.MultipleInvalid as err:
-        _LOGGER.exception("Error initializing device trigger for node_id: %s", node_id)
-        connection.send_message(
-            error_message(
-                msg[CONF_ID],
-                "invalid_trigger",
-                str(err),
-            )
-        )
-        return
     except vol.Invalid as err:
-        _LOGGER.exception("Error initializing device trigger for node_id: %s", node_id)
+        _LOGGER.error("Invalid device trigger config for node_id %s: %s", node_id, err)
         connection.send_message(
             error_message(
                 msg[CONF_ID],
