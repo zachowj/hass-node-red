@@ -22,7 +22,10 @@ from custom_components.nodered.websocket import (
     websocket_device_trigger,
     websocket_version,
 )
-from homeassistant.components.device_automation.exceptions import DeviceNotFound
+from homeassistant.components.device_automation.exceptions import (
+    DeviceNotFound,
+    InvalidDeviceAutomationConfig,
+)
 from homeassistant.components.webhook import async_register as webhook_real_register
 from homeassistant.components.websocket_api.messages import (
     error_message,
@@ -128,6 +131,29 @@ async def test_websocket_device_action_handles_device_not_found(
     sent = await client.receive_json()
 
     assert sent == error_message(msg["id"], "device_not_found", "no device")
+
+
+@pytest.mark.asyncio
+@patch.object(websocket.device_automation, "async_get_device_automation_platform")
+async def test_websocket_device_action_unknown_domain(
+    mock_get_platform: AsyncMock,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    mock_get_platform.side_effect = InvalidDeviceAutomationConfig("no platform")
+    websocket.register_websocket_handlers(hass)
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 8,
+            "type": "nodered/device/action",
+            "action": {"domain": "nope", "device_id": "dev-3"},
+        }
+    )
+    sent = await client.receive_json()
+
+    assert sent == error_message(8, "invalid_config", "no platform")
 
 
 @pytest.mark.asyncio

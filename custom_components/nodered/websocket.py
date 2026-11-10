@@ -122,11 +122,11 @@ async def websocket_device_action(
 ) -> None:
     """Execute a device action."""
     context = connection.context(msg)
-    platform = await device_automation.async_get_device_automation_platform(
-        hass, msg["action"][CONF_DOMAIN], DeviceAutomationType.ACTION
-    )
 
     try:
+        platform = await device_automation.async_get_device_automation_platform(
+            hass, msg["action"][CONF_DOMAIN], DeviceAutomationType.ACTION
+        )
         if "entity_id" in msg["action"]:
             entity_registry = async_get(hass)
             entity_entry = entity_registry.async_get(msg["action"]["entity_id"])
