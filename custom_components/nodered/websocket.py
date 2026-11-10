@@ -405,12 +405,6 @@ async def websocket_device_trigger(
             json.dumps(message, cls=NodeRedJSONEncoder, allow_nan=False),
         )
 
-    def unsubscribe() -> None:
-        """Remove device trigger."""
-        if remove_trigger is not None:
-            remove_trigger()
-        _LOGGER.info("Device trigger removed: %s", node_id)
-
     try:
         trigger_config = await trigger.async_validate_trigger_config(
             hass, [trigger_data]
@@ -453,6 +447,22 @@ async def websocket_device_trigger(
             )
         )
         return
+
+    # async_initialize_triggers logs the reason and returns None if attaching failed
+    if remove_trigger is None:
+        connection.send_message(
+            error_message(
+                msg[CONF_ID],
+                "trigger_not_attached",
+                "Device trigger could not be attached, check the Home Assistant log",
+            )
+        )
+        return
+
+    def unsubscribe() -> None:
+        """Remove device trigger."""
+        remove_trigger()
+        _LOGGER.info("Device trigger removed: %s", node_id)
 
     _LOGGER.info("Device trigger created: %s", node_id)
     _LOGGER.debug("Device trigger config for %s: %s", node_id, trigger_data)

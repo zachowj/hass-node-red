@@ -751,3 +751,32 @@ async def test_websocket_version_announce_does_not_reload_entry(
     assert not contrib_announced_version(hass)
 
     assert events == []
+
+
+@pytest.mark.asyncio
+@patch.object(
+    websocket.trigger, "async_initialize_triggers", new=AsyncMock(return_value=None)
+)
+@patch.object(websocket.trigger, "async_validate_trigger_config")
+async def test_websocket_device_trigger_attach_failure(
+    mock_validate: AsyncMock,
+    hass: HomeAssistant,
+) -> None:
+    """A trigger that fails to attach replies an error and stores no subscription."""
+    mock_validate.side_effect = lambda _hass, config: config
+
+    func: Any = websocket_device_trigger
+    while hasattr(func, "__wrapped__"):
+        func = func.__wrapped__
+
+    fake_conn = FakeConnection()
+    msg = {"id": 98, "node_id": "node-fail", "device_trigger": {}}
+
+    await func(hass, fake_conn, msg)
+
+    assert fake_conn.sent == error_message(
+        98,
+        "trigger_not_attached",
+        "Device trigger could not be attached, check the Home Assistant log",
+    )
+    assert fake_conn.subscriptions == {}
