@@ -144,5 +144,10 @@ def async_discover(
 
         if (discover := data.get(DISCOVERY_PLATFORMS, {}).get(component)) is None:
             raise HomeAssistantError(f"Node-RED {component} platform is not loaded")
-        discover(msg, connection)
+        # Adding starts eagerly, so an aborted add forgets the node before this returns
         discovered.add(unique_id)
+        try:
+            discover(msg, connection)
+        except Exception:
+            discovered.discard(unique_id)
+            raise

@@ -1,5 +1,6 @@
 """Websocket API for Node-RED."""
 
+from collections.abc import Callable
 import contextlib
 import json
 import logging
@@ -67,6 +68,7 @@ from .const import (
     WEBHOOKS,
 )
 from .discovery import async_discover, async_get_entity
+from .entity import NodeRedEntity
 from .sentence import websocket_sentence, websocket_sentence_response
 from .utils import NodeRedJSONEncoder
 
@@ -222,13 +224,7 @@ def websocket_entity(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Sensor command."""
-    entity = async_get_entity(hass, msg[CONF_SERVER_ID], msg[CONF_NODE_ID])
-    if entity is not None:
-        try:
-            entity.handle_entity_update(msg)
-        except Exception:
-            _LOGGER.exception("Error updating %s", entity.entity_id)
-    connection.send_message(result_message(msg[CONF_ID]))
+    _async_handle_update(hass, connection, msg, NodeRedEntity.handle_entity_update)
 
 
 @require_admin
@@ -244,10 +240,21 @@ def websocket_config_update(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Sensor command."""
+    _async_handle_update(hass, connection, msg, NodeRedEntity.handle_config_update)
+
+
+@callback
+def _async_handle_update(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    handler: Callable[[NodeRedEntity, dict[str, Any]], None],
+) -> None:
+    """Apply an update to its node's entity, if there is one, and reply."""
     entity = async_get_entity(hass, msg[CONF_SERVER_ID], msg[CONF_NODE_ID])
     if entity is not None:
         try:
-            entity.handle_config_update(msg)
+            handler(entity, msg)
         except Exception:
             _LOGGER.exception("Error updating %s", entity.entity_id)
     connection.send_message(result_message(msg[CONF_ID]))
