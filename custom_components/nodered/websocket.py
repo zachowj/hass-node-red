@@ -122,11 +122,11 @@ async def websocket_device_action(
 ) -> None:
     """Execute a device action."""
     context = connection.context(msg)
-    platform = await device_automation.async_get_device_automation_platform(
-        hass, msg["action"][CONF_DOMAIN], DeviceAutomationType.ACTION
-    )
 
     try:
+        platform = await device_automation.async_get_device_automation_platform(
+            hass, msg["action"][CONF_DOMAIN], DeviceAutomationType.ACTION
+        )
         if "entity_id" in msg["action"]:
             entity_registry = async_get(hass)
             entity_entry = entity_registry.async_get(msg["action"]["entity_id"])
@@ -405,12 +405,6 @@ async def websocket_device_trigger(
             json.dumps(message, cls=NodeRedJSONEncoder, allow_nan=False),
         )
 
-    def unsubscribe() -> None:
-        """Remove device trigger."""
-        if remove_trigger is not None:
-            remove_trigger()
-        _LOGGER.info("Device trigger removed: %s", node_id)
-
     try:
         trigger_config = await trigger.async_validate_trigger_config(
             hass, [trigger_data]
@@ -423,18 +417,8 @@ async def websocket_device_trigger(
             DOMAIN,
             _LOGGER.log,
         )
-    except vol.MultipleInvalid as err:
-        _LOGGER.exception("Error initializing device trigger for node_id: %s", node_id)
-        connection.send_message(
-            error_message(
-                msg[CONF_ID],
-                "invalid_trigger",
-                str(err),
-            )
-        )
-        return
     except vol.Invalid as err:
-        _LOGGER.exception("Error initializing device trigger for node_id: %s", node_id)
+        _LOGGER.error("Invalid device trigger config for node_id %s: %s", node_id, err)
         connection.send_message(
             error_message(
                 msg[CONF_ID],
@@ -453,6 +437,22 @@ async def websocket_device_trigger(
             )
         )
         return
+
+    # async_initialize_triggers logs the reason and returns None if attaching failed
+    if remove_trigger is None:
+        connection.send_message(
+            error_message(
+                msg[CONF_ID],
+                "trigger_not_attached",
+                "Device trigger could not be attached, check the Home Assistant log",
+            )
+        )
+        return
+
+    def unsubscribe() -> None:
+        """Remove device trigger."""
+        remove_trigger()
+        _LOGGER.info("Device trigger removed: %s", node_id)
 
     _LOGGER.info("Device trigger created: %s", node_id)
     _LOGGER.debug("Device trigger config for %s: %s", node_id, trigger_data)
