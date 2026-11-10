@@ -1,10 +1,10 @@
 """Sensor platform for nodered."""
 
 from datetime import time
-import logging
 from typing import Any
 
 from dateutil import parser
+import voluptuous as vol
 
 from homeassistant.components.time import TimeEntity
 from homeassistant.components.websocket_api.messages import event_message
@@ -15,8 +15,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_CONFIG, CONF_TIME, CONF_VALUE, EVENT_VALUE_CHANGE, TIME_ICON
 from .entity import NodeRedEntity, async_setup_discovery
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -35,9 +33,8 @@ def _convert_string_to_time(value: str | None) -> None | time:
         return None
     try:
         return parser.parse(value).time()
-    except ValueError:
-        _LOGGER.exception("Unable to parse time: %s", value)
-        return None
+    except (ValueError, TypeError, OverflowError) as err:
+        raise vol.Invalid(f"'{value}' is not a valid time", path=[CONF_STATE]) from err
 
 
 class NodeRedTime(NodeRedEntity, TimeEntity):
@@ -46,6 +43,10 @@ class NodeRedTime(NodeRedEntity, TimeEntity):
     _attr_native_value = None
     _bidirectional = True
     component = CONF_TIME
+    update_attrs = (
+        *NodeRedEntity.update_attrs,
+        "_attr_native_value",
+    )
 
     async def async_set_value(self, value: time) -> None:
         """Set new value."""

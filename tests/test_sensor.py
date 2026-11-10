@@ -1,9 +1,10 @@
 """Tests for Node-RED sensor last_reset handling."""
 
 from datetime import UTC, date, datetime
-from typing import Any, cast
+from typing import Any
 
 import pytest
+import voluptuous as vol
 
 from custom_components.nodered.const import (
     CONF_AVAILABLE,
@@ -123,48 +124,36 @@ def test_update_discovery_config_ignores_last_reset_without_valid_class(
     assert any("ignoring last_reset" in rec.getMessage() for rec in caplog.records)
 
 
-def test_convert_state_invalid_timestamp_returns_none_and_logs(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+@pytest.mark.parametrize(
+    ("device_class", "state"),
+    [
+        pytest.param(SensorDeviceClass.TIMESTAMP, "not-a-date", id="timestamp"),
+        pytest.param(SensorDeviceClass.DATE, "not-a-date", id="date"),
+        pytest.param(SensorDeviceClass.TIMESTAMP, 10**20, id="timestamp_overflow"),
+        pytest.param(SensorDeviceClass.TIMESTAMP, [1, 2, 3], id="not_str_or_number"),
+    ],
+)
+def test_convert_state_rejects_invalid_date(
+    hass: HomeAssistant, device_class: SensorDeviceClass, state: Any
 ) -> None:
-    """Invalid timestamp/date state should return None and log an exception."""
+    """A state that can't be parsed for a timestamp or date sensor is rejected."""
     node = NodeRedSensor(
         hass, {"id": "id-4", "server_id": "s1", "node_id": "node-4", CONF_CONFIG: {}}
     )
+    node._attr_device_class = device_class
 
-    # Test TIMESTAMP device class with invalid string
-    node._attr_device_class = SensorDeviceClass.TIMESTAMP
-    caplog.clear()
-    res = node.convert_state("not-a-date")
-    assert res is None
-    assert any(
-        "has a timestamp device class" in rec.getMessage() for rec in caplog.records
-    )
-
-    # Test TIMESTAMP device class with None state should not log an exception
-    caplog.clear()
-    res_none = node.convert_state(None)
-    assert res_none is None
-    assert not any(
-        "has a timestamp device class" in rec.getMessage() for rec in caplog.records
-    )
+    with pytest.raises(vol.Invalid, match=f"is not a valid {device_class}"):
+        node.convert_state(state)
 
 
-def test_convert_state_invalid_date_returns_none_and_logs(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Invalid date state should return None and log an exception."""
+def test_convert_state_none_with_timestamp_device_class(hass: HomeAssistant) -> None:
+    """A None state stays None for a timestamp sensor."""
     node = NodeRedSensor(
         hass, {"id": "id-5", "server_id": "s1", "node_id": "node-5", CONF_CONFIG: {}}
     )
+    node._attr_device_class = SensorDeviceClass.TIMESTAMP
 
-    # Test DATE device class
-    node._attr_device_class = SensorDeviceClass.DATE
-    caplog.clear()
-    res = node.convert_state("not-a-date")
-    assert res is None
-    assert any(
-        "has a timestamp device class" in rec.getMessage() for rec in caplog.records
-    )
+    assert node.convert_state(None) is None
 
 
 def test_convert_state_valid_timestamp_and_date(hass: HomeAssistant) -> None:
@@ -224,30 +213,6 @@ def test_validate_and_cache_last_reset_direct(hass: HomeAssistant) -> None:
     node._attr_device_class = SensorDeviceClass.TIMESTAMP
     node._validate_and_cache_last_reset("not-a-date")
     assert "last_reset" not in node.__dict__
-
-
-def test_convert_state_handles_extreme_and_negative_numbers(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Extreme numeric timestamps should fail; negative timestamps should parse."""
-    node = NodeRedSensor(
-        hass, {"id": "id-8", "server_id": "s1", "node_id": "node-8", CONF_CONFIG: {}}
-    )
-
-    node._attr_device_class = SensorDeviceClass.TIMESTAMP
-
-    # Extremely large number (likely overflow) should return None and log
-    big_ts = 10**20
-    caplog.clear()
-    res_big = node.convert_state(big_ts)
-    assert res_big is None
-    assert any("Invalid timestamp" in rec.getMessage() for rec in caplog.records)
-
-    # Negative timestamp (before epoch) should parse to a datetime
-    caplog.clear()
-    neg_ts = -1000000000  # about 1938-04-24
-    res_neg = node.convert_state(neg_ts)
-    assert isinstance(res_neg, datetime)
 
 
 def test_update_entity_state_attributes_does_not_overwrite_when_state_missing(
@@ -386,20 +351,6 @@ def test_convert_state_zero_and_negative_timestamps(hass: HomeAssistant) -> None
     assert res_neg == datetime.fromtimestamp(-1000000000, tz=UTC)
 
 
-def test_convert_state_large_overflow_logs_and_returns_none(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Extremely large numeric timestamps should return None and log an error."""
-    node = _make_node(hass, "id-big")
-    node._attr_device_class = SensorDeviceClass.TIMESTAMP
-
-    big = 10**20
-    caplog.clear()
-    res = node.convert_state(big)
-    assert res is None
-    assert any("Invalid timestamp" in rec.getMessage() for rec in caplog.records)
-
-
 def test_update_discovery_config_accepts_last_reset_with_total_state_class(
     hass: HomeAssistant,
 ) -> None:
@@ -456,23 +407,6 @@ def test_entity_category_mapper_logs_for_config_and_returns_diagnostic(
 
     # 'diagnostic' should return the enum
     assert node.entity_category_mapper("diagnostic") is EntityCategory.DIAGNOSTIC
-
-
-def test_convert_state_non_string_non_numeric_logs_and_returns_none(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Non-string, non-numeric state for timestamp device should log and return None."""
-    node = NodeRedSensor(
-        hass, {"id": "id-14", "server_id": "s1", "node_id": "node-14", CONF_CONFIG: {}}
-    )
-    node._attr_device_class = SensorDeviceClass.TIMESTAMP
-
-    caplog.clear()
-    res = node.convert_state(cast(Any, [1, 2, 3]))
-    assert res is None
-    assert any(
-        "has a timestamp device class" in rec.getMessage() for rec in caplog.records
-    )
 
 
 def test_update_entity_state_attributes_updates_native_when_state_present(

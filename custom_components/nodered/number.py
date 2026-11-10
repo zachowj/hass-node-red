@@ -55,6 +55,10 @@ class NodeRedNumber(NodeRedEntity, RestoreNumber):
     _attr_mode = NumberMode.AUTO
     _bidirectional = True
     component = CONF_NUMBER
+    update_attrs = (
+        *NodeRedEntity.update_attrs,
+        "_attr_native_value",
+    )
 
     def __init__(
         self,

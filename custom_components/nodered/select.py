@@ -2,6 +2,8 @@
 
 from typing import Any
 
+import voluptuous as vol
+
 from homeassistant.components.select import SelectEntity
 from homeassistant.components.websocket_api.messages import event_message
 from homeassistant.config_entries import ConfigEntry
@@ -35,6 +37,10 @@ class NodeRedSelect(NodeRedEntity, SelectEntity):
 
     _bidirectional = True
     component = CONF_SELECT
+    update_attrs = (
+        *NodeRedEntity.update_attrs,
+        "_attr_current_option",
+    )
 
     async def async_select_option(self, option: str) -> None:
         """Set new option."""
@@ -46,8 +52,12 @@ class NodeRedSelect(NodeRedEntity, SelectEntity):
 
     def update_entity_state_attributes(self, msg: dict[str, Any]) -> None:
         """Update the entity state attributes."""
+        # HA shows an option that isn't listed as unknown instead of raising
+        state = msg.get(CONF_STATE)
+        if state is not None and state not in getattr(self, "_attr_options", []):
+            raise vol.Invalid(f"'{state}' is not one of the options", path=[CONF_STATE])
         super().update_entity_state_attributes(msg)
-        self._attr_current_option = msg.get(CONF_STATE)
+        self._attr_current_option = state
 
     def update_discovery_config(self, msg: dict[str, Any]) -> None:
         """Update the entity config."""

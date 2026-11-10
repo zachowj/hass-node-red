@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, ClassVar
 
 import voluptuous as vol
@@ -21,11 +23,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_registry import async_get
 
-if TYPE_CHECKING:
-    from homeassistant.components.websocket_api.connection import ActiveConnection
-    from homeassistant.config_entries import ConfigEntry
-    from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
 from .const import (
     CONF_ATTRIBUTES,
     CONF_AVAILABLE,
@@ -38,6 +35,7 @@ from .const import (
     CONF_REMOVE,
     CONF_SERVER_ID,
     DOMAIN,
+    HA_MAX_STATE_LENGTH,
 )
 from .discovery import (
     CHANGE_ENTITY_TYPE,
@@ -47,6 +45,13 @@ from .discovery import (
     async_register_platform,
 )
 from .utils import contrib_supports_presence_available
+
+if TYPE_CHECKING:
+    from homeassistant.components.websocket_api.connection import ActiveConnection
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+_UNSET = object()
 
 
 class MissingConfigError(TypeError):
@@ -58,6 +63,11 @@ class NodeRedEntity(Entity):
 
     component: ClassVar[str] = ""
     _bidirectional = False
+    # Every _attr_ an entity update can change, restored if HA rejects the update
+    update_attrs: ClassVar[tuple[str, ...]] = (
+        "_attr_available",
+        "_attr_extra_state_attributes",
+    )
 
     def __init__(
         self,
@@ -112,8 +122,28 @@ class NodeRedEntity(Entity):
     @callback
     def handle_entity_update(self, msg: dict[str, Any]) -> None:
         """Update entity state attributes and write state."""
-        self.update_entity_state_attributes(msg)
+        with self._undo_on_error():
+            self.update_entity_state_attributes(msg)
+            self.validate_state()
         self.async_write_ha_state()
+
+    @contextmanager
+    def _undo_on_error(self) -> Generator[None]:
+        """Restore the update attributes if the block raises.
+
+        The block must not await, so nothing else can read a rejected update.
+        """
+        saved = {name: getattr(self, name, _UNSET) for name in self.update_attrs}
+        try:
+            yield
+        except Exception:
+            for name, value in saved.items():
+                if value is _UNSET:
+                    if hasattr(self, name):
+                        delattr(self, name)
+                else:
+                    setattr(self, name, value)
+            raise
 
     def update_entity_state_attributes(self, msg: dict[str, Any]) -> None:
         """Apply attributes and availability from an incoming message.
@@ -142,9 +172,13 @@ class NodeRedEntity(Entity):
         reading it runs the same check as writing the state.
         """
         try:
-            _ = self.state
+            state = self.state
         except ValueError as err:
             raise vol.Invalid(str(err), path=[CONF_STATE]) from err
+        # HA stores longer states as unknown instead of raising
+        if state is not None and len(str(state)) > HA_MAX_STATE_LENGTH:
+            msg = f"State is longer than {HA_MAX_STATE_LENGTH} characters"
+            raise vol.Invalid(msg, path=[CONF_STATE])
 
     @callback
     def handle_lost_connection(self) -> None:

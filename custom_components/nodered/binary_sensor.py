@@ -47,6 +47,10 @@ class NodeRedBinarySensor(NodeRedEntity, BinarySensorEntity):
         STATE_UNLOCKED,
     )
     component = CONF_BINARY_SENSOR
+    update_attrs = (
+        *NodeRedEntity.update_attrs,
+        "_attr_is_on",
+    )
 
     def __init__(
         self,

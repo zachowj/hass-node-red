@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from pytest_homeassistant_custom_component.typing import WebSocketGenerator
+import voluptuous as vol
 
 from custom_components.nodered.const import (
     CONF_ATTRIBUTES,
@@ -707,3 +708,245 @@ def test_update_config_ignores_empty_values(hass: HomeAssistant) -> None:
     assert ent._attr_name == "KeepName"
     assert ent._attr_icon == "mdi:keep"
     assert ent._attr_options == {"keep": 1}
+
+
+async def _setup_ws_client(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> Any:
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    return await hass_ws_client(hass)
+
+
+REJECTED_STATE_CASES = [
+    pytest.param(
+        "sensor",
+        {"state": 21.5, "config": {"name": "Temp", "unit_of_measurement": "°C"}},
+        "21.5",
+        "not a number",
+        "non-numeric value",
+        id="numeric_sensor",
+    ),
+    pytest.param(
+        "sensor",
+        {"state": "short", "config": {"name": "Temp"}},
+        "short",
+        "x" * 256,
+        "longer than 255 characters",
+        id="sensor_over_255_characters",
+    ),
+    pytest.param(
+        "sensor",
+        {
+            "state": "2021-02-03T04:05:06+00:00",
+            "config": {"name": "Temp", "device_class": "timestamp"},
+        },
+        "2021-02-03T04:05:06+00:00",
+        "not a date",
+        "is not a valid timestamp",
+        id="sensor_invalid_timestamp",
+    ),
+    pytest.param(
+        "time",
+        {"state": "12:34:00", "config": {"name": "Temp"}},
+        "12:34:00",
+        "not a time",
+        "is not a valid time",
+        id="time_unparseable",
+    ),
+    pytest.param(
+        "text",
+        {"state": "short", "config": {"name": "Temp", "max_length": 5}},
+        "short",
+        "too long",
+        "too long",
+        id="text_over_max_length",
+    ),
+    pytest.param(
+        "text",
+        {"state": "123", "config": {"name": "Temp", "pattern": r"^\d+$"}},
+        "123",
+        "abc",
+        "does not match expected pattern",
+        id="text_pattern_mismatch",
+    ),
+    pytest.param(
+        "select",
+        {"state": "a", "config": {"name": "Temp", "options": ["a", "b"]}},
+        "a",
+        "c",
+        "not one of the options",
+        id="select_option_not_listed",
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    ("component", "discovery", "old_state", "new_state", "error"),
+    REJECTED_STATE_CASES,
+)
+async def test_rejected_update_is_returned_and_undone(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    *,
+    component: str,
+    discovery: dict[str, Any],
+    old_state: str,
+    new_state: Any,
+    error: str,
+) -> None:
+    """An update HA rejects gets an error reply and leaves the entity as it was."""
+    entity_id = f"{component}.temp"
+    client = await _setup_ws_client(hass, hass_ws_client)
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "nodered/discovery",
+            "component": component,
+            "server_id": "s1",
+            "node_id": "n1",
+            "attributes": {"room": "kitchen"},
+            **discovery,
+        }
+    )
+    assert (await client.receive_json())["success"]
+    await hass.async_block_till_done()
+    entity_update = {"type": "nodered/entity", "server_id": "s1", "node_id": "n1"}
+
+    await client.send_json(
+        {
+            "id": 2,
+            **entity_update,
+            "state": new_state,
+            "attributes": {"room": "lounge"},
+        }
+    )
+    resp = await client.receive_json()
+
+    assert not resp["success"]
+    assert resp["error"]["code"] == "invalid_format"
+    assert error in resp["error"]["message"]
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == old_state
+    assert state.attributes["room"] == "kitchen"
+
+    # Would fail too if the rejected state had been kept
+    await client.send_json({"id": 3, **entity_update, "available": False})
+    assert (await client.receive_json())["success"]
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "unavailable"
+
+
+async def test_unexpected_update_error_is_returned(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """An unexpected exception during an update is returned and the update undone."""
+    client = await _setup_ws_client(hass, hass_ws_client)
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "nodered/discovery",
+            "component": "sensor",
+            "server_id": "s1",
+            "node_id": "n1",
+            "state": 1,
+        }
+    )
+    assert (await client.receive_json())["success"]
+    await hass.async_block_till_done()
+
+    with patch.object(NodeRedEntity, "validate_state", side_effect=RuntimeError):
+        await client.send_json(
+            {
+                "id": 2,
+                "type": "nodered/entity",
+                "server_id": "s1",
+                "node_id": "n1",
+                "state": 2,
+            }
+        )
+        resp = await client.receive_json()
+
+    assert not resp["success"]
+    assert resp["error"]["code"] == "unknown_error"
+
+    # The next write would publish the failed update's state if it were kept
+    await client.send_json(
+        {
+            "id": 3,
+            "type": "nodered/entity",
+            "server_id": "s1",
+            "node_id": "n1",
+            "attributes": {"room": "kitchen"},
+        }
+    )
+    assert (await client.receive_json())["success"]
+    state = hass.states.get("sensor.nodered_n1")
+    assert state is not None
+    assert state.state == "1"
+    assert state.attributes["room"] == "kitchen"
+
+
+UNDO_CASES = [
+    pytest.param("binary_sensor", {"state": True}, False, id="binary_sensor"),
+    pytest.param("button", {}, None, id="button"),
+    pytest.param("number", {"state": 5}, 7, id="number"),
+    pytest.param(
+        "select", {"state": "a", "config": {"options": ["a", "b"]}}, "b", id="select"
+    ),
+    pytest.param("sensor", {"state": 21.5}, 22, id="sensor"),
+    pytest.param("switch", {"state": True}, False, id="switch"),
+    pytest.param("text", {"state": "hi"}, "bye", id="text"),
+    pytest.param("time", {"state": "12:34:00"}, "13:00:00", id="time"),
+]
+
+
+def _attrs(entity: NodeRedEntity) -> dict[str, Any]:
+    return {
+        name: getattr(entity, name, None)
+        for name in dir(entity)
+        if name.startswith("_attr_")
+    }
+
+
+@pytest.mark.parametrize(("component", "fields", "new_state"), UNDO_CASES)
+async def test_rejected_update_restores_every_changed_attribute(
+    hass: HomeAssistant, component: str, fields: dict[str, Any], new_state: Any
+) -> None:
+    """Every attribute an entity update can change is in update_attrs."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    async_discover(
+        hass,
+        {
+            "id": 1,
+            CONF_COMPONENT: component,
+            CONF_SERVER_ID: "s1",
+            CONF_NODE_ID: "n1",
+            **fields,
+            CONF_CONFIG: {CONF_NAME: "Undo", **fields.get(CONF_CONFIG, {})},
+        },
+        FakeConnection(),
+    )
+    entity = async_get_entity(hass, "s1", "n1")
+    assert entity is not None
+    before = _attrs(entity)
+    entity_msg = {
+        CONF_STATE: new_state,
+        CONF_ATTRIBUTES: {"changed": True},
+        CONF_AVAILABLE: False,
+    }
+
+    with (
+        patch.object(entity, "validate_state", side_effect=vol.Invalid("rejected")),
+        pytest.raises(vol.Invalid),
+    ):
+        entity.handle_entity_update(entity_msg)
+
+    assert _attrs(entity) == before
