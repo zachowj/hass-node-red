@@ -16,6 +16,24 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## [5.0.0](https://github.com/zachowj/hass-node-red/compare/v4.3.3...v5.0.0) (2026-11-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* Entity updates that fail Home Assistant validation now return errors instead of being silently acknowledged. This includes invalid sensor values, overly long states, invalid select options, unparseable dates/timestamps/times, and text values that violate length or pattern constraints. Text values that were previously truncated are now rejected.
+
+### Bug Fixes
+
+* **discovery:** forget nodes whose entity add is aborted ([#429](https://github.com/zachowj/hass-node-red/issues/429)) ([c407dce](https://github.com/zachowj/hass-node-red/commit/c407dce546fff8ea9efbdbb9950f2eab579724bb))
+* Remove deprecated connection class ([#430](https://github.com/zachowj/hass-node-red/issues/430)) ([4d256ef](https://github.com/zachowj/hass-node-red/commit/4d256ef1c532bcf486ffc72fde409af5092cc91c))
+* reply with an error when Home Assistant rejects an entity update ([#433](https://github.com/zachowj/hass-node-red/issues/433)) ([6ce4718](https://github.com/zachowj/hass-node-red/commit/6ce4718d541d2e5a82102323cec663ca2e6f7f69))
+
+
+### Miscellaneous Chores
+
+* **deps:** update pre-commit hook astral-sh/ruff-pre-commit to v0.17.4 ([#431](https://github.com/zachowj/hass-node-red/issues/431)) ([dd447fa](https://github.com/zachowj/hass-node-red/commit/dd447fa3dcf4c37aee4c97abb32fd6641bf226a6))
+
 ## [4.3.3](https://github.com/zachowj/hass-node-red/compare/v4.3.2...v4.3.3) (2026-11-06)
 
 
