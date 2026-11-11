@@ -165,6 +165,26 @@ async def test_websocket_device_remove_handles_device_and_entities(
 
 
 @pytest.mark.asyncio
+async def test_websocket_device_remove_does_not_use_deprecated_lookup(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    _config_entry, device, _entity = create_device_with_entity(hass, "node-1")
+
+    websocket.register_websocket_handlers(hass)
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {"id": 9, "type": "nodered/device/remove", "node_id": "node-1"}
+    )
+
+    assert await client.receive_json() == result_message(9)
+    assert dr.async_get(hass).async_get(device.id) is None
+    assert "device_registry.async_get_device`" not in caplog.text
+
+
+@pytest.mark.asyncio
 @patch.object(websocket, "async_get_entity")
 @patch.object(websocket, "async_discover")
 async def test_websocket_discovery_and_entity_and_update_config_and_version(
