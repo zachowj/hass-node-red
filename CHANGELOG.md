@@ -16,6 +16,28 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## [5.0.0](https://github.com/zachowj/hass-node-red/compare/v4.3.3...v5.0.0) (2026-11-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* Entity updates that fail Home Assistant validation now return errors instead of being silently acknowledged. This includes invalid sensor values, overly long states, invalid select options, unparseable dates/timestamps/times, and text values that violate length or pattern constraints. Text values that were previously truncated are now rejected.
+
+### Bug Fixes
+
+* **discovery:** forget nodes whose entity add is aborted ([#429](https://github.com/zachowj/hass-node-red/issues/429)) ([c407dce](https://github.com/zachowj/hass-node-red/commit/c407dce546fff8ea9efbdbb9950f2eab579724bb))
+* Remove deprecated connection class ([#430](https://github.com/zachowj/hass-node-red/issues/430)) ([4d256ef](https://github.com/zachowj/hass-node-red/commit/4d256ef1c532bcf486ffc72fde409af5092cc91c))
+* reply with an error when Home Assistant rejects an entity update ([#433](https://github.com/zachowj/hass-node-red/issues/433)) ([6ce4718](https://github.com/zachowj/hass-node-red/commit/6ce4718d541d2e5a82102323cec663ca2e6f7f69))
+* **websocket:** look up the removed device by config entry ([#437](https://github.com/zachowj/hass-node-red/issues/437)) ([9d65b47](https://github.com/zachowj/hass-node-red/commit/9d65b47c9da5f722e0e47f01d39862c27111dd6b))
+* **websocket:** report device triggers that fail to attach ([#435](https://github.com/zachowj/hass-node-red/issues/435)) ([3e0ad1d](https://github.com/zachowj/hass-node-red/commit/3e0ad1d48e5b130c13d8155e19c4fc2dc31950f6))
+
+
+### Miscellaneous Chores
+
+* **deps:** update astral-sh/setup-uv action to v10 ([#440](https://github.com/zachowj/hass-node-red/issues/440)) ([6f4882f](https://github.com/zachowj/hass-node-red/commit/6f4882fbba5a80d3c25739320b4d18772188872d))
+* **deps:** update pre-commit hook astral-sh/ruff-pre-commit to v0.17.4 ([#431](https://github.com/zachowj/hass-node-red/issues/431)) ([dd447fa](https://github.com/zachowj/hass-node-red/commit/dd447fa3dcf4c37aee4c97abb32fd6641bf226a6))
+* **deps:** update pre-commit hook astral-sh/ruff-pre-commit to v0.17.5 ([#438](https://github.com/zachowj/hass-node-red/issues/438)) ([417df86](https://github.com/zachowj/hass-node-red/commit/417df863f976af1c379990bee183346c97b8acac))
+
 ## [4.3.3](https://github.com/zachowj/hass-node-red/compare/v4.3.2...v4.3.3) (2026-11-06)
 
 
