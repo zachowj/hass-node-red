@@ -169,7 +169,7 @@ async def websocket_device_remove(
 ) -> None:
     """Remove a device."""
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device({(DOMAIN, msg[CONF_NODE_ID])})
+    device = _async_get_device(hass, device_registry, msg[CONF_NODE_ID])
     if device is not None:
         entity_registry = async_get(hass)
         entries = async_entries_for_device(entity_registry, device.id)
@@ -182,6 +182,24 @@ async def websocket_device_remove(
         device_registry.async_remove_device(device.id)
 
     connection.send_message(result_message(msg[CONF_ID]))
+
+
+@callback
+def _async_get_device(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, node_id: str
+) -> dr.DeviceEntry | None:
+    """Return the Node-RED config entry's device for the node id."""
+    identifier = (DOMAIN, node_id)
+    # Home Assistant before 2026.8 has no async_get_device_by_identifier
+    if not hasattr(device_registry, "async_get_device_by_identifier"):
+        return device_registry.async_get_device({identifier})
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        device = device_registry.async_get_device_by_identifier(
+            identifier, entry.entry_id
+        )
+        if device is not None:
+            return device
+    return None
 
 
 @require_admin
