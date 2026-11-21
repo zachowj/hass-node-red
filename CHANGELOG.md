@@ -16,6 +16,14 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## [5.0.1](https://github.com/zachowj/hass-node-red/compare/v5.0.0...v5.0.1) (2026-11-21)
+
+
+### Miscellaneous Chores
+
+* add python version constraint to configuration ([a4d6d2f](https://github.com/zachowj/hass-node-red/commit/a4d6d2f403d81422324b47b5fdf1174e794bb6ed))
+* refactor test workflows by removing redundant inputs and adding beta validation ([781001f](https://github.com/zachowj/hass-node-red/commit/781001f6dc4649798795c754eab9e85f54cd1058))
+
 ## [5.0.0](https://github.com/zachowj/hass-node-red/compare/v4.3.3...v5.0.0) (2026-11-19)
 
 
