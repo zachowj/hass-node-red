@@ -2,7 +2,7 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
   "constraints": {
-    "python": "<3.15"
+    "python": "<3.16"
   },
   "schedule": ["* * * * 1"],
   "pre-commit": {
