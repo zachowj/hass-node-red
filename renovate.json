@@ -1,6 +1,9 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
+  "constraints": {
+    "python": "<3.15"
+  },
   "schedule": ["* * * * 1"],
   "pre-commit": {
     "enabled": true
