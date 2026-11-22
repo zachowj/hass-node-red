@@ -102,7 +102,8 @@ class NodeRedNumber(NodeRedEntity, RestoreNumber):
     def update_entity_state_attributes(self, msg: dict[str, Any]) -> None:
         """Update the entity state attributes."""
         super().update_entity_state_attributes(msg)
-        self._attr_native_value = msg.get(CONF_STATE)
+        if CONF_STATE in msg:
+            self._attr_native_value = msg[CONF_STATE]
 
     def update_config(self, msg: dict[str, Any]) -> None:
         """Update entity config."""

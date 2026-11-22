@@ -1,0 +1,115 @@
+"""Websocket tests shared by the number, text, select and time entities."""
+
+from typing import Any
+
+import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant_custom_component.typing import WebSocketGenerator
+
+from custom_components.nodered.const import DOMAIN
+from homeassistant.const import STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
+
+VALUE_ENTITIES = [
+    pytest.param("number", {}, 5, "5", id="number"),
+    pytest.param("text", {}, "hello", "hello", id="text"),
+    pytest.param("select", {"options": ["a", "b"]}, "b", "b", id="select"),
+    pytest.param("time", {}, "12:34:00", "12:34:00", id="time"),
+]
+
+
+async def _setup_nodered(hass: HomeAssistant) -> None:
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(("component", "config", "value", "expected"), VALUE_ENTITIES)
+@pytest.mark.parametrize(
+    "update",
+    [
+        pytest.param({"available": False}, id="available"),
+        pytest.param({"attributes": {"foo": "bar"}}, id="attributes"),
+    ],
+)
+async def test_update_without_state_keeps_value(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    *,
+    component: str,
+    config: dict[str, Any],
+    value: Any,
+    expected: str,
+    update: dict[str, Any],
+) -> None:
+    """An update without state leaves the value as it was."""
+    await _setup_nodered(hass)
+    client = await hass_ws_client(hass)
+    entity_id = f"{component}.value_entity"
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "nodered/discovery",
+            "component": component,
+            "server_id": "s1",
+            "node_id": "n1",
+            "config": {"name": "Value Entity", **config},
+            "state": value,
+        }
+    )
+    assert (await client.receive_json())["success"]
+    await hass.async_block_till_done()
+
+    await client.send_json(
+        {"id": 2, "type": "nodered/entity", "server_id": "s1", "node_id": "n1"} | update
+    )
+    assert (await client.receive_json())["success"]
+    await client.send_json(
+        {
+            "id": 3,
+            "type": "nodered/entity",
+            "server_id": "s1",
+            "node_id": "n1",
+            "available": True,
+        }
+    )
+    assert (await client.receive_json())["success"]
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == expected
+
+
+@pytest.mark.parametrize(
+    ("component", "config"),
+    [pytest.param(*p.values[:2], id=p.id) for p in VALUE_ENTITIES],
+)
+async def test_discovery_without_state_is_unknown(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    component: str,
+    config: dict[str, Any],
+) -> None:
+    """Discovery without a state creates the entity with an unknown value."""
+    await _setup_nodered(hass)
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "nodered/discovery",
+            "component": component,
+            "server_id": "s1",
+            "node_id": "n1",
+            "config": {"name": "Value Entity", **config},
+        }
+    )
+    assert (await client.receive_json())["success"]
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"{component}.value_entity")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN

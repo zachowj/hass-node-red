@@ -57,7 +57,8 @@ class NodeRedSelect(NodeRedEntity, SelectEntity):
         if state is not None and state not in getattr(self, "_attr_options", []):
             raise vol.Invalid(f"'{state}' is not one of the options", path=[CONF_STATE])
         super().update_entity_state_attributes(msg)
-        self._attr_current_option = state
+        if CONF_STATE in msg:
+            self._attr_current_option = state
 
     def update_discovery_config(self, msg: dict[str, Any]) -> None:
         """Update the entity config."""

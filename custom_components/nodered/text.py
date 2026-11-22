@@ -42,6 +42,7 @@ async def async_setup_entry(
 class NodeRedText(NodeRedEntity, RestoreText):
     """Node-RED text class."""
 
+    _attr_native_value = None
     _bidirectional = True
     component = CONF_TEXT
     update_attrs = (
@@ -69,9 +70,10 @@ class NodeRedText(NodeRedEntity, RestoreText):
     def update_entity_state_attributes(self, msg: dict[str, Any]) -> None:
         """Update the entity state attributes."""
         super().update_entity_state_attributes(msg)
-        # Home Assistant measures the value's length, so it must be a string
-        state = msg.get(CONF_STATE)
-        self._attr_native_value = str(state) if state is not None else None
+        if CONF_STATE in msg:
+            # Home Assistant measures the value's length, so it must be a string
+            state = msg[CONF_STATE]
+            self._attr_native_value = str(state) if state is not None else None
 
     def update_discovery_config(self, msg: dict[str, Any]) -> None:
         """Update the entity config."""
