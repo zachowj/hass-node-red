@@ -72,10 +72,10 @@ async def test_async_set_value_sends_event_message(
 
 
 @pytest.mark.asyncio
-async def test_async_added_to_hass_restores_native_values_when_available(
+async def test_async_added_to_hass_restores_value_not_limits(
     hass: HomeAssistant, fake_connection: FakeConnection
 ) -> None:
-    """async_added_to_hass should restore native values when last data exists."""
+    """async_added_to_hass restores the value but keeps the discovery limits."""
     config: dict[str, Any] = {
         CONF_ID: "id-restore",
         "server_id": "s1",
@@ -94,8 +94,8 @@ async def test_async_added_to_hass_restores_native_values_when_available(
     node.async_get_last_text_data = fake_get_last_text_data
     await node.async_added_to_hass()
 
-    assert node._attr_native_max == RESTORED_NATIVE_MAX
-    assert node._attr_native_min == RESTORED_NATIVE_MIN
+    assert node._attr_native_max == text.DEFAULT_MAX_LENGTH
+    assert node._attr_native_min == text.DEFAULT_MIN_LENGTH
     assert node._attr_native_value == "restored"
 
 
@@ -224,29 +224,3 @@ def test_update_discovery_config_clamps_to_ha_max_length(
     node.update_discovery_config({CONF_CONFIG: custom_cfg["config"]})
 
     assert node._attr_native_max == HA_MAX_STATE_LENGTH
-
-
-@pytest.mark.asyncio
-async def test_async_added_to_hass_preserves_restored_max(
-    hass: HomeAssistant, fake_connection: FakeConnection
-) -> None:
-    """Restored native_max values should be preserved (not clamped)."""
-    config: dict[str, Any] = {
-        CONF_ID: "id-restore-clamp",
-        "server_id": "s1",
-        "node_id": "n1",
-        "config": {},
-    }
-    node: NodeRedText = NodeRedText(hass, config, fake_connection)
-
-    async def fake_get_last_text_data() -> TextExtraStoredData:
-        return TextExtraStoredData(
-            native_value="restored",
-            native_min=RESTORED_NATIVE_MIN,
-            native_max=300,
-        )
-
-    node.async_get_last_text_data = fake_get_last_text_data
-    await node.async_added_to_hass()
-
-    assert node._attr_native_max == 300

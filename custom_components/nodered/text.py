@@ -2,6 +2,8 @@
 
 from typing import Any
 
+import voluptuous as vol
+
 from homeassistant.components.text import RestoreText, TextMode
 from homeassistant.components.websocket_api.messages import event_message
 from homeassistant.config_entries import ConfigEntry
@@ -51,14 +53,20 @@ class NodeRedText(NodeRedEntity, RestoreText):
     )
 
     async def async_added_to_hass(self) -> None:
-        """Restore native_*."""
+        """Restore the value if discovery didn't send one."""
         await super().async_added_to_hass()
-        if (last_text_data := await self.async_get_last_text_data()) is None:
-            return
-        self._attr_native_max = last_text_data.native_max
-        self._attr_native_min = last_text_data.native_min
-        if self._attr_native_value is None:
-            self._attr_native_value = last_text_data.native_value
+        if self._attr_native_value is None and (
+            last_text_data := await self.async_get_last_text_data()
+        ):
+            self._set_value_if_valid(last_text_data.native_value)
+
+    def _set_value_if_valid(self, value: str | None) -> None:
+        """Set the value, or leave it unknown if the limits or pattern reject it."""
+        self._attr_native_value = value
+        try:
+            self.validate_state()
+        except vol.Invalid:
+            self._attr_native_value = None
 
     async def async_set_value(self, value: str) -> None:
         """Set new value."""

@@ -260,3 +260,46 @@ async def test_discovery_value_wins_over_restored_state(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == (expected or restored)
+
+
+@pytest.mark.parametrize(
+    "config",
+    [
+        pytest.param({"max_length": 5}, id="max_length"),
+        pytest.param({"pattern": "[0-9]+"}, id="pattern"),
+    ],
+)
+async def test_restored_text_that_breaks_the_limits_is_dropped(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    config: dict[str, Any],
+) -> None:
+    """A restored text value the current config rejects isn't used."""
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State("text.value_entity", "restored"),
+                {"native_value": "restored", "native_min": 0, "native_max": 100},
+            )
+        ],
+    )
+    await _setup_nodered(hass)
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "nodered/discovery",
+            "component": "text",
+            "server_id": "s1",
+            "node_id": "n1",
+            "config": {"name": "Value Entity", **config},
+        }
+    )
+    assert (await client.receive_json())["success"]
+    await hass.async_block_till_done()
+
+    state = hass.states.get("text.value_entity")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
