@@ -19,7 +19,7 @@ from .const import (
     EVENT_VALUE_CHANGE,
     SELECT_ICON,
 )
-from .entity import NodeRedEntity, async_setup_discovery
+from .entity import NodeRedEntity, async_setup_discovery, reject_null_state
 
 
 async def async_setup_entry(
@@ -52,9 +52,10 @@ class NodeRedSelect(NodeRedEntity, SelectEntity):
 
     def update_entity_state_attributes(self, msg: dict[str, Any]) -> None:
         """Update the entity state attributes."""
+        reject_null_state(msg)
         # HA shows an option that isn't listed as unknown instead of raising
         state = msg.get(CONF_STATE)
-        if state is not None and state not in getattr(self, "_attr_options", []):
+        if CONF_STATE in msg and state not in getattr(self, "_attr_options", []):
             raise vol.Invalid(f"'{state}' is not one of the options", path=[CONF_STATE])
         super().update_entity_state_attributes(msg)
         if CONF_STATE in msg:

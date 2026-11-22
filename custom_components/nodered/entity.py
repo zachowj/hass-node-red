@@ -313,6 +313,12 @@ def apply_legacy_availability(msg: dict[str, Any]) -> None:
         msg.setdefault(CONF_ATTRIBUTES, {})
 
 
+def reject_null_state(msg: dict[str, Any]) -> None:
+    """Raise vol.Invalid if the message sets the state to null."""
+    if CONF_STATE in msg and msg[CONF_STATE] is None:
+        raise vol.Invalid("State can't be null", path=[CONF_STATE])
+
+
 @callback
 def async_setup_discovery(
     hass: HomeAssistant,

@@ -23,13 +23,12 @@ from tests.helpers import FakeConnection
 
 
 def test_convert_string_to_time_various() -> None:
-    """Valid strings and None should convert appropriately."""
+    """Valid strings should convert appropriately."""
     assert _convert_string_to_time("12:34:56") == dt_time(12, 34, 56)
     # Full datetime string with date/time zone should still extract time (tz stripped)
     assert _convert_string_to_time("2023-08-01T09:10:11Z") == dt_time(9, 10, 11)
     # Time string with offset should also return naive time with same clock time
     assert _convert_string_to_time("2023-08-01T09:10:11+02:00") == dt_time(9, 10, 11)
-    assert _convert_string_to_time(None) is None
 
 
 def test_convert_string_with_milliseconds_and_spaces() -> None:
@@ -73,10 +72,6 @@ def test_node_red_time_update_state_and_discovery(
     # Update state with a time string
     nrt.update_entity_state_attributes({CONF_STATE: "01:02:03"})
     assert nrt._attr_native_value == dt_time(1, 2, 3)
-
-    # Update with None clears/keeps None
-    nrt.update_entity_state_attributes({CONF_STATE: None})
-    assert nrt._attr_native_value is None
 
     # Update state with timezone-aware datetime string -> naive time expected
     nrt.update_entity_state_attributes({CONF_STATE: "2023-08-01T09:10:11Z"})

@@ -16,7 +16,7 @@ from .const import (
     HA_MAX_STATE_LENGTH,
     TEXT_ICON,
 )
-from .entity import NodeRedEntity, async_setup_discovery
+from .entity import NodeRedEntity, async_setup_discovery, reject_null_state
 
 CONF_MAX_LENGTH = "max_length"
 CONF_MIN_LENGTH = "min_length"
@@ -69,11 +69,11 @@ class NodeRedText(NodeRedEntity, RestoreText):
 
     def update_entity_state_attributes(self, msg: dict[str, Any]) -> None:
         """Update the entity state attributes."""
+        reject_null_state(msg)
         super().update_entity_state_attributes(msg)
         if CONF_STATE in msg:
             # Home Assistant measures the value's length, so it must be a string
-            state = msg[CONF_STATE]
-            self._attr_native_value = str(state) if state is not None else None
+            self._attr_native_value = str(msg[CONF_STATE])
 
     def update_discovery_config(self, msg: dict[str, Any]) -> None:
         """Update the entity config."""

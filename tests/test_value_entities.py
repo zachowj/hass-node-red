@@ -113,3 +113,82 @@ async def test_discovery_without_state_is_unknown(
     state = hass.states.get(f"{component}.value_entity")
     assert state is not None
     assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(("component", "config", "value", "expected"), VALUE_ENTITIES)
+async def test_null_state_update_is_rejected(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    *,
+    component: str,
+    config: dict[str, Any],
+    value: Any,
+    expected: str,
+) -> None:
+    """An update with a null state is rejected and the value is kept."""
+    await _setup_nodered(hass)
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "nodered/discovery",
+            "component": component,
+            "server_id": "s1",
+            "node_id": "n1",
+            "config": {"name": "Value Entity", **config},
+            "state": value,
+        }
+    )
+    assert (await client.receive_json())["success"]
+
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "nodered/entity",
+            "server_id": "s1",
+            "node_id": "n1",
+            "state": None,
+        }
+    )
+    resp = await client.receive_json()
+    assert not resp["success"]
+    assert resp["error"]["code"] == "invalid_format"
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"{component}.value_entity")
+    assert state is not None
+    assert state.state == expected
+
+
+@pytest.mark.parametrize(
+    ("component", "config"),
+    [pytest.param(*p.values[:2], id=p.id) for p in VALUE_ENTITIES],
+)
+async def test_null_state_discovery_is_rejected(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    component: str,
+    config: dict[str, Any],
+) -> None:
+    """Discovery with a null state is rejected and no entity is created."""
+    await _setup_nodered(hass)
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "nodered/discovery",
+            "component": component,
+            "server_id": "s1",
+            "node_id": "n1",
+            "config": {"name": "Value Entity", **config},
+            "state": None,
+        }
+    )
+    resp = await client.receive_json()
+    assert not resp["success"]
+    assert resp["error"]["code"] == "invalid_format"
+    await hass.async_block_till_done()
+
+    assert hass.states.get(f"{component}.value_entity") is None

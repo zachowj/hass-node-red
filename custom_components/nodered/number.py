@@ -25,7 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_CONFIG, CONF_NUMBER, CONF_VALUE, EVENT_VALUE_CHANGE, NUMBER_ICON
-from .entity import NodeRedEntity, async_setup_discovery
+from .entity import NodeRedEntity, async_setup_discovery, reject_null_state
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -101,6 +101,7 @@ class NodeRedNumber(NodeRedEntity, RestoreNumber):
 
     def update_entity_state_attributes(self, msg: dict[str, Any]) -> None:
         """Update the entity state attributes."""
+        reject_null_state(msg)
         super().update_entity_state_attributes(msg)
         if CONF_STATE in msg:
             self._attr_native_value = msg[CONF_STATE]

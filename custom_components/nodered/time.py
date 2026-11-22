@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_CONFIG, CONF_TIME, CONF_VALUE, EVENT_VALUE_CHANGE, TIME_ICON
-from .entity import NodeRedEntity, async_setup_discovery
+from .entity import NodeRedEntity, async_setup_discovery, reject_null_state
 
 
 async def async_setup_entry(
@@ -27,10 +27,8 @@ async def async_setup_entry(
     async_setup_discovery(hass, config_entry, NodeRedTime, async_add_entities)
 
 
-def _convert_string_to_time(value: str | None) -> None | time:
+def _convert_string_to_time(value: str) -> time:
     """Convert string to time."""
-    if value is None:
-        return None
     try:
         return parser.parse(value).time()
     except (ValueError, TypeError, OverflowError) as err:
@@ -60,6 +58,7 @@ class NodeRedTime(NodeRedEntity, TimeEntity):
 
     def update_entity_state_attributes(self, msg: dict[str, Any]) -> None:
         """Update the entity state attributes."""
+        reject_null_state(msg)
         super().update_entity_state_attributes(msg)
         if CONF_STATE in msg:
             self._attr_native_value = _convert_string_to_time(msg[CONF_STATE])

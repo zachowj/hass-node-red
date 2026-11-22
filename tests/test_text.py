@@ -37,10 +37,6 @@ def test_update_entity_state_coerces_to_string(
     node.update_entity_state_attributes({text.CONF_STATE: 1765968779435})
     assert node._attr_native_value == "1765968779435"
 
-    # None state should result in None native value
-    node.update_entity_state_attributes({text.CONF_STATE: None})
-    assert node._attr_native_value is None
-
     # String state should remain unchanged
     node.update_entity_state_attributes({text.CONF_STATE: "hello"})
     assert node._attr_native_value == "hello"
