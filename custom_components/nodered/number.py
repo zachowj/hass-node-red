@@ -92,15 +92,17 @@ class NodeRedNumber(NodeRedEntity, RestoreNumber):
     async def async_added_to_hass(self) -> None:
         """Restore the value if discovery didn't send one, else use the minimum."""
         await super().async_added_to_hass()
+        if self._attr_native_value is not None:
+            return
         if (
-            self._attr_native_value is None
-            and (last_state := await self.async_get_last_state())
+            (last_state := await self.async_get_last_state())
             and (last_number_data := await self.async_get_last_number_data())
             and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
         ):
             self._attr_native_value = last_number_data.native_value
         if self._attr_native_value is None:
             self._attr_native_value = self.native_min_value
+        self.send_entity_sync(self._attr_native_value)
 
     def update_entity_state_attributes(self, msg: dict[str, Any]) -> None:
         """Update the entity state attributes."""

@@ -51,12 +51,13 @@ class NodeRedTime(NodeRedEntity, TimeEntity, RestoreEntity):
     async def async_added_to_hass(self) -> None:
         """Restore the value if discovery didn't send one, else use midnight."""
         await super().async_added_to_hass()
-        if self._attr_native_value is None and (
-            last_state := await self.async_get_last_state()
-        ):
+        if self._attr_native_value is not None:
+            return
+        if last_state := await self.async_get_last_state():
             self._attr_native_value = dt_util.parse_time(last_state.state)
         if self._attr_native_value is None:
             self._attr_native_value = time(0, 0)
+        self.send_entity_sync(self._attr_native_value.isoformat())
 
     async def async_set_value(self, value: time) -> None:
         """Set new value."""

@@ -55,12 +55,14 @@ class NodeRedText(NodeRedEntity, RestoreText):
     async def async_added_to_hass(self) -> None:
         """Restore the value if discovery didn't send one, else default to empty."""
         await super().async_added_to_hass()
-        if self._attr_native_value is None and (
-            last_text_data := await self.async_get_last_text_data()
-        ):
+        if self._attr_native_value is not None:
+            return
+        if last_text_data := await self.async_get_last_text_data():
             self._set_value_if_valid(last_text_data.native_value)
         if self._attr_native_value is None:
             self._set_value_if_valid("")
+        if self._attr_native_value is not None:
+            self.send_entity_sync(self._attr_native_value)
 
     def _set_value_if_valid(self, value: str | None) -> None:
         """Set the value, or leave it unknown if the limits or pattern reject it."""

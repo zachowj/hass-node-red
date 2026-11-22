@@ -7,7 +7,10 @@ from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
     mock_restore_cache_with_extra_data,
 )
-from pytest_homeassistant_custom_component.typing import WebSocketGenerator
+from pytest_homeassistant_custom_component.typing import (
+    MockHAClientWebSocket,
+    WebSocketGenerator,
+)
 
 from custom_components.nodered.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -26,6 +29,27 @@ async def _setup_nodered(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+
+
+def _sync(value: Any) -> list[dict[str, Any]]:
+    """Return the events expected when the companion sends an entity_sync."""
+    return [{"type": "entity_sync", "payload": [{"type": "state", "value": value}]}]
+
+
+async def _discover(
+    client: MockHAClientWebSocket, msg: dict[str, Any]
+) -> list[dict[str, Any]]:
+    """Send a discovery message and return the events sent for it."""
+    await client.send_json({"id": 1, "type": "nodered/discovery"} | msg)
+    # The ping's reply comes after anything sent while handling the discovery
+    await client.send_json({"id": 2, "type": "ping"})
+    events = []
+    while (resp := await client.receive_json())["type"] != "pong":
+        if resp["type"] == "event":
+            events.append(resp["event"])
+        else:
+            assert resp["success"]
+    return events
 
 
 @pytest.mark.parametrize(("component", "config", "value", "expected"), VALUE_ENTITIES)
@@ -87,39 +111,46 @@ async def test_update_without_state_keeps_value(
 
 
 @pytest.mark.parametrize(
-    ("component", "config", "expected"),
+    ("component", "config", "expected", "events"),
     [
-        pytest.param("number", {}, "0.0", id="number"),
-        pytest.param("number", {"min_value": 10}, "10", id="number_min"),
-        pytest.param("text", {}, "", id="text"),
-        pytest.param("text", {"min_length": 2}, STATE_UNKNOWN, id="text_min_length"),
-        pytest.param("text", {"pattern": "[a-z]+"}, STATE_UNKNOWN, id="text_pattern"),
-        pytest.param("select", {"options": ["a", "b"]}, "a", id="select"),
-        pytest.param("time", {}, "00:00:00", id="time"),
+        pytest.param("number", {}, "0.0", _sync(0.0), id="number"),
+        pytest.param("number", {"min_value": 10}, "10", _sync(10), id="number_min"),
+        pytest.param("text", {}, "", _sync(""), id="text"),
+        pytest.param(
+            "text", {"min_length": 2}, STATE_UNKNOWN, [], id="text_min_length"
+        ),
+        pytest.param(
+            "text", {"pattern": "[a-z]+"}, STATE_UNKNOWN, [], id="text_pattern"
+        ),
+        pytest.param("select", {"options": ["a", "b"]}, "a", _sync("a"), id="select"),
+        pytest.param("time", {}, "00:00:00", _sync("00:00:00"), id="time"),
     ],
 )
 async def test_discovery_without_state_uses_default(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    *,
     component: str,
     config: dict[str, Any],
     expected: str,
+    events: list[dict[str, Any]],
 ) -> None:
     """Without a value at discovery or a restored state, the helper default is used."""
     await _setup_nodered(hass)
     client = await hass_ws_client(hass)
 
-    await client.send_json(
-        {
-            "id": 1,
-            "type": "nodered/discovery",
-            "component": component,
-            "server_id": "s1",
-            "node_id": "n1",
-            "config": {"name": "Value Entity", **config},
-        }
+    assert (
+        await _discover(
+            client,
+            {
+                "component": component,
+                "server_id": "s1",
+                "node_id": "n1",
+                "config": {"name": "Value Entity", **config},
+            },
+        )
+        == events
     )
-    assert (await client.receive_json())["success"]
     await hass.async_block_till_done()
 
     state = hass.states.get(f"{component}.value_entity")
@@ -220,6 +251,7 @@ RESTORED_ENTITIES = [
             "native_step": 1,
             "native_unit_of_measurement": None,
         },
+        7,
         id="number",
     ),
     pytest.param(
@@ -227,10 +259,11 @@ RESTORED_ENTITIES = [
         {},
         "restored",
         {"native_value": "restored", "native_min": 0, "native_max": 100},
+        "restored",
         id="text",
     ),
-    pytest.param("select", {"options": ["a", "b"]}, "a", {}, id="select"),
-    pytest.param("time", {}, "07:30:00", {}, id="time"),
+    pytest.param("select", {"options": ["a", "b"]}, "a", {}, "a", id="select"),
+    pytest.param("time", {}, "07:30:00", {}, "07:30:00", id="time"),
 ]
 
 
@@ -243,31 +276,32 @@ async def _discover_with_restored_state(
     restored: str,
     extra_data: dict[str, Any],
     discovery: dict[str, Any],
-) -> State | None:
-    """Discover an entity that has a restored state and return its state."""
+) -> tuple[State | None, list[dict[str, Any]]]:
+    """Discover an entity that has a restored state.
+
+    Returns its state and the events sent for the discovery.
+    """
     entity_id = f"{component}.value_entity"
     mock_restore_cache_with_extra_data(hass, [(State(entity_id, restored), extra_data)])
     await _setup_nodered(hass)
     client = await hass_ws_client(hass)
 
-    await client.send_json(
+    events = await _discover(
+        client,
         {
-            "id": 1,
-            "type": "nodered/discovery",
             "component": component,
             "server_id": "s1",
             "node_id": "n1",
             "config": {"name": "Value Entity", **config},
         }
-        | discovery
+        | discovery,
     )
-    assert (await client.receive_json())["success"]
     await hass.async_block_till_done()
-    return hass.states.get(entity_id)
+    return hass.states.get(entity_id), events
 
 
 @pytest.mark.parametrize(
-    ("component", "config", "restored", "extra_data"), RESTORED_ENTITIES
+    ("component", "config", "restored", "extra_data", "synced"), RESTORED_ENTITIES
 )
 async def test_restored_state_used_without_discovery_value(
     hass: HomeAssistant,
@@ -277,9 +311,10 @@ async def test_restored_state_used_without_discovery_value(
     config: dict[str, Any],
     restored: str,
     extra_data: dict[str, Any],
+    synced: Any,
 ) -> None:
-    """Without a value at discovery, the restored state is used."""
-    state = await _discover_with_restored_state(
+    """Without a value at discovery, the restored state is used and synced."""
+    state, events = await _discover_with_restored_state(
         hass,
         hass_ws_client,
         component=component,
@@ -290,10 +325,11 @@ async def test_restored_state_used_without_discovery_value(
     )
     assert state is not None
     assert state.state == restored
+    assert events == _sync(synced)
 
 
 @pytest.mark.parametrize(
-    ("component", "config", "restored", "extra_data"), RESTORED_ENTITIES
+    ("component", "config", "restored", "extra_data", "synced"), RESTORED_ENTITIES
 )
 async def test_discovery_value_wins_over_restored_state(
     hass: HomeAssistant,
@@ -303,10 +339,11 @@ async def test_discovery_value_wins_over_restored_state(
     config: dict[str, Any],
     restored: str,
     extra_data: dict[str, Any],
+    synced: Any,
 ) -> None:
     """The value sent at discovery is used instead of the restored state."""
     value, expected = DISCOVERY_VALUES[component]
-    state = await _discover_with_restored_state(
+    state, events = await _discover_with_restored_state(
         hass,
         hass_ws_client,
         component=component,
@@ -317,13 +354,14 @@ async def test_discovery_value_wins_over_restored_state(
     )
     assert state is not None
     assert state.state == expected
+    assert events == []
 
 
 @pytest.mark.parametrize(
-    ("config", "expected"),
+    ("config", "expected", "events"),
     [
-        pytest.param({"max_length": 5}, "", id="max_length"),
-        pytest.param({"pattern": "[0-9]+"}, STATE_UNKNOWN, id="pattern"),
+        pytest.param({"max_length": 5}, "", _sync(""), id="max_length"),
+        pytest.param({"pattern": "[0-9]+"}, STATE_UNKNOWN, [], id="pattern"),
     ],
 )
 async def test_restored_text_that_breaks_the_limits_is_dropped(
@@ -331,9 +369,10 @@ async def test_restored_text_that_breaks_the_limits_is_dropped(
     hass_ws_client: WebSocketGenerator,
     config: dict[str, Any],
     expected: str,
+    events: list[dict[str, Any]],
 ) -> None:
     """A restored text value the current config rejects falls back to the default."""
-    state = await _discover_with_restored_state(
+    state, sent = await _discover_with_restored_state(
         hass,
         hass_ws_client,
         component="text",
@@ -344,6 +383,7 @@ async def test_restored_text_that_breaks_the_limits_is_dropped(
     )
     assert state is not None
     assert state.state == expected
+    assert sent == events
 
 
 @pytest.mark.parametrize(
