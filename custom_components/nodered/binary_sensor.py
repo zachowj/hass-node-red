@@ -65,7 +65,7 @@ class NodeRedBinarySensor(NodeRedEntity, BinarySensorEntity):
         else:
             self._attr_is_on = None
             # No reading yet: unavailable once presence-available applies
-            if contrib_supports_presence_available(hass):
+            if contrib_supports_presence_available(hass, connection):
                 self._attr_available = False
 
     def update_entity_state_attributes(self, msg: dict[str, Any]) -> None:

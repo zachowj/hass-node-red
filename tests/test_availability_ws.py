@@ -1,11 +1,13 @@
 """Websocket integration tests for sensor/binary_sensor availability."""
 
+from typing import Any
+
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from pytest_homeassistant_custom_component.typing import WebSocketGenerator
 
 from custom_components.nodered.const import CONF_CONTRIB_VERSION, DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 
 
 async def _setup_nodered(hass: HomeAssistant) -> None:
@@ -267,3 +269,150 @@ async def test_binary_sensor_discovery_without_state_presence_is_unavailable(
     state = hass.states.get("binary_sensor.no_state_binary")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+async def _announce(client: Any) -> None:
+    await client.send_json(
+        {"id": 1, "type": "nodered/version", CONF_CONTRIB_VERSION: "0.80.3"}
+    )
+    assert (await client.receive_json())["success"]
+
+
+async def _send(hass: HomeAssistant, client: Any, msg: dict[str, Any]) -> None:
+    await client.send_json(msg)
+    assert (await client.receive_json())["success"]
+    await hass.async_block_till_done()
+
+
+async def _add_unavailable_sensor(
+    hass: HomeAssistant, client: Any, node_id: str
+) -> None:
+    """Discover a sensor with attributes, then mark it unavailable."""
+    await _send(
+        hass,
+        client,
+        {
+            "id": 10,
+            "type": "nodered/discovery",
+            "component": "sensor",
+            "server_id": "s1",
+            "node_id": node_id,
+            "state": 1,
+            "attributes": {"keep": True},
+            "config": {"name": node_id},
+        },
+    )
+    await _send(
+        hass,
+        client,
+        {
+            "id": 11,
+            "type": "nodered/entity",
+            "server_id": "s1",
+            "node_id": node_id,
+            "available": False,
+        },
+    )
+
+
+async def _send_state_only(
+    hass: HomeAssistant, client: Any, node_id: str
+) -> State | None:
+    await _send(
+        hass,
+        client,
+        {
+            "id": 12,
+            "type": "nodered/entity",
+            "server_id": "s1",
+            "node_id": node_id,
+            "state": 2,
+        },
+    )
+    return hass.states.get(f"sensor.{node_id}")
+
+
+async def _send_available(
+    hass: HomeAssistant, client: Any, node_id: str
+) -> State | None:
+    await _send(
+        hass,
+        client,
+        {
+            "id": 13,
+            "type": "nodered/entity",
+            "server_id": "s1",
+            "node_id": node_id,
+            "available": True,
+        },
+    )
+    return hass.states.get(f"sensor.{node_id}")
+
+
+async def test_state_only_update_follows_its_own_connection(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Another connection's announce doesn't change how an update is read."""
+    await _setup_nodered(hass)
+    new_contrib = await hass_ws_client(hass)
+    old_contrib = await hass_ws_client(hass)
+    await _announce(new_contrib)
+    await _add_unavailable_sensor(hass, new_contrib, "new")
+    await _add_unavailable_sensor(hass, old_contrib, "old")
+
+    state = await _send_state_only(hass, new_contrib, "new")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    state = await _send_available(hass, new_contrib, "new")
+    assert state is not None
+    assert state.state == "2"
+    assert state.attributes.get("keep") is True
+
+    state = await _send_state_only(hass, old_contrib, "old")
+    assert state is not None
+    assert state.state == "2"
+    assert "keep" not in state.attributes
+
+
+async def test_closing_a_connection_keeps_other_announces(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Closing one connection doesn't clear another connection's announce."""
+    await _setup_nodered(hass)
+    closing = await hass_ws_client(hass)
+    staying = await hass_ws_client(hass)
+    await _announce(closing)
+    await _announce(staying)
+    await _add_unavailable_sensor(hass, staying, "staying")
+
+    await closing.close()
+    await hass.async_block_till_done()
+
+    state = await _send_state_only(hass, staying, "staying")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+    state = await _send_available(hass, staying, "staying")
+    assert state is not None
+    assert state.state == "2"
+    assert state.attributes.get("keep") is True
+
+
+async def test_reconnect_without_announce_is_legacy(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """A reconnect that doesn't announce gets legacy handling."""
+    await _setup_nodered(hass)
+    first = await hass_ws_client(hass)
+    await _announce(first)
+    await _add_unavailable_sensor(hass, first, "sensor")
+    await first.close()
+    await hass.async_block_till_done()
+
+    reconnected = await hass_ws_client(hass)
+    state = await _send_state_only(hass, reconnected, "sensor")
+    assert state is not None
+    assert state.state == "2"
+    assert "keep" not in state.attributes

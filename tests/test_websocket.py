@@ -14,6 +14,7 @@ from custom_components.nodered.const import (
     CONF_ATTRIBUTES,
     CONF_AVAILABLE,
     CONF_CONTRIB_VERSION,
+    CONTRIB_VERSION_DATA,
     DOMAIN,
     VERSION,
 )
@@ -253,8 +254,9 @@ async def test_websocket_discovery_and_entity_and_update_config_and_version(
     mock_get_entity.assert_called_with(hass, "s", "n")
     entity_msg = entity.update_entity_state_attributes.call_args.args[0]
     assert entity_msg[CONF_STATE] is True
-    assert CONF_ATTRIBUTES not in entity_msg
-    assert CONF_AVAILABLE not in entity_msg
+    # Nothing announced on this connection, so the update is read as legacy
+    assert entity_msg[CONF_ATTRIBUTES] == {}
+    assert entity_msg[CONF_AVAILABLE] is True
 
     msg3 = {"id": 11, "server_id": "s", "node_id": "n", "config": {}}
     await client.send_json(
@@ -708,7 +710,7 @@ async def test_websocket_version_stores_and_clears_contrib_version(
         func = func.__wrapped__
 
     func(hass, fake_conn, {"id": 1, "type": "nodered/version"})
-    assert not contrib_announced_version(hass)
+    assert not contrib_announced_version(hass, fake_conn)
     assert fake_conn.sent == result_message(1, VERSION)
 
     func(
@@ -720,18 +722,18 @@ async def test_websocket_version_stores_and_clears_contrib_version(
             CONF_CONTRIB_VERSION: "0.80.3",
         },
     )
-    assert contrib_announced_version(hass)
+    assert contrib_announced_version(hass, fake_conn)
     assert 2 in fake_conn.subscriptions
 
     func(hass, fake_conn, {"id": 3, "type": "nodered/version"})
-    assert contrib_announced_version(hass)
+    assert contrib_announced_version(hass, fake_conn)
 
     func(
         hass,
         fake_conn,
         {"id": 4, "type": "nodered/version", CONF_CONTRIB_VERSION: ""},
     )
-    assert not contrib_announced_version(hass)
+    assert not contrib_announced_version(hass, fake_conn)
     assert CONF_CONTRIB_VERSION not in entry.data
 
 
@@ -755,10 +757,10 @@ async def test_websocket_version_clears_contrib_version_on_disconnect(
             CONF_CONTRIB_VERSION: "0.80.3",
         },
     )
-    assert contrib_announced_version(hass)
+    assert contrib_announced_version(hass, fake_conn)
 
     fake_conn.close()
-    assert not contrib_announced_version(hass)
+    assert not contrib_announced_version(hass, fake_conn)
 
 
 async def test_websocket_version_announce_does_not_reload_entry(
@@ -790,11 +792,11 @@ async def test_websocket_version_announce_does_not_reload_entry(
     )
     assert (await client.receive_json())["success"]
     await hass.async_block_till_done()
-    assert contrib_announced_version(hass)
+    assert hass.data[CONTRIB_VERSION_DATA]
 
     await client.close()
     await hass.async_block_till_done()
-    assert not contrib_announced_version(hass)
+    assert not hass.data[CONTRIB_VERSION_DATA]
 
     assert events == []
 
