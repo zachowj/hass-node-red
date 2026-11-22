@@ -57,7 +57,8 @@ class NodeRedText(NodeRedEntity, RestoreText):
             return
         self._attr_native_max = last_text_data.native_max
         self._attr_native_min = last_text_data.native_min
-        self._attr_native_value = last_text_data.native_value
+        if self._attr_native_value is None:
+            self._attr_native_value = last_text_data.native_value
 
     async def async_set_value(self, value: str) -> None:
         """Set new value."""

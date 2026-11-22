@@ -93,7 +93,8 @@ class NodeRedNumber(NodeRedEntity, RestoreNumber):
         """Load the last known state when added to hass."""
         await super().async_added_to_hass()
         if (
-            (last_state := await self.async_get_last_state())
+            self._attr_native_value is None
+            and (last_state := await self.async_get_last_state())
             and (last_number_data := await self.async_get_last_number_data())
             and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
         ):
