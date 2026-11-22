@@ -10,7 +10,7 @@ from pytest_homeassistant_custom_component.common import (
 from pytest_homeassistant_custom_component.typing import WebSocketGenerator
 
 from custom_components.nodered.const import DOMAIN
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 
 VALUE_ENTITIES = [
@@ -378,3 +378,58 @@ async def test_select_discovery_without_options_is_rejected(
     await hass.async_block_till_done()
 
     assert hass.states.get("select.value_entity") is None
+
+
+@pytest.mark.parametrize(
+    ("component", "config", "value"),
+    [pytest.param(*p.values[:3], id=p.id) for p in VALUE_ENTITIES],
+)
+@pytest.mark.parametrize(
+    ("rediscovery", "available"),
+    [
+        pytest.param({"available": False}, False, id="unavailable"),
+        pytest.param({}, True, id="no_available"),
+    ],
+)
+async def test_rediscovery_uses_available(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    *,
+    component: str,
+    config: dict[str, Any],
+    value: Any,
+    rediscovery: dict[str, Any],
+    available: bool,
+) -> None:
+    """Re-discovery of an existing entity uses available from the message."""
+    await _setup_nodered(hass)
+    client = await hass_ws_client(hass)
+    discovery = {
+        "type": "nodered/discovery",
+        "component": component,
+        "server_id": "s1",
+        "node_id": "n1",
+        "config": {"name": "Value Entity", **config},
+        "state": value,
+    }
+
+    await client.send_json({"id": 1} | discovery)
+    assert (await client.receive_json())["success"]
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "nodered/entity",
+            "server_id": "s1",
+            "node_id": "n1",
+            "available": False,
+        }
+    )
+    assert (await client.receive_json())["success"]
+
+    await client.send_json({"id": 3} | discovery | rediscovery)
+    assert (await client.receive_json())["success"]
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"{component}.value_entity")
+    assert state is not None
+    assert (state.state != STATE_UNAVAILABLE) is available

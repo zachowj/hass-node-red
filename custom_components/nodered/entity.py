@@ -213,7 +213,7 @@ class NodeRedEntity(Entity):
 
         # Bidirectional subscription handling
         if self._bidirectional and "id" in msg:
-            self._attr_available = True
+            self._attr_available = msg.get(CONF_AVAILABLE, True)
             self._message_id = msg["id"]
             self._connection = connection
             self._connection.subscriptions[msg["id"]] = self.handle_lost_connection
