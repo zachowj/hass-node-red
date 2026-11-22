@@ -12,6 +12,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ICON, CONF_STATE, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_CONFIG, CONF_TIME, CONF_VALUE, EVENT_VALUE_CHANGE, TIME_ICON
 from .entity import NodeRedEntity, async_setup_discovery, reject_null_state
@@ -35,7 +37,7 @@ def _convert_string_to_time(value: str) -> time:
         raise vol.Invalid(f"'{value}' is not a valid time", path=[CONF_STATE]) from err
 
 
-class NodeRedTime(NodeRedEntity, TimeEntity):
+class NodeRedTime(NodeRedEntity, TimeEntity, RestoreEntity):
     """Node-RED time class."""
 
     _attr_native_value = None
@@ -45,6 +47,14 @@ class NodeRedTime(NodeRedEntity, TimeEntity):
         *NodeRedEntity.update_attrs,
         "_attr_native_value",
     )
+
+    async def async_added_to_hass(self) -> None:
+        """Restore the value if discovery didn't send one."""
+        await super().async_added_to_hass()
+        if self._attr_native_value is None and (
+            last_state := await self.async_get_last_state()
+        ):
+            self._attr_native_value = dt_util.parse_time(last_state.state)
 
     async def async_set_value(self, value: time) -> None:
         """Set new value."""

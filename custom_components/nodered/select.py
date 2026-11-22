@@ -10,6 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ICON, CONF_STATE, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     CONF_CONFIG,
@@ -32,7 +33,7 @@ async def async_setup_entry(
     async_setup_discovery(hass, config_entry, NodeRedSelect, async_add_entities)
 
 
-class NodeRedSelect(NodeRedEntity, SelectEntity):
+class NodeRedSelect(NodeRedEntity, SelectEntity, RestoreEntity):
     """Node-RED text class."""
 
     _bidirectional = True
@@ -41,6 +42,16 @@ class NodeRedSelect(NodeRedEntity, SelectEntity):
         *NodeRedEntity.update_attrs,
         "_attr_current_option",
     )
+
+    async def async_added_to_hass(self) -> None:
+        """Restore the option if discovery didn't send one."""
+        await super().async_added_to_hass()
+        if (
+            self._attr_current_option is None
+            and (last_state := await self.async_get_last_state())
+            and last_state.state in getattr(self, "_attr_options", [])
+        ):
+            self._attr_current_option = last_state.state
 
     async def async_select_option(self, option: str) -> None:
         """Set new option."""

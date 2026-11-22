@@ -197,9 +197,12 @@ async def test_null_state_discovery_is_rejected(
     assert hass.states.get(f"{component}.value_entity") is None
 
 
+DISCOVERY_VALUES = {p.values[0]: p.values[2:] for p in VALUE_ENTITIES}
+
 RESTORED_ENTITIES = [
     pytest.param(
         "number",
+        {},
         "7",
         {
             "native_value": 7,
@@ -212,32 +215,27 @@ RESTORED_ENTITIES = [
     ),
     pytest.param(
         "text",
+        {},
         "restored",
         {"native_value": "restored", "native_min": 0, "native_max": 100},
         id="text",
     ),
+    pytest.param("select", {"options": ["a", "b"]}, "a", {}, id="select"),
+    pytest.param("time", {}, "07:30:00", {}, id="time"),
 ]
 
 
-@pytest.mark.parametrize(("component", "restored", "extra_data"), RESTORED_ENTITIES)
-@pytest.mark.parametrize(
-    ("discovery", "expected"),
-    [
-        pytest.param({"state": 5}, "5", id="discovery_state"),
-        pytest.param({}, None, id="no_discovery_state"),
-    ],
-)
-async def test_discovery_value_wins_over_restored_state(
+async def _discover_with_restored_state(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     *,
     component: str,
+    config: dict[str, Any],
     restored: str,
     extra_data: dict[str, Any],
     discovery: dict[str, Any],
-    expected: str | None,
-) -> None:
-    """The value sent at discovery is used; otherwise the restored state is."""
+) -> State | None:
+    """Discover an entity that has a restored state and return its state."""
     entity_id = f"{component}.value_entity"
     mock_restore_cache_with_extra_data(hass, [(State(entity_id, restored), extra_data)])
     await _setup_nodered(hass)
@@ -250,16 +248,66 @@ async def test_discovery_value_wins_over_restored_state(
             "component": component,
             "server_id": "s1",
             "node_id": "n1",
-            "config": {"name": "Value Entity"},
+            "config": {"name": "Value Entity", **config},
         }
         | discovery
     )
     assert (await client.receive_json())["success"]
     await hass.async_block_till_done()
+    return hass.states.get(entity_id)
 
-    state = hass.states.get(entity_id)
+
+@pytest.mark.parametrize(
+    ("component", "config", "restored", "extra_data"), RESTORED_ENTITIES
+)
+async def test_restored_state_used_without_discovery_value(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    *,
+    component: str,
+    config: dict[str, Any],
+    restored: str,
+    extra_data: dict[str, Any],
+) -> None:
+    """Without a value at discovery, the restored state is used."""
+    state = await _discover_with_restored_state(
+        hass,
+        hass_ws_client,
+        component=component,
+        config=config,
+        restored=restored,
+        extra_data=extra_data,
+        discovery={},
+    )
     assert state is not None
-    assert state.state == (expected or restored)
+    assert state.state == restored
+
+
+@pytest.mark.parametrize(
+    ("component", "config", "restored", "extra_data"), RESTORED_ENTITIES
+)
+async def test_discovery_value_wins_over_restored_state(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    *,
+    component: str,
+    config: dict[str, Any],
+    restored: str,
+    extra_data: dict[str, Any],
+) -> None:
+    """The value sent at discovery is used instead of the restored state."""
+    value, expected = DISCOVERY_VALUES[component]
+    state = await _discover_with_restored_state(
+        hass,
+        hass_ws_client,
+        component=component,
+        config=config,
+        restored=restored,
+        extra_data=extra_data,
+        discovery={"state": value},
+    )
+    assert state is not None
+    assert state.state == expected
 
 
 @pytest.mark.parametrize(
@@ -275,32 +323,15 @@ async def test_restored_text_that_breaks_the_limits_is_dropped(
     config: dict[str, Any],
 ) -> None:
     """A restored text value the current config rejects isn't used."""
-    mock_restore_cache_with_extra_data(
+    state = await _discover_with_restored_state(
         hass,
-        [
-            (
-                State("text.value_entity", "restored"),
-                {"native_value": "restored", "native_min": 0, "native_max": 100},
-            )
-        ],
+        hass_ws_client,
+        component="text",
+        config=config,
+        restored="restored",
+        extra_data={"native_value": "restored", "native_min": 0, "native_max": 100},
+        discovery={},
     )
-    await _setup_nodered(hass)
-    client = await hass_ws_client(hass)
-
-    await client.send_json(
-        {
-            "id": 1,
-            "type": "nodered/discovery",
-            "component": "text",
-            "server_id": "s1",
-            "node_id": "n1",
-            "config": {"name": "Value Entity", **config},
-        }
-    )
-    assert (await client.receive_json())["success"]
-    await hass.async_block_till_done()
-
-    state = hass.states.get("text.value_entity")
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
