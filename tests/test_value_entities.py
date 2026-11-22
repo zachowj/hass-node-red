@@ -303,3 +303,37 @@ async def test_restored_text_that_breaks_the_limits_is_dropped(
     state = hass.states.get("text.value_entity")
     assert state is not None
     assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    "config",
+    [
+        pytest.param({}, id="missing"),
+        pytest.param({"options": []}, id="empty"),
+    ],
+)
+async def test_select_discovery_without_options_is_rejected(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    config: dict[str, Any],
+) -> None:
+    """Discovery of a select without options is rejected and no entity is created."""
+    await _setup_nodered(hass)
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "nodered/discovery",
+            "component": "select",
+            "server_id": "s1",
+            "node_id": "n1",
+            "config": {"name": "Value Entity", **config},
+        }
+    )
+    resp = await client.receive_json()
+    assert not resp["success"]
+    assert resp["error"]["code"] == "invalid_format"
+    await hass.async_block_till_done()
+
+    assert hass.states.get("select.value_entity") is None

@@ -61,6 +61,14 @@ class NodeRedSelect(NodeRedEntity, SelectEntity):
         if CONF_STATE in msg:
             self._attr_current_option = state
 
+    def validate_state(self) -> None:
+        """Raise vol.Invalid if there are no options, which HA can't add."""
+        if not getattr(self, "_attr_options", None):
+            raise vol.Invalid(
+                "A select needs at least one option", path=[CONF_CONFIG, CONF_OPTIONS]
+            )
+        super().validate_state()
+
     def update_discovery_config(self, msg: dict[str, Any]) -> None:
         """Update the entity config."""
         super().update_discovery_config(msg)
