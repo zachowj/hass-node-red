@@ -44,7 +44,7 @@ class NodeRedSelect(NodeRedEntity, SelectEntity, RestoreEntity):
     )
 
     async def async_added_to_hass(self) -> None:
-        """Restore the option if discovery didn't send one."""
+        """Restore the option if discovery didn't send one, else use the first."""
         await super().async_added_to_hass()
         if (
             self._attr_current_option is None
@@ -52,6 +52,10 @@ class NodeRedSelect(NodeRedEntity, SelectEntity, RestoreEntity):
             and last_state.state in getattr(self, "_attr_options", [])
         ):
             self._attr_current_option = last_state.state
+        if self._attr_current_option is None and (
+            options := getattr(self, "_attr_options", [])
+        ):
+            self._attr_current_option = options[0]
 
     async def async_select_option(self, option: str) -> None:
         """Set new option."""

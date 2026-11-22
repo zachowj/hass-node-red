@@ -51,7 +51,7 @@ class NodeRedNumber(NodeRedEntity, RestoreNumber):
     _attr_native_min_value = DEFAULT_MIN_VALUE
     _attr_native_max_value = DEFAULT_MAX_VALUE
     _attr_native_step = DEFAULT_STEP
-    _attr_native_value = 0
+    _attr_native_value = None
     _attr_mode = NumberMode.AUTO
     _bidirectional = True
     component = CONF_NUMBER
@@ -90,7 +90,7 @@ class NodeRedNumber(NodeRedEntity, RestoreNumber):
         )
 
     async def async_added_to_hass(self) -> None:
-        """Load the last known state when added to hass."""
+        """Restore the value if discovery didn't send one, else use the minimum."""
         await super().async_added_to_hass()
         if (
             self._attr_native_value is None
@@ -99,6 +99,8 @@ class NodeRedNumber(NodeRedEntity, RestoreNumber):
             and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
         ):
             self._attr_native_value = last_number_data.native_value
+        if self._attr_native_value is None:
+            self._attr_native_value = self.native_min_value
 
     def update_entity_state_attributes(self, msg: dict[str, Any]) -> None:
         """Update the entity state attributes."""

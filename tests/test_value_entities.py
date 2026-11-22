@@ -87,16 +87,25 @@ async def test_update_without_state_keeps_value(
 
 
 @pytest.mark.parametrize(
-    ("component", "config"),
-    [pytest.param(*p.values[:2], id=p.id) for p in VALUE_ENTITIES],
+    ("component", "config", "expected"),
+    [
+        pytest.param("number", {}, "0.0", id="number"),
+        pytest.param("number", {"min_value": 10}, "10", id="number_min"),
+        pytest.param("text", {}, "", id="text"),
+        pytest.param("text", {"min_length": 2}, STATE_UNKNOWN, id="text_min_length"),
+        pytest.param("text", {"pattern": "[a-z]+"}, STATE_UNKNOWN, id="text_pattern"),
+        pytest.param("select", {"options": ["a", "b"]}, "a", id="select"),
+        pytest.param("time", {}, "00:00:00", id="time"),
+    ],
 )
-async def test_discovery_without_state_is_unknown(
+async def test_discovery_without_state_uses_default(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     component: str,
     config: dict[str, Any],
+    expected: str,
 ) -> None:
-    """Discovery without a state creates the entity with an unknown value."""
+    """Without a value at discovery or a restored state, the helper default is used."""
     await _setup_nodered(hass)
     client = await hass_ws_client(hass)
 
@@ -115,7 +124,7 @@ async def test_discovery_without_state_is_unknown(
 
     state = hass.states.get(f"{component}.value_entity")
     assert state is not None
-    assert state.state == STATE_UNKNOWN
+    assert state.state == expected
 
 
 @pytest.mark.parametrize(("component", "config", "value", "expected"), VALUE_ENTITIES)
@@ -311,18 +320,19 @@ async def test_discovery_value_wins_over_restored_state(
 
 
 @pytest.mark.parametrize(
-    "config",
+    ("config", "expected"),
     [
-        pytest.param({"max_length": 5}, id="max_length"),
-        pytest.param({"pattern": "[0-9]+"}, id="pattern"),
+        pytest.param({"max_length": 5}, "", id="max_length"),
+        pytest.param({"pattern": "[0-9]+"}, STATE_UNKNOWN, id="pattern"),
     ],
 )
 async def test_restored_text_that_breaks_the_limits_is_dropped(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     config: dict[str, Any],
+    expected: str,
 ) -> None:
-    """A restored text value the current config rejects isn't used."""
+    """A restored text value the current config rejects falls back to the default."""
     state = await _discover_with_restored_state(
         hass,
         hass_ws_client,
@@ -333,7 +343,7 @@ async def test_restored_text_that_breaks_the_limits_is_dropped(
         discovery={},
     )
     assert state is not None
-    assert state.state == STATE_UNKNOWN
+    assert state.state == expected
 
 
 @pytest.mark.parametrize(
