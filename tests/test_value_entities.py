@@ -1,5 +1,6 @@
 """Websocket tests shared by the number, text, select and time entities."""
 
+from collections.abc import Callable
 from typing import Any
 
 import pytest
@@ -473,3 +474,121 @@ async def test_rediscovery_uses_available(
     state = hass.states.get(f"{component}.value_entity")
     assert state is not None
     assert (state.state != STATE_UNAVAILABLE) is available
+
+
+async def _send(
+    client: MockHAClientWebSocket, msg: dict[str, Any]
+) -> list[dict[str, Any]]:
+    """Send a message and return the event messages sent while handling it."""
+    await client.send_json(msg)
+    # The ping's reply comes after anything sent while handling the message
+    await client.send_json({"id": msg["id"] + 1, "type": "ping"})
+    events = []
+    while (resp := await client.receive_json())["type"] != "pong":
+        if resp["type"] == "event":
+            events.append(resp)
+        else:
+            assert resp["success"]
+    return events
+
+
+NUMBER_DISCOVERY = {
+    "type": "nodered/discovery",
+    "component": "number",
+    "server_id": "s1",
+    "node_id": "n1",
+    "config": {"name": "Value Entity"},
+    "state": 5,
+}
+
+
+@pytest.mark.parametrize(
+    ("limits", "expected", "events"),
+    [
+        pytest.param(
+            {"min_value": 10},
+            "10",
+            [{"type": "value_change", "value": 10}],
+            id="min_raised",
+        ),
+        pytest.param(
+            {"max_value": 3},
+            "3",
+            [{"type": "value_change", "value": 3}],
+            id="max_lowered",
+        ),
+        pytest.param({"min_value": 1, "max_value": 9}, "5", [], id="still_inside"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("make_msg", "event_id"),
+    [
+        pytest.param(
+            lambda limits: {
+                "id": 3,
+                "type": "nodered/entity/update_config",
+                "server_id": "s1",
+                "node_id": "n1",
+                "config": limits,
+            },
+            1,
+            id="update_config",
+        ),
+        pytest.param(
+            lambda limits: (
+                NUMBER_DISCOVERY
+                | {"id": 3, "config": {"name": "Value Entity", **limits}}
+            ),
+            3,
+            id="rediscovery",
+        ),
+    ],
+)
+async def test_number_limit_change_clamps_value(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    *,
+    limits: dict[str, Any],
+    expected: str,
+    events: list[dict[str, Any]],
+    make_msg: Callable[[dict[str, Any]], dict[str, Any]],
+    event_id: int,
+) -> None:
+    """A limit change moves the value inside the limits and sends value_change."""
+    await _setup_nodered(hass)
+    client = await hass_ws_client(hass)
+    assert await _send(client, {"id": 1} | NUMBER_DISCOVERY) == []
+
+    sent = await _send(client, make_msg(limits))
+    await hass.async_block_till_done()
+
+    # Re-discovery moves the subscription, so the event goes to its id
+    assert sent == [{"id": event_id, "type": "event", "event": e} for e in events]
+    state = hass.states.get("number.value_entity")
+    assert state is not None
+    assert state.state == expected
+
+
+async def test_restored_number_outside_the_limits_is_clamped(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """A restored number outside the discovery limits is clamped and synced."""
+    state, events = await _discover_with_restored_state(
+        hass,
+        hass_ws_client,
+        component="number",
+        config={"min_value": 10},
+        restored="7",
+        extra_data={
+            "native_value": 7,
+            "native_min_value": 0,
+            "native_max_value": 100,
+            "native_step": 1,
+            "native_unit_of_measurement": None,
+        },
+        discovery={},
+    )
+    assert state is not None
+    assert state.state == "10"
+    assert events == _sync(10)
