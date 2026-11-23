@@ -56,7 +56,7 @@ class NodeRedSensor(NodeRedEntity, SensorEntity):
         else:
             self._attr_native_value = None
             # No reading yet: unavailable once presence-available applies
-            if contrib_supports_presence_available(hass):
+            if contrib_supports_presence_available(hass, connection):
                 self._attr_available = False
         self._attr_native_unit_of_measurement = self._config.get(
             CONF_UNIT_OF_MEASUREMENT

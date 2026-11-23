@@ -22,9 +22,11 @@ def test_binary_sensor_discovered_without_state_presence_is_unavailable(
     hass: HomeAssistant,
 ) -> None:
     """With presence-available: discovery without state is Unavailable."""
-    announce_contrib_version(hass)
+    connection = announce_contrib_version(hass)
     node = NodeRedBinarySensor(
-        hass, {"server_id": "s1", "node_id": "bs-no-state-new", CONF_CONFIG: {}}
+        hass,
+        {"server_id": "s1", "node_id": "bs-no-state-new", CONF_CONFIG: {}},
+        connection,
     )
     assert node._attr_available is False
     assert node._attr_is_on is None

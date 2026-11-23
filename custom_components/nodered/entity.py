@@ -44,7 +44,6 @@ from .discovery import (
     async_register_entity,
     async_register_platform,
 )
-from .utils import contrib_supports_presence_available
 
 if TYPE_CHECKING:
     from homeassistant.components.websocket_api.connection import ActiveConnection
@@ -146,20 +145,7 @@ class NodeRedEntity(Entity):
             raise
 
     def update_entity_state_attributes(self, msg: dict[str, Any]) -> None:
-        """Apply attributes and availability from an incoming message.
-
-        When presence-available is not supported, inject ``available: true`` if
-        ``state`` is present without ``available``, and clear attributes to ``{}``
-        when the attributes key is omitted.
-        """
-        if (
-            not contrib_supports_presence_available(self.hass)
-            and CONF_STATE in msg
-            and CONF_AVAILABLE not in msg
-        ):
-            msg[CONF_AVAILABLE] = True
-            if CONF_ATTRIBUTES not in msg:
-                self._attr_extra_state_attributes = {}
+        """Apply attributes and availability from an incoming message."""
         if CONF_ATTRIBUTES in msg:
             self._attr_extra_state_attributes = msg[CONF_ATTRIBUTES]
         if CONF_AVAILABLE in msg:
@@ -314,6 +300,17 @@ class NodeRedEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """Start receiving Node-RED messages when added to Home Assistant."""
         self.async_on_remove(async_register_entity(self.hass, self))
+
+
+def apply_legacy_availability(msg: dict[str, Any]) -> None:
+    """Translate an update from a contrib that predates presence-available.
+
+    There, a state without ``available`` means available, and omitted
+    attributes mean none.
+    """
+    if CONF_STATE in msg and CONF_AVAILABLE not in msg:
+        msg[CONF_AVAILABLE] = True
+        msg.setdefault(CONF_ATTRIBUTES, {})
 
 
 @callback

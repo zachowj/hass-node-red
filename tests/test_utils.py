@@ -14,7 +14,7 @@ from custom_components.nodered.utils import (
 )
 from custom_components.nodered.version import __version__
 from homeassistant.core import HomeAssistant
-from tests.helpers import announce_contrib_version
+from tests.helpers import FakeConnection, announce_contrib_version
 
 
 def test_version_matches_manifest() -> None:
@@ -31,23 +31,26 @@ def test_version_matches_manifest() -> None:
 
 def test_contrib_announced_version_tracks_connection(hass: HomeAssistant) -> None:
     """Helper is true while a connection that announced a version is open."""
-    assert contrib_announced_version(hass) is False
+    connection = FakeConnection()
+    assert contrib_announced_version(hass, connection) is False
 
-    connection = announce_contrib_version(hass)
-    assert contrib_announced_version(hass) is True
+    announce_contrib_version(hass, connection)
+    assert contrib_announced_version(hass, connection) is True
+    assert contrib_announced_version(hass, FakeConnection()) is False
+    assert contrib_announced_version(hass, None) is False
 
     connection.close()
-    assert contrib_announced_version(hass) is False
+    assert contrib_announced_version(hass, connection) is False
 
 
 def test_contrib_supports_presence_available_aliases_announced(
     hass: HomeAssistant,
 ) -> None:
     """Presence-available capability tracks announced version."""
-    assert contrib_supports_presence_available(hass) is False
-    announce_contrib_version(hass)
-    assert contrib_supports_presence_available(hass) is True
-    assert contrib_supports_presence_available(hass) is contrib_announced_version(hass)
+    connection = FakeConnection()
+    assert contrib_supports_presence_available(hass, connection) is False
+    announce_contrib_version(hass, connection)
+    assert contrib_supports_presence_available(hass, connection) is True
 
 
 def test_json_encoder() -> None:

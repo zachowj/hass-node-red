@@ -68,9 +68,9 @@ from .const import (
     WEBHOOKS,
 )
 from .discovery import async_discover, async_get_entity
-from .entity import NodeRedEntity
+from .entity import NodeRedEntity, apply_legacy_availability
 from .sentence import websocket_sentence, websocket_sentence_response
-from .utils import NodeRedJSONEncoder
+from .utils import NodeRedJSONEncoder, contrib_supports_presence_available
 
 CONF_ALLOWED_METHODS = "allowed_methods"
 CONF_LOCAL_ONLY = "local_only"
@@ -242,6 +242,8 @@ def websocket_entity(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Sensor command."""
+    if not contrib_supports_presence_available(hass, connection):
+        apply_legacy_availability(msg)
     _async_handle_update(hass, connection, msg, NodeRedEntity.handle_entity_update)
 
 
@@ -278,16 +280,22 @@ def _async_handle_update(
     connection.send_message(result_message(msg[CONF_ID]))
 
 
-def _store_contrib_version(hass: HomeAssistant, contrib_version: str | None) -> None:
-    """Store or clear the contrib package version announced by Node-RED.
+def _store_contrib_version(
+    hass: HomeAssistant, connection: ActiveConnection, contrib_version: str | None
+) -> None:
+    """Store or clear the contrib package version announced on a connection.
 
-    Kept in hass.data, not on the config entry: updating the entry reloads it,
-    and contrib then registers all of its nodes again on the same connection.
+    Kept per connection, so each Node-RED's messages are read by what its own
+    contrib supports. Kept in hass.data, not on the config entry: updating the
+    entry reloads it, and contrib then registers all of its nodes again on the
+    same connection.
     """
+    versions = hass.data.setdefault(CONTRIB_VERSION_DATA, {})
+    # ActiveConnection has __slots__ without __weakref__, so key by id()
     if contrib_version:
-        hass.data[CONTRIB_VERSION_DATA] = contrib_version
+        versions[id(connection)] = contrib_version
     else:
-        hass.data.pop(CONTRIB_VERSION_DATA, None)
+        versions.pop(id(connection), None)
 
 
 @require_admin
@@ -302,18 +310,19 @@ def websocket_version(
 ) -> None:
     """Version command.
 
-    Optional ``contrib_version`` is stored in hass.data. Only update when
-    the key is present so a version probe without it does not clear a prior
-    announce. Empty string clears. On announce, register a disconnect callback
-    so reconnect from a contrib that does not announce clears the stored value.
+    Optional ``contrib_version`` is stored for this connection. Only update
+    when the key is present so a version probe without it does not clear a
+    prior announce. Empty string clears. On announce, register a disconnect
+    callback that clears it, so a reconnect that does not announce gets
+    legacy handling.
     """
     if CONF_CONTRIB_VERSION in msg:
 
         def clear_contrib_version() -> None:
-            _store_contrib_version(hass, None)
+            _store_contrib_version(hass, connection, None)
 
         contrib_version = msg[CONF_CONTRIB_VERSION]
-        _store_contrib_version(hass, contrib_version or None)
+        _store_contrib_version(hass, connection, contrib_version or None)
         if contrib_version:
             connection.subscriptions[msg[CONF_ID]] = clear_contrib_version
 

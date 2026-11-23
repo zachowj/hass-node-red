@@ -33,6 +33,7 @@ from custom_components.nodered.discovery import (
 )
 from custom_components.nodered.entity import (
     NodeRedEntity,
+    apply_legacy_availability,
     async_setup_discovery,
     generate_device_identifiers,
 )
@@ -48,7 +49,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import Entity
-from tests.helpers import FakeConnection, announce_contrib_version
+from tests.helpers import FakeConnection
 
 
 class DummyEntity(NodeRedEntity):
@@ -65,27 +66,44 @@ class DummyEntity(NodeRedEntity):
         self.platform = None  # type: ignore[assignment]
 
 
-def test_update_entity_state_attributes_legacy_state_only_clears_attrs(
+@pytest.mark.parametrize(
+    ("msg", "expected"),
+    [
+        pytest.param(
+            {CONF_STATE: 21.5},
+            {CONF_STATE: 21.5, CONF_AVAILABLE: True, CONF_ATTRIBUTES: {}},
+            id="state_only",
+        ),
+        pytest.param(
+            {CONF_STATE: 21.5, CONF_ATTRIBUTES: {"unit": "C"}},
+            {CONF_STATE: 21.5, CONF_AVAILABLE: True, CONF_ATTRIBUTES: {"unit": "C"}},
+            id="state_and_attributes",
+        ),
+        pytest.param(
+            {CONF_STATE: 21.5, CONF_AVAILABLE: False},
+            {CONF_STATE: 21.5, CONF_AVAILABLE: False},
+            id="explicit_available",
+        ),
+        pytest.param(
+            {CONF_ATTRIBUTES: {"unit": "C"}},
+            {CONF_ATTRIBUTES: {"unit": "C"}},
+            id="no_state",
+        ),
+    ],
+)
+def test_apply_legacy_availability(
+    msg: dict[str, Any], expected: dict[str, Any]
+) -> None:
+    """A legacy state without available means available with no attributes."""
+    apply_legacy_availability(msg)
+
+    assert msg == expected
+
+
+def test_update_entity_state_attributes_state_only_holds_available(
     hass: HomeAssistant,
 ) -> None:
-    """Legacy: state without available injects True and clears omitted attrs."""
-    ent = DummyEntity(hass, {CONF_SERVER_ID: "s", CONF_NODE_ID: "n", CONF_CONFIG: {}})
-    ent._attr_extra_state_attributes = {"keep": False}
-    ent._attr_available = False
-    msg = {CONF_STATE: 21.5}
-
-    ent.update_entity_state_attributes(msg)
-
-    assert msg[CONF_AVAILABLE] is True
-    assert ent._attr_available is True
-    assert ent._attr_extra_state_attributes == {}
-
-
-def test_update_entity_state_attributes_presence_state_only_holds_available(
-    hass: HomeAssistant,
-) -> None:
-    """Presence-available: state without available holds availability."""
-    announce_contrib_version(hass)
+    """State without available holds availability."""
     ent = DummyEntity(hass, {CONF_SERVER_ID: "s", CONF_NODE_ID: "n", CONF_CONFIG: {}})
     ent._attr_extra_state_attributes = {"keep": True}
     ent._attr_available = False
@@ -103,25 +121,10 @@ def test_update_entity_state_attributes_presence_state_only_holds_available(
     assert ent._attr_extra_state_attributes == {"unit": "C"}
 
 
-def test_update_entity_state_attributes_legacy_state_and_attrs(
+def test_update_entity_state_attributes_updates_only_present_keys(
     hass: HomeAssistant,
 ) -> None:
-    """Legacy: state + attributes applies both and injects available True."""
-    ent = DummyEntity(hass, {CONF_SERVER_ID: "s", CONF_NODE_ID: "n", CONF_CONFIG: {}})
-
-    ent.update_entity_state_attributes(
-        {CONF_STATE: 21.5, CONF_ATTRIBUTES: {"unit": "C"}}
-    )
-
-    assert ent._attr_available is True
-    assert ent._attr_extra_state_attributes == {"unit": "C"}
-
-
-def test_update_entity_state_attributes_presence_updates_only_present_keys(
-    hass: HomeAssistant,
-) -> None:
-    """Presence-available: update only keys present; do not invent attrs."""
-    announce_contrib_version(hass)
+    """Update only keys present; do not invent attrs."""
     ent = DummyEntity(hass, {CONF_SERVER_ID: "s", CONF_NODE_ID: "n", CONF_CONFIG: {}})
     ent._attr_extra_state_attributes = {"prev": 1}
     ent._attr_available = True
