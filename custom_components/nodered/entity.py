@@ -8,12 +8,14 @@ from typing import TYPE_CHECKING, Any, ClassVar
 
 import voluptuous as vol
 
+from homeassistant.components.websocket_api.messages import event_message
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ENTITY_CATEGORY,
     CONF_ICON,
     CONF_ID,
     CONF_STATE,
+    CONF_TYPE,
     CONF_UNIT_OF_MEASUREMENT,
     EntityCategory,
 )
@@ -32,9 +34,12 @@ from .const import (
     CONF_NAME,
     CONF_NODE_ID,
     CONF_OPTIONS,
+    CONF_PAYLOAD,
     CONF_REMOVE,
     CONF_SERVER_ID,
+    CONF_VALUE,
     DOMAIN,
+    EVENT_ENTITY_SYNC,
     HA_MAX_STATE_LENGTH,
 )
 from .discovery import (
@@ -167,6 +172,19 @@ class NodeRedEntity(Entity):
             raise vol.Invalid(msg, path=[CONF_STATE])
 
     @callback
+    def send_entity_sync(self, value: Any) -> None:
+        """Tell Node-RED about a value it didn't send, without a value change."""
+        self._connection.send_message(
+            event_message(
+                self._message_id,
+                {
+                    CONF_TYPE: EVENT_ENTITY_SYNC,
+                    CONF_PAYLOAD: [{CONF_TYPE: CONF_STATE, CONF_VALUE: value}],
+                },
+            )
+        )
+
+    @callback
     def handle_lost_connection(self) -> None:
         """Mark entity unavailable after losing connection."""
         self._attr_available = False
@@ -213,7 +231,7 @@ class NodeRedEntity(Entity):
 
         # Bidirectional subscription handling
         if self._bidirectional and "id" in msg:
-            self._attr_available = True
+            self._attr_available = msg.get(CONF_AVAILABLE, True)
             self._message_id = msg["id"]
             self._connection = connection
             self._connection.subscriptions[msg["id"]] = self.handle_lost_connection
@@ -311,6 +329,12 @@ def apply_legacy_availability(msg: dict[str, Any]) -> None:
     if CONF_STATE in msg and CONF_AVAILABLE not in msg:
         msg[CONF_AVAILABLE] = True
         msg.setdefault(CONF_ATTRIBUTES, {})
+
+
+def reject_null_state(msg: dict[str, Any]) -> None:
+    """Raise vol.Invalid if the message sets the state to null."""
+    if CONF_STATE in msg and msg[CONF_STATE] is None:
+        raise vol.Invalid("State can't be null", path=[CONF_STATE])
 
 
 @callback

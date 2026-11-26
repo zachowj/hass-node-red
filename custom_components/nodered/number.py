@@ -21,11 +21,11 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_CONFIG, CONF_NUMBER, CONF_VALUE, EVENT_VALUE_CHANGE, NUMBER_ICON
-from .entity import NodeRedEntity, async_setup_discovery
+from .entity import NodeRedEntity, async_setup_discovery, reject_null_state
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ class NodeRedNumber(NodeRedEntity, RestoreNumber):
     _attr_native_min_value = DEFAULT_MIN_VALUE
     _attr_native_max_value = DEFAULT_MAX_VALUE
     _attr_native_step = DEFAULT_STEP
-    _attr_native_value = 0
+    _attr_native_value = None
     _attr_mode = NumberMode.AUTO
     _bidirectional = True
     component = CONF_NUMBER
@@ -83,26 +83,58 @@ class NodeRedNumber(NodeRedEntity, RestoreNumber):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
+        self._send_value_change(value)
+
+    @callback
+    def _send_value_change(self, value: float) -> None:
         self._connection.send_message(
             event_message(
                 self._message_id, {CONF_TYPE: EVENT_VALUE_CHANGE, CONF_VALUE: value}
             )
         )
 
+    def _clamp_value(self) -> bool:
+        """Move the value inside the limits, and return whether it changed."""
+        if (value := self._attr_native_value) is None:
+            return False
+        clamped = max(
+            self._attr_native_min_value, min(value, self._attr_native_max_value)
+        )
+        if clamped == value:
+            return False
+        self._attr_native_value = clamped
+        return True
+
+    @callback
+    def _clamp_value_and_notify(self) -> bool:
+        """Clamp the value after a limit change, and tell Node-RED if it moved."""
+        if not self._clamp_value():
+            return False
+        self._send_value_change(self._attr_native_value)
+        return True
+
     async def async_added_to_hass(self) -> None:
-        """Load the last known state when added to hass."""
+        """Restore the value if discovery didn't send one, else use the minimum."""
         await super().async_added_to_hass()
+        if self._attr_native_value is not None:
+            return
         if (
             (last_state := await self.async_get_last_state())
             and (last_number_data := await self.async_get_last_number_data())
             and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
         ):
             self._attr_native_value = last_number_data.native_value
+            self._clamp_value()
+        if self._attr_native_value is None:
+            self._attr_native_value = self.native_min_value
+        self.send_entity_sync(self._attr_native_value)
 
     def update_entity_state_attributes(self, msg: dict[str, Any]) -> None:
         """Update the entity state attributes."""
+        reject_null_state(msg)
         super().update_entity_state_attributes(msg)
-        self._attr_native_value = msg.get(CONF_STATE)
+        if CONF_STATE in msg:
+            self._attr_native_value = msg[CONF_STATE]
 
     def update_config(self, msg: dict[str, Any]) -> None:
         """Update entity config."""
@@ -119,6 +151,17 @@ class NodeRedNumber(NodeRedEntity, RestoreNumber):
             self._attr_mode = mode
         if (unit := config.get(CONF_UNIT_OF_MEASUREMENT)) is not None:
             self._attr_native_unit_of_measurement = unit
+        self._clamp_value_and_notify()
+
+    @callback
+    def handle_discovery_update(
+        self, msg: dict[str, Any], connection: ActiveConnection
+    ) -> None:
+        """Apply re-discovery, then clamp the value to the new limits."""
+        super().handle_discovery_update(msg, connection)
+        # Clamp after the base class switches to the new connection
+        if self._clamp_value_and_notify():
+            self.async_write_ha_state()
 
     def update_discovery_config(self, msg: dict[str, Any]) -> None:
         """Update the entity config."""

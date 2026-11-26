@@ -2,6 +2,8 @@
 
 from typing import Any
 
+import voluptuous as vol
+
 from homeassistant.components.text import RestoreText, TextMode
 from homeassistant.components.websocket_api.messages import event_message
 from homeassistant.config_entries import ConfigEntry
@@ -16,7 +18,7 @@ from .const import (
     HA_MAX_STATE_LENGTH,
     TEXT_ICON,
 )
-from .entity import NodeRedEntity, async_setup_discovery
+from .entity import NodeRedEntity, async_setup_discovery, reject_null_state
 
 CONF_MAX_LENGTH = "max_length"
 CONF_MIN_LENGTH = "min_length"
@@ -42,6 +44,7 @@ async def async_setup_entry(
 class NodeRedText(NodeRedEntity, RestoreText):
     """Node-RED text class."""
 
+    _attr_native_value = None
     _bidirectional = True
     component = CONF_TEXT
     update_attrs = (
@@ -50,13 +53,24 @@ class NodeRedText(NodeRedEntity, RestoreText):
     )
 
     async def async_added_to_hass(self) -> None:
-        """Restore native_*."""
+        """Restore the value if discovery didn't send one, else default to empty."""
         await super().async_added_to_hass()
-        if (last_text_data := await self.async_get_last_text_data()) is None:
+        if self._attr_native_value is not None:
             return
-        self._attr_native_max = last_text_data.native_max
-        self._attr_native_min = last_text_data.native_min
-        self._attr_native_value = last_text_data.native_value
+        if last_text_data := await self.async_get_last_text_data():
+            self._set_value_if_valid(last_text_data.native_value)
+        if self._attr_native_value is None:
+            self._set_value_if_valid("")
+        if self._attr_native_value is not None:
+            self.send_entity_sync(self._attr_native_value)
+
+    def _set_value_if_valid(self, value: str | None) -> None:
+        """Set the value, or leave it unknown if the limits or pattern reject it."""
+        self._attr_native_value = value
+        try:
+            self.validate_state()
+        except vol.Invalid:
+            self._attr_native_value = None
 
     async def async_set_value(self, value: str) -> None:
         """Set new value."""
@@ -68,10 +82,11 @@ class NodeRedText(NodeRedEntity, RestoreText):
 
     def update_entity_state_attributes(self, msg: dict[str, Any]) -> None:
         """Update the entity state attributes."""
+        reject_null_state(msg)
         super().update_entity_state_attributes(msg)
-        # Home Assistant measures the value's length, so it must be a string
-        state = msg.get(CONF_STATE)
-        self._attr_native_value = str(state) if state is not None else None
+        if CONF_STATE in msg:
+            # Home Assistant measures the value's length, so it must be a string
+            self._attr_native_value = str(msg[CONF_STATE])
 
     def update_discovery_config(self, msg: dict[str, Any]) -> None:
         """Update the entity config."""
