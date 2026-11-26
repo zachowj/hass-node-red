@@ -16,6 +16,27 @@
 
 **Full Changelog**: https://github.com/zachowj/hass-node-red/compare/v1.1.2...v1.1.3
 
+## [5.1.0](https://github.com/zachowj/hass-node-red/compare/v5.0.0...v5.1.0) (2026-11-26)
+
+
+### Features
+
+* partial updates, restore and defaults for number, text, select and time ([#443](https://github.com/zachowj/hass-node-red/issues/443)) ([a2d568c](https://github.com/zachowj/hass-node-red/commit/a2d568c5bba2001abcc4c25464bf6d68f063f595))
+
+
+### Bug Fixes
+
+* **websocket:** keep the announced contrib version per connection ([#444](https://github.com/zachowj/hass-node-red/issues/444)) ([9225d6c](https://github.com/zachowj/hass-node-red/commit/9225d6c485441fc0f522bc725c70d90be4c25e4f))
+
+
+### Miscellaneous Chores
+
+* add python version constraint to configuration ([a4d6d2f](https://github.com/zachowj/hass-node-red/commit/a4d6d2f403d81422324b47b5fdf1174e794bb6ed))
+* **deps:** update astral-sh/setup-uv action to v10.4.0 ([#446](https://github.com/zachowj/hass-node-red/issues/446)) ([1123a13](https://github.com/zachowj/hass-node-red/commit/1123a13d11418291d7775f03ebcd163a80bd4419))
+* **deps:** update pre-commit hook astral-sh/ruff-pre-commit to v0.17.6 ([#445](https://github.com/zachowj/hass-node-red/issues/445)) ([16668e3](https://github.com/zachowj/hass-node-red/commit/16668e32db0c1f8869bb8d4aff40cd5417c731b3))
+* refactor test workflows by removing redundant inputs and adding beta validation ([781001f](https://github.com/zachowj/hass-node-red/commit/781001f6dc4649798795c754eab9e85f54cd1058))
+* update renovate configuration to disable dependency dashboard ([2aa710c](https://github.com/zachowj/hass-node-red/commit/2aa710c212e1a285a0cb9c36b341eec9eb486ea3))
+
 ## [5.0.0](https://github.com/zachowj/hass-node-red/compare/v4.3.3...v5.0.0) (2026-11-19)
 
 
